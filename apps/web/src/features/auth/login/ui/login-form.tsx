@@ -30,25 +30,27 @@ export function LoginForm() {
   };
 
   return (
-    <Card title="Вход в систему" className="max-w-md mx-auto mt-20">
-      <div className="flex flex-col gap-4">
-        <Button
-          type="primary"
-          icon={<GoogleOutlined />}
-          size="large"
-          block
-          onClick={handleGoogleSignIn}
-          loading={status === "loading"}
-        >
-          Войти через Google
-        </Button>
-        {error && (
-          <div className="text-red-500 text-sm text-center">
-            Произошла ошибка при авторизации. Проверьте настройки Google OAuth.
-          </div>
-        )}
-      </div>
-    </Card>
+    <div className="flex items-center justify-center min-h-screen">
+      <Card title="Вход в систему" className="max-w-md w-full">
+        <div className="flex flex-col gap-4">
+          <Button
+            type="primary"
+            icon={<GoogleOutlined />}
+            size="large"
+            block
+            onClick={handleGoogleSignIn}
+            loading={status === "loading"}
+          >
+            Войти через Google
+          </Button>
+          {error && (
+            <div className="text-red-500 text-sm text-center">
+              Произошла ошибка при авторизации. Проверьте настройки Google
+              OAuth.
+            </div>
+          )}
+        </div>
+      </Card>
+    </div>
   );
 }
-
