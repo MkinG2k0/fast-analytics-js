@@ -264,6 +264,88 @@ textarea.ant-input::placeholder {
   border: 1px solid var(--border-color);
 }
 
+.json-viewer-container {
+  width: 100%;
+}
+
+.json-viewer-wrapper {
+  font-family: 'Courier New', 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  line-height: 1.6;
+}
+
+.json-toggle {
+  cursor: pointer;
+  user-select: none;
+  border: none;
+  background: transparent;
+  padding: 2px 4px;
+  margin: -2px -4px;
+}
+
+.json-toggle:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.json-key {
+  color: #881391;
+  font-weight: 500;
+}
+
+.json-string {
+  color: #1a1aa6;
+}
+
+.json-number {
+  color: #1c00cf;
+  font-weight: 500;
+}
+
+.json-boolean {
+  color: #0e22a0;
+  font-weight: 500;
+}
+
+.json-null {
+  color: #808080;
+  font-style: italic;
+}
+
+.json-undefined {
+  color: #808080;
+  font-style: italic;
+}
+
+.json-bracket {
+  color: #000000;
+  font-weight: 600;
+}
+
+.json-colon {
+  color: #000000;
+  margin: 0 4px;
+}
+
+.json-comma {
+  color: #000000;
+  margin-left: 4px;
+}
+
+.json-item {
+  display: block;
+  margin: 1px 0;
+  min-height: 20px;
+}
+
+.json-array,
+.json-object {
+  display: inline-block;
+  vertical-align: top;
+}
+
+.json-unknown {
+  color: #666666;
+}
+
 @media (prefers-color-scheme: dark) {
   html {
     color-scheme: dark;
@@ -272,6 +354,43 @@ textarea.ant-input::placeholder {
   .json-viewer {
     background: #1f1f1f;
     color: #e0e0e0;
+  }
+
+  .json-viewer-wrapper {
+    background-color: #1f1f1f;
+    color: #e0e0e0;
+    border-color: #374151;
+  }
+
+  .json-key {
+    color: #c586c0;
+  }
+
+  .json-string {
+    color: #ce9178;
+  }
+
+  .json-number {
+    color: #b5cea8;
+  }
+
+  .json-boolean {
+    color: #569cd6;
+  }
+
+  .json-null,
+  .json-undefined {
+    color: #808080;
+  }
+
+  .json-bracket,
+  .json-colon,
+  .json-comma {
+    color: #d4d4d4;
+  }
+
+  .json-toggle:hover {
+    background-color: rgba(255, 255, 255, 0.1);
   }
 }
 

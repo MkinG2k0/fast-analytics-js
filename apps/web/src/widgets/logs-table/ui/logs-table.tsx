@@ -170,6 +170,7 @@ export function LogsTable({
       title: "Сообщение",
       dataIndex: "message",
       key: "message",
+      width: 200,
       ellipsis: { showTitle: false },
       render: (message: string) => (
         <Text

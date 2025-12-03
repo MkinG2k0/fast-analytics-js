@@ -8,7 +8,7 @@ const createEventSchema = z.object({
   level: z.enum(["error", "warn", "info", "debug"]),
   message: z.string().min(1),
   stack: z.string().optional(),
-  context: z.record(z.unknown()).optional(),
+  context: z.record(z.unknown()).nullable().optional(),
   userAgent: z.string().optional(),
   url: z.string().optional(),
   sessionId: z.string().optional(),
@@ -65,6 +65,20 @@ export async function POST(request: Request) {
     const eventsData = Array.isArray(body) ? body : [body];
     const validatedData = createEventsSchema.parse(eventsData);
 
+    // Отладочное логирование
+    console.log("=== API: Received events ===");
+    console.log("Events count:", validatedData.length);
+    validatedData.forEach((event, index) => {
+      console.log(`Event ${index + 1}:`, {
+        level: event.level,
+        message: event.message,
+        context: event.context,
+        hasContext: !!event.context,
+        contextKeys: event.context ? Object.keys(event.context) : [],
+      });
+    });
+    console.log("===========================");
+
     // Получаем контекст из запроса
     const userAgent = request.headers.get("user-agent") || undefined;
     const url = request.headers.get("referer") || undefined;
@@ -76,17 +90,34 @@ export async function POST(request: Request) {
           ? (event.context.userId as string | undefined)
           : undefined;
 
-        return {
+        // Сохраняем context как есть, если он есть, иначе null
+        const contextToSave =
+          event.context && typeof event.context === "object"
+            ? event.context
+            : null;
+
+        const eventData = {
           projectId: project.id,
           level: event.level as EventLevel,
           message: event.message,
           stack: event.stack || null,
-          context: event.context || null,
+          context: contextToSave,
           userAgent: event.userAgent || userAgent || null,
           url: event.url || url || null,
           sessionId: event.sessionId || null,
           userId: event.userId || userIdFromContext || null,
         };
+
+        console.log("=== API: Saving event ===");
+        console.log("Event data:", {
+          ...eventData,
+          context: eventData.context,
+          contextType: typeof eventData.context,
+          contextStringified: JSON.stringify(eventData.context),
+        });
+        console.log("========================");
+
+        return eventData;
       }),
     });
 

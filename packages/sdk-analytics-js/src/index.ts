@@ -25,7 +25,8 @@ class FastAnalyticsSDK {
     this.interceptors = new Interceptors(
       this.transport,
       this.sessionManager,
-      () => this.userId
+      () => this.userId,
+      options.endpoint
     );
 
     if (options.enableAutoCapture !== false) {

@@ -20,8 +20,20 @@ class Transport {
       return;
     }
 
+    // Отладочное логирование
+    console.log("[Fast Analytics SDK] Отправка событий:", {
+      count: events.length,
+      events: events.map((event) => ({
+        level: event.level,
+        message: event.message,
+        hasContext: !!event.context,
+        context: event.context,
+        contextKeys: event.context ? Object.keys(event.context) : [],
+      })),
+    });
+
     try {
-      await fetch(this.endpoint, {
+      const response = await fetch(this.endpoint, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -29,6 +41,14 @@ class Transport {
         },
         body: JSON.stringify(events),
       });
+
+      if (!response.ok) {
+        console.error(
+          "[Fast Analytics SDK] Ошибка ответа сервера:",
+          response.status,
+          response.statusText
+        );
+      }
     } catch (error) {
       console.error("[Fast Analytics SDK] Ошибка отправки событий:", error);
     }
@@ -82,4 +102,3 @@ class Transport {
 }
 
 export default Transport;
-

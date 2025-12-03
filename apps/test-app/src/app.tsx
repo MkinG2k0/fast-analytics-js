@@ -10,11 +10,15 @@ import {
 
 export const App = () => {
   const [sessionId, setSessionId] = useState<string>("");
-  const [projectKey, setProjectKey] = useState<string>("");
+  const [projectKey, setProjectKey] = useState<string>(
+    "fa_e153bc3419757ed5384c4eb53ba2d24d94f58b0d7089c08f14e63250c8030be1"
+  );
   const [endpoint, setEndpoint] = useState<string>(
     "http://localhost:3000/api/events"
   );
-  const [userId, setUserIdState] = useState<string>("");
+  const [userId, setUserIdState] = useState<string>(
+    `Kama-${new Date().getTime().toString(36).substring(0, 4)}`
+  );
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
@@ -113,7 +117,9 @@ export const App = () => {
   // Тест автоматического перехвата необработанного промиса
   const handleAutoUnhandledPromise = () => {
     // Создаем промис, который отклоняется без обработки
-    Promise.reject(new Error("Автоматически перехваченный необработанный промис"));
+    Promise.reject(
+      new Error("Автоматически перехваченный необработанный промис")
+    );
   };
 
   // Тест автоматического перехвата ошибки загрузки ресурса
@@ -124,6 +130,26 @@ export const App = () => {
     img.onerror = () => {
       // Ошибка должна быть перехвачена автоматически
     };
+  };
+
+  // Тест ошибки в HTTP-запросе
+  const handleRequestError = async () => {
+    // Делаем запрос на несуществующий эндпоинт или эндпоинт, который возвращает ошибку
+    // await fetch("https://httpstat.us/500", {
+    //   method: "GET",
+    // });
+
+    await fetch("https://jsonplaceholder.typicode.com/posts/asdasd", {
+      method: "POST",
+      body: JSON.stringify({
+        title: "foo",
+        body: "bar",
+        userId: 1,
+      }),
+      headers: {
+        "Content-type": "application/json; charset=UTF-8",
+      },
+    });
   };
 
   return (
@@ -266,6 +292,19 @@ export const App = () => {
               Тест Async Error
             </button>
             <button
+              onClick={handleRequestError}
+              style={{
+                padding: "0.75rem 1.5rem",
+                backgroundColor: "#dc3545",
+                color: "white",
+                border: "none",
+                borderRadius: "4px",
+                cursor: "pointer",
+              }}
+            >
+              Тест Request Error
+            </button>
+            <button
               onClick={handleTestWarning}
               style={{
                 padding: "0.75rem 1.5rem",
@@ -320,7 +359,8 @@ export const App = () => {
         >
           <h2>Тестирование автоматического перехвата ошибок</h2>
           <p style={{ marginBottom: "1rem", color: "#666" }}>
-            Эти ошибки должны быть автоматически перехвачены SDK без явного вызова logError()
+            Эти ошибки должны быть автоматически перехвачены SDK без явного
+            вызова logError()
           </p>
           <div
             style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}
