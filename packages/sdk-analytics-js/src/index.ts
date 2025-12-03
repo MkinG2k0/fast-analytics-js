@@ -8,6 +8,7 @@ class FastAnalyticsSDK {
   private sessionManager: SessionManager;
   private interceptors: Interceptors | null = null;
   private initialized = false;
+  private userId: string | undefined;
 
   constructor() {
     this.sessionManager = new SessionManager();
@@ -19,10 +20,12 @@ class FastAnalyticsSDK {
       return;
     }
 
+    this.userId = options.userId;
     this.transport = new Transport(options);
     this.interceptors = new Interceptors(
       this.transport,
-      this.sessionManager
+      this.sessionManager,
+      () => this.userId
     );
 
     if (options.enableAutoCapture !== false) {
@@ -40,10 +43,7 @@ class FastAnalyticsSDK {
     }
   }
 
-  async logError(
-    error: Error | string,
-    context?: EventContext
-  ): Promise<void> {
+  async logError(error: Error | string, context?: EventContext): Promise<void> {
     this.ensureInitialized();
 
     const message = error instanceof Error ? error.message : error;
@@ -55,6 +55,7 @@ class FastAnalyticsSDK {
       stack,
       context,
       sessionId: this.sessionManager.getSessionId(),
+      userId: context?.userId || this.userId,
       url: typeof window !== "undefined" ? window.location.href : undefined,
       userAgent:
         typeof navigator !== "undefined" ? navigator.userAgent : undefined,
@@ -71,6 +72,7 @@ class FastAnalyticsSDK {
       message,
       context,
       sessionId: this.sessionManager.getSessionId(),
+      userId: context?.userId || this.userId,
       url: typeof window !== "undefined" ? window.location.href : undefined,
       userAgent:
         typeof navigator !== "undefined" ? navigator.userAgent : undefined,
@@ -87,6 +89,7 @@ class FastAnalyticsSDK {
       message,
       context,
       sessionId: this.sessionManager.getSessionId(),
+      userId: context?.userId || this.userId,
       url: typeof window !== "undefined" ? window.location.href : undefined,
       userAgent:
         typeof navigator !== "undefined" ? navigator.userAgent : undefined,
@@ -103,6 +106,7 @@ class FastAnalyticsSDK {
       message,
       context,
       sessionId: this.sessionManager.getSessionId(),
+      userId: context?.userId || this.userId,
       url: typeof window !== "undefined" ? window.location.href : undefined,
       userAgent:
         typeof navigator !== "undefined" ? navigator.userAgent : undefined,
@@ -151,5 +155,9 @@ export const resetSession = () => sdk.resetSession();
 export const teardown = () => sdk.teardown();
 
 export default sdk;
-export type { InitOptions, EventContext, EventPayload, EventLevel } from "./types";
-
+export type {
+  InitOptions,
+  EventContext,
+  EventPayload,
+  EventLevel,
+} from "./types";

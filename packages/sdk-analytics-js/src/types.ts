@@ -15,6 +15,7 @@ export interface InitOptions {
   enableAutoCapture?: boolean;
   batchSize?: number;
   batchTimeout?: number;
+  userId?: string;
 }
 
 export interface EventPayload {

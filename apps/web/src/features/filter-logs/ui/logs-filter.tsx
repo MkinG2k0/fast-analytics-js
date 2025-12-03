@@ -1,7 +1,11 @@
 "use client";
 
-import { Form, Select, DatePicker, Input, Button, Space } from "antd";
-import { SearchOutlined, ReloadOutlined } from "@ant-design/icons";
+import { Form, Select, DatePicker, Input, Button, Space, Row, Col } from "antd";
+import {
+  SearchOutlined,
+  ReloadOutlined,
+  FilterOutlined,
+} from "@ant-design/icons";
 import type { EventLevel } from "@repo/types";
 import dayjs from "@/shared/config/dayjs";
 
@@ -39,49 +43,81 @@ export function LogsFilter({ onFilter, onReset }: LogsFilterProps) {
   };
 
   return (
-    <Form
-      form={form}
-      onFinish={handleSubmit}
-      layout="inline"
-      className="mb-4"
-    >
-      <Form.Item name="level">
-        <Select
-          placeholder="Уровень"
-          allowClear
-          style={{ width: 120 }}
-          options={[
-            { label: "Error", value: "error" },
-            { label: "Warning", value: "warn" },
-            { label: "Info", value: "info" },
-            { label: "Debug", value: "debug" },
-          ]}
-        />
-      </Form.Item>
-
-      <Form.Item name="dateRange">
-        <RangePicker showTime />
-      </Form.Item>
-
-      <Form.Item name="search">
-        <Input
-          placeholder="Поиск по сообщению"
-          prefix={<SearchOutlined />}
-          style={{ width: 250 }}
-        />
-      </Form.Item>
-
-      <Form.Item>
-        <Space>
-          <Button type="primary" htmlType="submit" icon={<SearchOutlined />}>
-            Применить
-          </Button>
-          <Button onClick={handleReset} icon={<ReloadOutlined />}>
-            Сбросить
-          </Button>
-        </Space>
-      </Form.Item>
-    </Form>
+    <div className="bg-gray-50 rounded-lg p-4 mb-6 border border-gray-200">
+      <div className="flex items-center gap-2 mb-4">
+        <FilterOutlined className="text-gray-500" />
+        <span className="font-semibold text-gray-700">Фильтры</span>
+      </div>
+      <Form form={form} onFinish={handleSubmit} layout="vertical">
+        <Row gutter={[16, 16]}>
+          <Col xs={24} sm={12} md={6}>
+            <Form.Item
+              name="level"
+              label={
+                <span className="text-sm font-medium text-gray-600">
+                  Уровень
+                </span>
+              }
+            >
+              <Select
+                placeholder="Выберите уровень"
+                allowClear
+                options={[
+                  { label: "Error", value: "error" },
+                  { label: "Warning", value: "warn" },
+                  { label: "Info", value: "info" },
+                  { label: "Debug", value: "debug" },
+                ]}
+              />
+            </Form.Item>
+          </Col>
+          <Col xs={24} sm={12} md={10}>
+            <Form.Item
+              name="dateRange"
+              label={
+                <span className="text-sm font-medium text-gray-600">
+                  Период
+                </span>
+              }
+            >
+              <RangePicker
+                showTime
+                className="w-full"
+                placeholder={["Начальная дата", "Конечная дата"]}
+              />
+            </Form.Item>
+          </Col>
+          <Col xs={24} sm={12} md={8}>
+            <Form.Item
+              name="search"
+              label={
+                <span className="text-sm font-medium text-gray-600">Поиск</span>
+              }
+            >
+              <Input
+                placeholder="Поиск по сообщению"
+                prefix={<SearchOutlined className="text-gray-400" />}
+                allowClear
+              />
+            </Form.Item>
+          </Col>
+        </Row>
+        <Form.Item className="mb-0">
+          <Space>
+            <Button
+              type="primary"
+              htmlType="submit"
+              icon={<SearchOutlined />}
+              className="shadow-sm"
+            >
+              Применить
+            </Button>
+            <Button onClick={handleReset} icon={<ReloadOutlined />}>
+              Сбросить
+            </Button>
+          </Space>
+        </Form.Item>
+      </Form>
+    </div>
   );
 }
-

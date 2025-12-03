@@ -20,6 +20,7 @@ export default function AuthLayout({
   const router = useRouter();
   const { data: session, status } = useSession();
   const [mounted, setMounted] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
 
   useEffect(() => {
     setMounted(true);
@@ -57,12 +58,15 @@ export default function AuthLayout({
   }
 
   return (
-    <Layout style={{ minHeight: "100vh" }}>
-      <Header />
-      <Layout>
-        <Sidebar />
-        <Layout style={{ padding: "24px" }}>
-          <Content>{children}</Content>
+    <Layout style={{ minHeight: "100vh", background: "#f5f7fa" }}>
+      <Header
+        sidebarCollapsed={sidebarCollapsed}
+        onSidebarToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+      />
+      <Layout style={{ background: "transparent" }}>
+        <Sidebar collapsed={sidebarCollapsed} />
+        <Layout style={{ padding: "0", background: "transparent" }}>
+          <Content style={{ background: "transparent" }}>{children}</Content>
         </Layout>
       </Layout>
     </Layout>

@@ -28,6 +28,17 @@ async function getProjectByApiKey(apiKey: string | null) {
 }
 
 
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization, x-api-key",
+};
+
+// Обработка preflight запросов
+export async function OPTIONS() {
+  return NextResponse.json({}, { headers: corsHeaders });
+}
+
 // Публичный endpoint для SDK
 export async function POST(request: Request) {
   try {
@@ -36,7 +47,7 @@ export async function POST(request: Request) {
     if (!apiKey) {
       return NextResponse.json(
         { message: "API ключ не предоставлен" },
-        { status: 401 }
+        { status: 401, headers: corsHeaders }
       );
     }
 
@@ -44,7 +55,7 @@ export async function POST(request: Request) {
     if (!project) {
       return NextResponse.json(
         { message: "Неверный API ключ" },
-        { status: 401 }
+        { status: 401, headers: corsHeaders }
       );
     }
 
@@ -59,32 +70,39 @@ export async function POST(request: Request) {
     const url = request.headers.get("referer") || undefined;
 
     const events = await prisma.event.createMany({
-      data: validatedData.map((event) => ({
-        projectId: project.id,
-        level: event.level as EventLevel,
-        message: event.message,
-        stack: event.stack || null,
-        context: event.context || null,
-        userAgent: event.userAgent || userAgent || null,
-        url: event.url || url || null,
-        sessionId: event.sessionId || null,
-        userId: event.userId || null,
-      })),
+      data: validatedData.map((event) => {
+        // Извлекаем userId из context, если он не передан напрямую
+        const userIdFromContext = event.context && typeof event.context === "object" && "userId" in event.context
+          ? (event.context.userId as string | undefined)
+          : undefined;
+
+        return {
+          projectId: project.id,
+          level: event.level as EventLevel,
+          message: event.message,
+          stack: event.stack || null,
+          context: event.context || null,
+          userAgent: event.userAgent || userAgent || null,
+          url: event.url || url || null,
+          sessionId: event.sessionId || null,
+          userId: event.userId || userIdFromContext || null,
+        };
+      }),
     });
 
-    return NextResponse.json({ success: true, count: events.count });
+    return NextResponse.json({ success: true, count: events.count }, { headers: corsHeaders });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { message: error.errors[0]?.message || "Ошибка валидации" },
-        { status: 400 }
+        { status: 400, headers: corsHeaders }
       );
     }
 
     console.error("Create event error:", error);
     return NextResponse.json(
       { message: "Внутренняя ошибка сервера" },
-      { status: 500 }
+      { status: 500, headers: corsHeaders }
     );
   }
 }

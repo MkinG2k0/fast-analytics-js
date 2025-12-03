@@ -46,11 +46,11 @@ export default function EventPage() {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-6 max-w-[1600px] mx-auto">
       <Button
         icon={<ArrowLeftOutlined />}
         onClick={() => router.back()}
-        className="mb-4"
+        className="mb-6"
       >
         Назад
       </Button>

@@ -1,15 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
-import { Card, message } from "antd";
+import { useParams, useRouter } from "next/navigation";
+import { Button, message, Space, Tabs, Typography } from "antd";
+import { FileTextOutlined, ReloadOutlined, SettingOutlined } from "@ant-design/icons";
 import { LogsTable } from "@/widgets/logs-table";
-import { LogsFilter } from "@/features/filter-logs";
 import { getEvents } from "@/shared/api/events";
 import type { Event } from "@repo/types";
 
+const { Title } = Typography;
+
 export default function ProjectLogsPage() {
   const params = useParams();
+  const router = useRouter();
   const projectId = params.id as string;
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(false);
@@ -19,7 +22,11 @@ export default function ProjectLogsPage() {
     endDate?: string;
     search?: string;
   }>({});
-  const [pagination, setPagination] = useState({ current: 1, pageSize: 50, total: 0 });
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: 50,
+    total: 0,
+  });
 
   const loadEvents = async (page = 1, pageSize = 50) => {
     try {
@@ -54,21 +61,25 @@ export default function ProjectLogsPage() {
     setPagination({ ...pagination, current: 1 });
   };
 
-  const handleReset = () => {
-    setFilters({});
-    setPagination({ ...pagination, current: 1 });
-  };
-
   const handlePaginationChange = (page: number, pageSize: number) => {
     setPagination({ ...pagination, current: page, pageSize });
     loadEvents(page, pageSize);
   };
 
-  return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Логи проекта</h1>
-      <Card>
-        <LogsFilter onFilter={handleFilter} onReset={handleReset} />
+  const handleRefresh = () => {
+    loadEvents(pagination.current, pagination.pageSize);
+  };
+
+  const tabItems = [
+    {
+      key: "logs",
+      label: (
+        <span className="flex items-center gap-2">
+          <FileTextOutlined />
+          Логи
+        </span>
+      ),
+      children: (
         <LogsTable
           events={events}
           loading={loading}
@@ -76,9 +87,58 @@ export default function ProjectLogsPage() {
             ...pagination,
             onChange: handlePaginationChange,
           }}
+          filters={filters}
+          onFilterChange={handleFilter}
         />
-      </Card>
+      ),
+    },
+    {
+      key: "settings",
+      label: (
+        <span className="flex items-center gap-2">
+          <SettingOutlined />
+          Настройки
+        </span>
+      ),
+      children: null,
+    },
+  ];
+
+  const handleTabChange = (key: string) => {
+    if (key === "settings") {
+      router.push(`/project/${projectId}/settings`);
+    }
+  };
+
+  return (
+    <div className="p-6 max-w-[1600px] mx-auto">
+      <Space direction="vertical" size="large" className="w-full">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+              <FileTextOutlined className="!text-white text-lg" />
+            </div>
+            <Title level={2} className="!mb-0">
+              Логи проекта
+            </Title>
+          </div>
+          <Button
+            icon={<ReloadOutlined />}
+            onClick={handleRefresh}
+            loading={loading}
+            type="default"
+          >
+            Обновить
+          </Button>
+        </div>
+
+        <Tabs
+          activeKey="logs"
+          items={tabItems}
+          onChange={handleTabChange}
+          className="[&_.ant-tabs-nav]:mb-6"
+        />
+      </Space>
     </div>
   );
 }
-
