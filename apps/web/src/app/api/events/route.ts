@@ -1,0 +1,182 @@
+import { NextResponse } from "next/server";
+import { prisma } from "@/shared/lib/prisma";
+import { getSessionFromRequest } from "@/shared/lib/auth";
+import { z } from "zod";
+import type { EventLevel } from "@repo/types";
+
+const createEventSchema = z.object({
+  level: z.enum(["error", "warn", "info", "debug"]),
+  message: z.string().min(1),
+  stack: z.string().optional(),
+  context: z.record(z.unknown()).optional(),
+  userAgent: z.string().optional(),
+  url: z.string().optional(),
+  sessionId: z.string().optional(),
+  userId: z.string().optional(),
+});
+
+const createEventsSchema = z.array(createEventSchema);
+
+async function getProjectByApiKey(apiKey: string | null) {
+  if (!apiKey) {
+    return null;
+  }
+
+  return prisma.project.findUnique({
+    where: { apiKey },
+  });
+}
+
+
+// Публичный endpoint для SDK
+export async function POST(request: Request) {
+  try {
+    const apiKey = request.headers.get("x-api-key") || request.headers.get("authorization")?.replace("Bearer ", "");
+
+    if (!apiKey) {
+      return NextResponse.json(
+        { message: "API ключ не предоставлен" },
+        { status: 401 }
+      );
+    }
+
+    const project = await getProjectByApiKey(apiKey);
+    if (!project) {
+      return NextResponse.json(
+        { message: "Неверный API ключ" },
+        { status: 401 }
+      );
+    }
+
+    const body = await request.json();
+
+    // Поддержка как одиночного события, так и массива событий
+    const eventsData = Array.isArray(body) ? body : [body];
+    const validatedData = createEventsSchema.parse(eventsData);
+
+    // Получаем контекст из запроса
+    const userAgent = request.headers.get("user-agent") || undefined;
+    const url = request.headers.get("referer") || undefined;
+
+    const events = await prisma.event.createMany({
+      data: validatedData.map((event) => ({
+        projectId: project.id,
+        level: event.level as EventLevel,
+        message: event.message,
+        stack: event.stack || null,
+        context: event.context || null,
+        userAgent: event.userAgent || userAgent || null,
+        url: event.url || url || null,
+        sessionId: event.sessionId || null,
+        userId: event.userId || null,
+      })),
+    });
+
+    return NextResponse.json({ success: true, count: events.count });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { message: error.errors[0]?.message || "Ошибка валидации" },
+        { status: 400 }
+      );
+    }
+
+    console.error("Create event error:", error);
+    return NextResponse.json(
+      { message: "Внутренняя ошибка сервера" },
+      { status: 500 }
+    );
+  }
+}
+
+// Endpoint для получения событий (для авторизованных пользователей)
+export async function GET(request: Request) {
+  try {
+    const session = await getSessionFromRequest();
+    if (!session?.user?.id) {
+      return NextResponse.json({ message: "Не авторизован" }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const projectId = searchParams.get("projectId");
+    const level = searchParams.get("level");
+    const startDate = searchParams.get("startDate");
+    const endDate = searchParams.get("endDate");
+    const search = searchParams.get("search");
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "50");
+
+    if (!projectId) {
+      return NextResponse.json(
+        { message: "projectId обязателен" },
+        { status: 400 }
+      );
+    }
+
+    // Проверяем, что проект принадлежит пользователю
+    const project = await prisma.project.findFirst({
+      where: {
+        id: projectId,
+        userId: session.user.id,
+      },
+    });
+
+    if (!project) {
+      return NextResponse.json(
+        { message: "Проект не найден" },
+        { status: 404 }
+      );
+    }
+
+    const where: {
+      projectId: string;
+      level?: string;
+      timestamp?: { gte?: Date; lte?: Date };
+      message?: { contains: string; mode?: "insensitive" };
+    } = {
+      projectId,
+    };
+
+    if (level) {
+      where.level = level;
+    }
+
+    if (startDate || endDate) {
+      where.timestamp = {};
+      if (startDate) {
+        where.timestamp.gte = new Date(startDate);
+      }
+      if (endDate) {
+        where.timestamp.lte = new Date(endDate);
+      }
+    }
+
+    if (search) {
+      where.message = { contains: search, mode: "insensitive" };
+    }
+
+    const [events, total] = await Promise.all([
+      prisma.event.findMany({
+        where,
+        orderBy: { timestamp: "desc" },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      prisma.event.count({ where }),
+    ]);
+
+    return NextResponse.json({
+      events,
+      total,
+      page,
+      limit,
+    });
+  } catch (error) {
+    console.error("Get events error:", error);
+    return NextResponse.json(
+      { message: "Внутренняя ошибка сервера" },
+      { status: 500 }
+    );
+  }
+}
+

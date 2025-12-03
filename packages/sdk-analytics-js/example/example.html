@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Пример использования Fast Analytics SDK</title>
+</head>
+<body>
+  <h1>Пример использования Fast Analytics SDK</h1>
+  
+  <div>
+    <h2>Тестирование SDK</h2>
+    <button onclick="testError()">Вызвать ошибку</button>
+    <button onclick="testWarning()">Отправить предупреждение</button>
+    <button onclick="testUnhandledRejection()">Необработанный промис</button>
+    <button onclick="testManualError()">Ручная отправка ошибки</button>
+  </div>
+
+  <script type="module">
+    import { init, logError, logWarning } from '../dist/index.mjs';
+
+    // Инициализация SDK
+    init({
+      projectKey: 'your-project-api-key', // Замените на ваш API ключ
+      endpoint: 'http://localhost:3000/api/events',
+      enableAutoCapture: true,
+      batchSize: 5,
+      batchTimeout: 3000
+    });
+
+    // Экспортируем функции для использования в кнопках
+    window.testError = () => {
+      throw new Error('Тестовая ошибка из примера');
+    };
+
+    window.testWarning = () => {
+      logWarning('Тестовое предупреждение', {
+        customTags: { source: 'example' }
+      });
+      alert('Предупреждение отправлено!');
+    };
+
+    window.testUnhandledRejection = () => {
+      Promise.reject(new Error('Необработанная ошибка промиса'));
+    };
+
+    window.testManualError = () => {
+      try {
+        throw new Error('Ручная ошибка');
+      } catch (error) {
+        logError(error, {
+          customTags: { type: 'manual', section: 'example' }
+        });
+        alert('Ошибка отправлена вручную!');
+      }
+    };
+  </script>
+</body>
+</html>
+

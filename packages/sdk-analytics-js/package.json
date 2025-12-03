@@ -1,0 +1,39 @@
+{
+  "name": "@fast-analytics/sdk",
+  "version": "0.1.0",
+  "description": "SDK для отправки логов и ошибок в Fast Analytics",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts",
+    "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
+    "lint": "eslint src",
+    "check-types": "tsc --noEmit"
+  },
+  "keywords": [
+    "analytics",
+    "error-tracking",
+    "logging",
+    "monitoring"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^22.15.3",
+    "eslint": "^9.39.1",
+    "tsup": "^8.3.5",
+    "typescript": "^5.9.2"
+  }
+}
+

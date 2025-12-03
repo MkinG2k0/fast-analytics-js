@@ -1,135 +1,345 @@
-# Turborepo starter
+# Fast Analytics
 
-This Turborepo starter is maintained by the Turborepo core team.
+SaaS сервис для аналитики web-приложений, аналог Sentry / LogRocket / Datadog RUM.
 
-## Using this example
+## 🎯 Описание
 
-Run the following command:
+Fast Analytics — это полнофункциональный сервис для мониторинга и аналитики web-приложений. Сервис позволяет отслеживать ошибки, логи и события в реальном времени.
 
-```sh
-npx create-turbo@latest
-```
+### Текущий функционал (MVP)
 
-## What's inside?
+- ✅ Полная аналитика логов, ошибок и предупреждений
+- ✅ Автоматический перехват ошибок браузера через SDK
+- ✅ Многопроектность (каждый пользователь может создавать несколько проектов)
+- ✅ Фильтрация и поиск по событиям
+- ✅ Детальный просмотр событий с stack trace и контекстом
 
-This Turborepo includes the following packages/apps:
+### Планируемые функции
 
-### Apps and Packages
+- 📸 Скриншот экрана во время ошибки
+- 🖱️ Аналитика кликов
+- 📊 Аналитика самых посещаемых страниц и времени на них
+- ⚡ Скорость загрузки страниц и скорость API-запросов
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+## 🏗️ Архитектура
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+Проект построен на основе:
 
-### Utilities
+- **Turborepo** — монорепозиторий для управления несколькими пакетами
+- **Next.js** (App Router) — основной фреймворк для frontend и API
+- **Feature-Sliced Design (FSD)** — архитектура фронтенда
+- **Prisma + PostgreSQL** — база данных и ORM
+- **Ant Design** — UI библиотека компонентов
+- **Tailwind CSS** — утилиты для стилизации
 
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
+### Структура проекта
 
 ```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
+.
+├── apps/
+│   └── web/              # Next.js приложение (frontend + API)
+│       ├── app/          # Next.js App Router
+│       │   ├── api/     # API routes
+│       │   └── ...      # Страницы
+│       ├── src/         # Исходный код по FSD
+│       │   ├── app/     # Инициализация приложения
+│       │   ├── pages/   # Страницы
+│       │   ├── widgets/ # Виджеты (Sidebar, Header, LogsTable)
+│       │   ├── features/ # Фичи (Auth, FilterLogs, ViewLogDetails)
+│       │   ├── entities/ # Сущности (Project, Event, User)
+│       │   └── shared/  # Общие модули (API, UI, lib)
+│       └── prisma/       # Схема базы данных
+├── packages/
+│   ├── types/           # Общие TypeScript типы
+│   ├── ui/             # Общие UI компоненты
+│   ├── eslint-config/  # Конфигурация ESLint
+│   ├── typescript-config/ # Конфигурация TypeScript
+│   └── sdk-analytics-js/   # SDK для публикации в npm
+    └── src/
+        ├── index.ts     # Главный экспорт
+        ├── transport.ts # Отправка событий
+        ├── interceptors.ts # Перехват ошибок
+        └── session.ts  # Управление сессиями
 ```
 
-You can build a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
+## 🚀 Быстрый старт
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build --filter=docs
+### Требования
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-```
+- Node.js >= 18
+- PostgreSQL >= 14
+- pnpm >= 9.0.0
 
-### Develop
+### Установка
 
-To develop all apps and packages, run the following command:
+1. Клонируйте репозиторий:
 
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
+```bash
+git clone <repository-url>
+cd fast-analytics
 ```
 
-You can develop a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
+2. Установите зависимости:
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev --filter=web
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
+```bash
+pnpm install
 ```
 
-### Remote Caching
+3. Настройте базу данных:
 
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
+Скопируйте файл `apps/web/example.env` в `apps/web/.env` и заполните значения:
 
-Turborepo can use a technique known as [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo login
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo login
-yarn exec turbo login
-pnpm exec turbo login
+```bash
+cp apps/web/example.env apps/web/.env
 ```
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+Затем отредактируйте `apps/web/.env` и укажите свои значения:
 
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo link
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo link
-yarn exec turbo link
-pnpm exec turbo link
+```env
+DATABASE_URL="postgresql://user:password@localhost:5432/fast_analytics?schema=public"
+JWT_SECRET="your-secret-key-change-in-production"
+NEXTAUTH_URL="http://localhost:3000"
 ```
 
-## Useful Links
+4. Запустите миграции Prisma:
 
-Learn more about the power of Turborepo:
+```bash
+cd apps/web
+pnpm db:push
+# или для создания миграции
+pnpm db:migrate
+```
 
-- [Tasks](https://turborepo.com/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.com/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.com/docs/reference/configuration)
-- [CLI Usage](https://turborepo.com/docs/reference/command-line-reference)
+5. Сгенерируйте Prisma Client:
+
+```bash
+pnpm db:generate
+```
+
+6. Запустите dev сервер:
+
+```bash
+# Из корня проекта
+pnpm dev
+```
+
+Приложение будет доступно по адресу: http://localhost:3000
+
+## 📦 SDK
+
+SDK находится в директории `packages/sdk-analytics-js` и может быть опубликован в npm как отдельный пакет.
+
+### Использование SDK
+
+1. Установите SDK:
+
+```bash
+npm install @fast-analytics/sdk
+```
+
+2. Инициализируйте в вашем приложении:
+
+```typescript
+import { init, logError, logWarning } from '@fast-analytics/sdk';
+
+init({
+  projectKey: 'your-project-api-key',
+  endpoint: 'http://localhost:3000/api/events'
+});
+
+// Автоматический перехват ошибок уже работает!
+
+// Ручная отправка ошибки
+try {
+  // ваш код
+} catch (error) {
+  logError(error, {
+    customTags: { section: 'checkout' }
+  });
+}
+
+// Отправка предупреждения
+logWarning('Пользователь выполнил необычное действие', {
+  userId: 'user123'
+});
+```
+
+Подробнее см. [README SDK](./packages/sdk-analytics-js/README.md)
+
+### Разработка SDK
+
+```bash
+cd packages/sdk-analytics-js
+pnpm install
+pnpm dev  # watch режим
+pnpm build  # сборка
+```
+
+### Публикация SDK в npm
+
+```bash
+cd packages/sdk-analytics-js
+npm version patch|minor|major
+npm publish --access public
+```
+
+## 🗄️ База данных
+
+### Модели
+
+- **User** — пользователи системы
+- **Project** — проекты пользователей (каждый проект имеет уникальный API ключ)
+- **Event** — события логирования (ошибки, предупреждения и т.д.)
+
+### Миграции
+
+```bash
+cd apps/web
+pnpm db:migrate  # Создать новую миграцию
+pnpm db:push     # Применить изменения без миграции (для разработки)
+pnpm db:studio   # Открыть Prisma Studio
+```
+
+## 🔐 Аутентификация
+
+Система использует NextAuth.js для аутентификации с поддержкой Google OAuth провайдера. Данные авторизации сохраняются в базе данных.
+
+### Провайдеры аутентификации
+
+- **Google OAuth** — вход через Google аккаунт
+- **Email/Password** — традиционная регистрация и вход (JWT токены)
+
+### Настройка Google OAuth
+
+1. Перейдите в [Google Cloud Console](https://console.cloud.google.com/)
+2. Создайте новый проект или выберите существующий
+3. Включите Google+ API
+4. Создайте OAuth 2.0 Client ID:
+   - Тип приложения: Web application
+   - Authorized redirect URIs: `http://localhost:3000/api/auth/callback/google` (для разработки)
+   - Для продакшена добавьте ваш домен
+5. Скопируйте Client ID и Client Secret в `.env` файл:
+   ```
+   GOOGLE_CLIENT_ID="your-client-id"
+   GOOGLE_CLIENT_SECRET="your-client-secret"
+   NEXTAUTH_SECRET="your-secret-key" # Сгенерируйте случайную строку
+   NEXTAUTH_URL="http://localhost:3000" # Для продакшена укажите ваш домен
+   ```
+
+### Регистрация и вход
+
+- `/register` — регистрация нового пользователя (email/password)
+- `/login` — вход в систему (email/password или Google OAuth)
+
+После успешной аутентификации пользователь перенаправляется на `/projects`.
+
+## 📡 API Endpoints
+
+### Аутентификация
+
+- `POST /api/auth/register` — регистрация
+- `POST /api/auth/login` — вход
+
+### Проекты
+
+- `GET /api/projects` — список проектов пользователя
+- `POST /api/projects` — создание проекта
+- `GET /api/projects/:id` — получение проекта
+- `POST /api/projects/:id/regenerate-key` — обновление API ключа
+
+### События
+
+- `POST /api/events` — создание события (публичный endpoint для SDK)
+  - Требует заголовок `x-api-key` с API ключом проекта
+- `GET /api/events?projectId=...` — получение событий (требует аутентификации)
+- `GET /api/events/:id` — получение конкретного события
+
+## 🎨 Frontend структура (FSD)
+
+Проект следует архитектуре Feature-Sliced Design:
+
+- **app/** — инициализация приложения, провайдеры
+- **pages/** — страницы приложения
+- **widgets/** — сложные композитные компоненты (Sidebar, Header, LogsTable)
+- **features/** — бизнес-фичи (Auth, FilterLogs, ViewLogDetails)
+- **entities/** — бизнес-сущности (Project, Event, User)
+- **shared/** — переиспользуемый код (API клиенты, UI компоненты, утилиты)
+
+## 🛠️ Разработка
+
+### Запуск в режиме разработки
+
+```bash
+pnpm dev
+```
+
+### Сборка
+
+```bash
+pnpm build
+```
+
+### Линтинг
+
+```bash
+pnpm lint
+```
+
+### Проверка типов
+
+```bash
+pnpm check-types
+```
+
+## 📝 Скрипты
+
+### Корневой уровень
+
+- `pnpm dev` — запуск всех приложений в dev режиме
+- `pnpm build` — сборка всех приложений
+- `pnpm lint` — линтинг всех пакетов
+- `pnpm check-types` — проверка типов
+
+### apps/web
+
+- `pnpm dev` — запуск Next.js dev сервера
+- `pnpm build` — сборка Next.js приложения
+- `pnpm db:generate` — генерация Prisma Client
+- `pnpm db:push` — применение изменений схемы к БД
+- `pnpm db:migrate` — создание миграции
+- `pnpm db:studio` — открытие Prisma Studio
+
+## 🚢 Деплой
+
+### Требования для продакшена
+
+1. Настройте переменные окружения:
+   - `DATABASE_URL` — строка подключения к PostgreSQL
+   - `JWT_SECRET` — секретный ключ для JWT (используйте надежный ключ!)
+   - `NEXTAUTH_URL` — URL вашего приложения
+
+2. Запустите миграции:
+
+```bash
+pnpm db:migrate
+```
+
+3. Соберите приложение:
+
+```bash
+pnpm build
+```
+
+4. Запустите production сервер:
+
+```bash
+pnpm start
+```
+
+## 📄 Лицензия
+
+MIT
+
+## 🤝 Вклад
+
+Проект находится в активной разработке. Приветствуются любые предложения и pull requests!
