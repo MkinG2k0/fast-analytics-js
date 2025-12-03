@@ -11,7 +11,7 @@ import {
 export const App = () => {
 	const [sessionId, setSessionId] = useState<string>('')
 	const [projectKey, setProjectKey] = useState<string>(
-		'fa_e153bc3419757ed5384c4eb53ba2d24d94f58b0d7089c08f14e63250c8030be1',
+		localStorage.getItem('projectKey') || 'fa_test',
 	)
 	const [endpoint, setEndpoint] = useState<string>(
 		localStorage.getItem('href') || 'http://localhost:3000/api/events',
@@ -173,7 +173,10 @@ export const App = () => {
 						<input
 							type="text"
 							value={projectKey}
-							onChange={(e) => setProjectKey(e.target.value)}
+							onChange={(e) => {
+								setProjectKey(e.target.value)
+								localStorage.setItem('projectKey', e.target.value)
+							}}
 							placeholder="Введите project key"
 							style={{width: '100%', padding: '0.5rem'}}
 							disabled={isInitialized}
