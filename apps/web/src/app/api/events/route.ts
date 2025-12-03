@@ -1,231 +1,219 @@
-import { NextResponse } from "next/server";
-import { prisma } from "@/shared/lib/prisma";
-import { getSessionFromRequest } from "@/shared/lib/auth";
-import { z } from "zod";
-import type { EventLevel } from "@repo/types";
+import { NextResponse } from 'next/server'
+import { Prisma } from '@prisma/client'
+
+import { prisma } from '@/shared/lib/prisma'
+import { getSessionFromRequest } from '@/shared/lib/auth'
+import { z } from 'zod'
+import type { EventLevel } from '@repo/types'
 
 const createEventSchema = z.object({
-  level: z.enum(["error", "warn", "info", "debug"]),
-  message: z.string().min(1),
-  stack: z.string().optional(),
-  context: z.record(z.unknown()).nullable().optional(),
-  userAgent: z.string().optional(),
-  url: z.string().optional(),
-  sessionId: z.string().optional(),
-  userId: z.string().optional(),
-});
+	level: z.enum(['error', 'warn', 'info', 'debug']),
+	message: z.string().min(1),
+	stack: z.string().optional(),
+	context: z.record(z.unknown()).nullable().optional(),
+	userAgent: z.string().optional(),
+	url: z.string().optional(),
+	sessionId: z.string().optional(),
+	userId: z.string().optional(),
+})
 
-const createEventsSchema = z.array(createEventSchema);
+const createEventsSchema = z.array(createEventSchema)
 
 async function getProjectByApiKey(apiKey: string | null) {
-  if (!apiKey) {
-    return null;
-  }
+	if (!apiKey) {
+		return null
+	}
 
-  return prisma.project.findUnique({
-    where: { apiKey },
-  });
+	return prisma.project.findUnique({
+		where: {apiKey},
+	})
 }
 
-
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization, x-api-key",
-};
+	'Access-Control-Allow-Origin': '*',
+	'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+	'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-api-key',
+}
 
 // Обработка preflight запросов
 export async function OPTIONS() {
-  return NextResponse.json({}, { headers: corsHeaders });
+	return NextResponse.json({}, {headers: corsHeaders})
 }
 
 // Публичный endpoint для SDK
 export async function POST(request: Request) {
-  try {
-    const apiKey = request.headers.get("x-api-key") || request.headers.get("authorization")?.replace("Bearer ", "");
+	try {
+		const apiKey =
+			request.headers.get('x-api-key') ||
+			request.headers.get('authorization')?.replace('Bearer ', '')
 
-    if (!apiKey) {
-      return NextResponse.json(
-        { message: "API ключ не предоставлен" },
-        { status: 401, headers: corsHeaders }
-      );
-    }
+		if (!apiKey) {
+			return NextResponse.json(
+				{message: 'API ключ не предоставлен'},
+				{status: 401, headers: corsHeaders},
+			)
+		}
 
-    const project = await getProjectByApiKey(apiKey);
-    if (!project) {
-      return NextResponse.json(
-        { message: "Неверный API ключ" },
-        { status: 401, headers: corsHeaders }
-      );
-    }
+		const project = await getProjectByApiKey(apiKey)
+		if (!project) {
+			return NextResponse.json(
+				{message: 'Неверный API ключ'},
+				{status: 401, headers: corsHeaders},
+			)
+		}
 
-    const body = await request.json();
+		const body = await request.json()
 
-    // Поддержка как одиночного события, так и массива событий
-    const eventsData = Array.isArray(body) ? body : [body];
-    const validatedData = createEventsSchema.parse(eventsData);
+		// Поддержка как одиночного события, так и массива событий
+		const eventsData = Array.isArray(body) ? body : [body]
+		const validatedData = createEventsSchema.parse(eventsData)
 
-    // Отладочное логирование
-    console.log("=== API: Received events ===");
-    console.log("Events count:", validatedData.length);
-    validatedData.forEach((event, index) => {
-      console.log(`Event ${index + 1}:`, {
-        level: event.level,
-        message: event.message,
-        context: event.context,
-        hasContext: !!event.context,
-        contextKeys: event.context ? Object.keys(event.context) : [],
-      });
-    });
-    console.log("===========================");
+		// Получаем контекст из запроса
+		const userAgent = request.headers.get('user-agent') || undefined
+		const url = request.headers.get('referer') || undefined
 
-    // Получаем контекст из запроса
-    const userAgent = request.headers.get("user-agent") || undefined;
-    const url = request.headers.get("referer") || undefined;
+		const events = await prisma.event.createMany({
+			data: validatedData.map((event) => {
+				// Извлекаем userId из context, если он не передан напрямую
+				const userIdFromContext =
+					event.context &&
+					typeof event.context === 'object' &&
+					'userId' in event.context
+						? (event.context.userId as string | undefined)
+						: undefined
 
-    const events = await prisma.event.createMany({
-      data: validatedData.map((event) => {
-        // Извлекаем userId из context, если он не передан напрямую
-        const userIdFromContext = event.context && typeof event.context === "object" && "userId" in event.context
-          ? (event.context.userId as string | undefined)
-          : undefined;
+				// Сохраняем context как есть, если он есть, иначе используем Prisma.JsonNull
+				const contextToSave:
+					| Prisma.InputJsonValue
+					| Prisma.NullableJsonNullValueInput
+					| undefined =
+					event.context && typeof event.context === 'object'
+						? (event.context as Prisma.InputJsonValue)
+						: Prisma.JsonNull
 
-        // Сохраняем context как есть, если он есть, иначе null
-        const contextToSave =
-          event.context && typeof event.context === "object"
-            ? event.context
-            : null;
+				const eventData = {
+					projectId: project.id,
+					level: event.level as EventLevel,
+					message: event.message,
+					stack: event.stack || null,
+					context: contextToSave,
+					userAgent: event.userAgent || userAgent || null,
+					url: event.url || url || null,
+					sessionId: event.sessionId || null,
+					userId: event.userId || userIdFromContext || null,
+				}
 
-        const eventData = {
-          projectId: project.id,
-          level: event.level as EventLevel,
-          message: event.message,
-          stack: event.stack || null,
-          context: contextToSave,
-          userAgent: event.userAgent || userAgent || null,
-          url: event.url || url || null,
-          sessionId: event.sessionId || null,
-          userId: event.userId || userIdFromContext || null,
-        };
+				return eventData
+			}),
+		})
 
-        console.log("=== API: Saving event ===");
-        console.log("Event data:", {
-          ...eventData,
-          context: eventData.context,
-          contextType: typeof eventData.context,
-          contextStringified: JSON.stringify(eventData.context),
-        });
-        console.log("========================");
+		return NextResponse.json(
+			{success: true, count: events.count},
+			{headers: corsHeaders},
+		)
+	} catch (error) {
+		if (error instanceof z.ZodError) {
+			return NextResponse.json(
+				{message: error.errors[0]?.message || 'Ошибка валидации'},
+				{status: 400, headers: corsHeaders},
+			)
+		}
 
-        return eventData;
-      }),
-    });
-
-    return NextResponse.json({ success: true, count: events.count }, { headers: corsHeaders });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { message: error.errors[0]?.message || "Ошибка валидации" },
-        { status: 400, headers: corsHeaders }
-      );
-    }
-
-    console.error("Create event error:", error);
-    return NextResponse.json(
-      { message: "Внутренняя ошибка сервера" },
-      { status: 500, headers: corsHeaders }
-    );
-  }
+		console.error('Create event error:', error)
+		return NextResponse.json(
+			{message: 'Внутренняя ошибка сервера'},
+			{status: 500, headers: corsHeaders},
+		)
+	}
 }
 
 // Endpoint для получения событий (для авторизованных пользователей)
 export async function GET(request: Request) {
-  try {
-    const session = await getSessionFromRequest();
-    if (!session?.user?.id) {
-      return NextResponse.json({ message: "Не авторизован" }, { status: 401 });
-    }
+	try {
+		const session = await getSessionFromRequest()
+		if (!session?.user?.id) {
+			return NextResponse.json({message: 'Не авторизован'}, {status: 401})
+		}
 
-    const { searchParams } = new URL(request.url);
-    const projectId = searchParams.get("projectId");
-    const level = searchParams.get("level");
-    const startDate = searchParams.get("startDate");
-    const endDate = searchParams.get("endDate");
-    const search = searchParams.get("search");
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "50");
+		const {searchParams} = new URL(request.url)
+		const projectId = searchParams.get('projectId')
+		const level = searchParams.get('level')
+		const startDate = searchParams.get('startDate')
+		const endDate = searchParams.get('endDate')
+		const search = searchParams.get('search')
+		const page = parseInt(searchParams.get('page') || '1')
+		const limit = parseInt(searchParams.get('limit') || '50')
 
-    if (!projectId) {
-      return NextResponse.json(
-        { message: "projectId обязателен" },
-        { status: 400 }
-      );
-    }
+		if (!projectId) {
+			return NextResponse.json(
+				{message: 'projectId обязателен'},
+				{status: 400},
+			)
+		}
 
-    // Проверяем, что проект принадлежит пользователю
-    const project = await prisma.project.findFirst({
-      where: {
-        id: projectId,
-        userId: session.user.id,
-      },
-    });
+		// Проверяем, что проект принадлежит пользователю
+		const project = await prisma.project.findFirst({
+			where: {
+				id: projectId,
+				userId: session.user.id,
+			},
+		})
 
-    if (!project) {
-      return NextResponse.json(
-        { message: "Проект не найден" },
-        { status: 404 }
-      );
-    }
+		if (!project) {
+			return NextResponse.json(
+				{message: 'Проект не найден'},
+				{status: 404},
+			)
+		}
 
-    const where: {
-      projectId: string;
-      level?: string;
-      timestamp?: { gte?: Date; lte?: Date };
-      message?: { contains: string; mode?: "insensitive" };
-    } = {
-      projectId,
-    };
+		const where: {
+			projectId: string;
+			level?: string;
+			timestamp?: { gte?: Date; lte?: Date };
+			message?: { contains: string; mode?: 'insensitive' };
+		} = {
+			projectId,
+		}
 
-    if (level) {
-      where.level = level;
-    }
+		if (level) {
+			where.level = level
+		}
 
-    if (startDate || endDate) {
-      where.timestamp = {};
-      if (startDate) {
-        where.timestamp.gte = new Date(startDate);
-      }
-      if (endDate) {
-        where.timestamp.lte = new Date(endDate);
-      }
-    }
+		if (startDate || endDate) {
+			where.timestamp = {}
+			if (startDate) {
+				where.timestamp.gte = new Date(startDate)
+			}
+			if (endDate) {
+				where.timestamp.lte = new Date(endDate)
+			}
+		}
 
-    if (search) {
-      where.message = { contains: search, mode: "insensitive" };
-    }
+		if (search) {
+			where.message = {contains: search, mode: 'insensitive'}
+		}
 
-    const [events, total] = await Promise.all([
-      prisma.event.findMany({
-        where,
-        orderBy: { timestamp: "desc" },
-        skip: (page - 1) * limit,
-        take: limit,
-      }),
-      prisma.event.count({ where }),
-    ]);
+		const [events, total] = await Promise.all([
+			prisma.event.findMany({
+				where,
+				orderBy: {timestamp: 'desc'},
+				skip: (page - 1) * limit,
+				take: limit,
+			}),
+			prisma.event.count({where}),
+		])
 
-    return NextResponse.json({
-      events,
-      total,
-      page,
-      limit,
-    });
-  } catch (error) {
-    console.error("Get events error:", error);
-    return NextResponse.json(
-      { message: "Внутренняя ошибка сервера" },
-      { status: 500 }
-    );
-  }
+		return NextResponse.json({
+			events,
+			total,
+			page,
+			limit,
+		})
+	} catch (error) {
+		console.error('Get events error:', error)
+		return NextResponse.json(
+			{message: 'Внутренняя ошибка сервера'},
+			{status: 500},
+		)
+	}
 }
-
