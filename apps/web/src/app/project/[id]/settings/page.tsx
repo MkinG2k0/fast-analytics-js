@@ -10,7 +10,6 @@ import {
   Space,
   Typography,
   Tabs,
-  Spin,
   Skeleton,
 } from "antd";
 import {
@@ -18,9 +17,15 @@ import {
   ReloadOutlined,
   FileTextOutlined,
   SettingOutlined,
-  LoadingOutlined,
 } from "@ant-design/icons";
+import { useSession } from "next-auth/react";
 import { getProject, regenerateApiKey } from "@/shared/api/projects";
+import { getProjectRole } from "@/shared/api/invitations";
+import {
+  InviteMemberForm,
+  MembersList,
+  InvitationsList,
+} from "@/features/manage-members";
 import type { Project } from "@repo/types";
 
 const { Title, Paragraph, Text } = Typography;
@@ -28,17 +33,29 @@ const { Title, Paragraph, Text } = Typography;
 export default function ProjectSettingsPage() {
   const params = useParams();
   const router = useRouter();
+  const { data: session } = useSession();
   const projectId = params.id as string;
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(false);
   const [regeneratingKey, setRegeneratingKey] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
 
   const loadProject = async () => {
     try {
       setLoading(true);
       const data = await getProject(projectId);
       setProject(data);
-    } catch (error) {
+
+      // Загружаем роль пользователя
+      if (session?.user?.id) {
+        try {
+          const { role } = await getProjectRole(projectId);
+          setUserRole(role);
+        } catch {
+          // Игнорируем ошибку загрузки роли
+        }
+      }
+    } catch {
       message.error("Ошибка загрузки проекта");
     } finally {
       setLoading(false);
@@ -46,10 +63,11 @@ export default function ProjectSettingsPage() {
   };
 
   useEffect(() => {
-    if (projectId) {
+    if (projectId && session?.user?.id) {
       loadProject();
     }
-  }, [projectId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projectId, session?.user?.id]);
 
   const handleRegenerateKey = async () => {
     try {
@@ -57,7 +75,7 @@ export default function ProjectSettingsPage() {
       const { apiKey } = await regenerateApiKey(projectId);
       setProject(project ? { ...project, apiKey } : null);
       message.success("Ключ обновлен");
-    } catch (error) {
+    } catch {
       message.error("Ошибка обновления ключа");
     } finally {
       setRegeneratingKey(false);
@@ -75,7 +93,7 @@ export default function ProjectSettingsPage() {
     }
   };
 
-  const loadingIcon = <LoadingOutlined style={{ fontSize: 24 }} spin />;
+  const canManageMembers = userRole === "owner" || userRole === "admin";
 
   if (loading || !project) {
     return (
@@ -220,28 +238,34 @@ logWarning('Пользователь выполнил необычное дей�
             </Space>
           </Card>
 
-          <Card title="Инструкция по интеграции SDK">
-            <Paragraph>
-              <Text strong>1. Установите SDK:</Text>
-            </Paragraph>
-            <pre className="bg-gray-100 p-4 rounded mb-4">
-              <code>npm install fast-analytics-js</code>
-            </pre>
-
-            <Paragraph>
-              <Text strong>2. Инициализируйте SDK в вашем приложении:</Text>
-            </Paragraph>
-            <pre className="bg-gray-100 p-4 rounded overflow-x-auto">
-              <code>{sdkCode}</code>
-            </pre>
-            <Button
-              icon={<CopyOutlined />}
-              onClick={() => copyToClipboard(sdkCode)}
-              className="mt-4"
-            >
-              Копировать код
-            </Button>
-          </Card>
+          {canManageMembers && (
+            <Card title="Участники проекта" className="mb-4">
+              <Space direction="vertical" size="large" className="w-full">
+                <div>
+                  <Title level={5}>Пригласить участника</Title>
+                  <InviteMemberForm
+                    projectId={projectId}
+                    onSuccess={() => {
+                      // Перезагружаем страницу для обновления списков
+                      loadProject();
+                    }}
+                  />
+                </div>
+                <div>
+                  <Title level={5}>Активные приглашения</Title>
+                  <InvitationsList projectId={projectId} />
+                </div>
+                <div>
+                  <Title level={5}>Участники</Title>
+                  <MembersList
+                    projectId={projectId}
+                    currentUserId={session?.user?.id || ""}
+                    currentUserRole={userRole || ""}
+                  />
+                </div>
+              </Space>
+            </Card>
+          )}
         </Space>
       ),
     },

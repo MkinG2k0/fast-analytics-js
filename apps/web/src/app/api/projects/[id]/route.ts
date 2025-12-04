@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/shared/lib/prisma";
 import { getSessionFromRequest } from "@/shared/lib/auth";
+import { checkProjectAccess, ProjectPermission } from "@/shared/lib/project-access";
 
 export async function GET(
   _request: Request,
@@ -14,11 +15,18 @@ export async function GET(
 
     const { id } = await params;
 
-    const project = await prisma.project.findFirst({
-      where: {
-        id,
-        userId: session.user.id,
-      },
+    const { hasAccess } = await checkProjectAccess(
+      id,
+      session.user.id,
+      ProjectPermission.VIEW
+    );
+
+    if (!hasAccess) {
+      return NextResponse.json({ message: "Доступ запрещен" }, { status: 403 });
+    }
+
+    const project = await prisma.project.findUnique({
+      where: { id },
     });
 
     if (!project) {

@@ -1,8 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Card, Descriptions, Tag, Typography, Button } from "antd";
-import { ArrowLeftOutlined } from "@ant-design/icons";
+import { Card, Descriptions, Tag, Typography, Button, Popconfirm, message, Space } from "antd";
+import { ArrowLeftOutlined, DeleteOutlined } from "@ant-design/icons";
 import type { Event } from "@repo/types";
 
 import {
@@ -19,6 +20,7 @@ import {
 } from "@/entities/event";
 import dayjs from "@/shared/config/dayjs";
 import { JsonViewer } from "@/shared/ui";
+import { deleteEvent } from "@/shared/api/events";
 
 const { Text } = Typography;
 
@@ -30,6 +32,20 @@ export function EventDetails({ event }: EventDetailsProps) {
   const router = useRouter();
   const parsedContext = parseEventContext(event);
   const { requestUrl, hasHttpData } = parsedContext;
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    try {
+      setDeleting(true);
+      await deleteEvent(event.id);
+      message.success("Событие удалено");
+      router.push(`/project/${event.projectId}/logs`);
+    } catch {
+      message.error("Ошибка удаления события");
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   return (
     <div className="flex flex-col gap-4 w-full">
@@ -37,13 +53,32 @@ export function EventDetails({ event }: EventDetailsProps) {
         title={
           <div className="flex items-center justify-between">
             <span className="font-semibold text-sm">Детали события</span>
-            <Button
-              icon={<ArrowLeftOutlined />}
-              onClick={() => router.back()}
-              size="small"
-            >
-              Назад
-            </Button>
+            <Space>
+              <Popconfirm
+                title="Удалить событие?"
+                description="Это действие нельзя отменить"
+                onConfirm={handleDelete}
+                okText="Удалить"
+                cancelText="Отмена"
+                okButtonProps={{ danger: true }}
+              >
+                <Button
+                  danger
+                  icon={<DeleteOutlined />}
+                  loading={deleting}
+                  size="small"
+                >
+                  Удалить
+                </Button>
+              </Popconfirm>
+              <Button
+                icon={<ArrowLeftOutlined />}
+                onClick={() => router.back()}
+                size="small"
+              >
+                Назад
+              </Button>
+            </Space>
           </div>
         }
         bodyStyle={{ padding: "12px 16px" }}

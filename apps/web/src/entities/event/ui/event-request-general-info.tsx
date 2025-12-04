@@ -2,6 +2,7 @@
 
 import { Card, Typography } from "antd";
 import type { ParsedEventContext } from "../lib";
+import { EventUrlDisplay } from "./event-url-display";
 
 const { Text } = Typography;
 
@@ -28,9 +29,9 @@ export function EventRequestGeneralInfo({
             <Text className="font-mono text-xs text-gray-600 min-w-[180px] font-medium">
               URL Запроса:
             </Text>
-            <Text className="font-mono text-xs text-gray-900 break-all flex-1">
-              {requestUrl}
-            </Text>
+            <div className="flex-1 min-w-0">
+              <EventUrlDisplay url={requestUrl} compact />
+            </div>
           </div>
         )}
         {method && (

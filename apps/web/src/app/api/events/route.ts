@@ -3,6 +3,10 @@ import { Prisma } from "@prisma/client";
 
 import { prisma } from "@/shared/lib/prisma";
 import { getSessionFromRequest } from "@/shared/lib/auth";
+import {
+  checkProjectAccess,
+  ProjectPermission,
+} from "@/shared/lib/project-access";
 import { z } from "zod";
 import type { EventLevel } from "@repo/types";
 
@@ -167,19 +171,15 @@ export async function GET(request: Request) {
       );
     }
 
-    // Проверяем, что проект принадлежит пользователю
-    const project = await prisma.project.findFirst({
-      where: {
-        id: projectId,
-        userId: session.user.id,
-      },
-    });
+    // Проверяем доступ к проекту
+    const { hasAccess } = await checkProjectAccess(
+      projectId,
+      session.user.id,
+      ProjectPermission.VIEW
+    );
 
-    if (!project) {
-      return NextResponse.json(
-        { message: "Проект не найден" },
-        { status: 404 }
-      );
+    if (!hasAccess) {
+      return NextResponse.json({ message: "Доступ запрещен" }, { status: 403 });
     }
 
     const where: {

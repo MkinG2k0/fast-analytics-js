@@ -9,7 +9,7 @@ import { useEffect, useState } from "react";
 
 const { Content } = Layout;
 
-const PUBLIC_ROUTES = ["/login"];
+const PUBLIC_ROUTES = ["/login", "/register"];
 
 export default function AuthLayout({
   children,
@@ -36,11 +36,11 @@ export default function AuthLayout({
       return;
     }
 
-    const isPublicRoute = PUBLIC_ROUTES.includes(pathname);
+    const isPublicRoute = PUBLIC_ROUTES.includes(pathname) || pathname?.startsWith("/invite/");
 
     if (!isPublicRoute && !session) {
       router.push("/login");
-    } else if (isPublicRoute && session) {
+    } else if (isPublicRoute && session && pathname !== "/invite" && !pathname?.startsWith("/invite/")) {
       router.push("/projects");
     }
   }, [mounted, status, session, pathname, router]);
@@ -49,7 +49,7 @@ export default function AuthLayout({
     return null;
   }
 
-  if (PUBLIC_ROUTES.includes(pathname)) {
+  if (PUBLIC_ROUTES.includes(pathname) || pathname?.startsWith("/invite/")) {
     return <>{children}</>;
   }
 

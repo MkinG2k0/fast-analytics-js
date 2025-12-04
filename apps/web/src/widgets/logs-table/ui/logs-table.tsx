@@ -1,12 +1,25 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Table, Tag, Button, Typography, Input, DatePicker, Space } from "antd";
+import {
+  App,
+  Table,
+  Tag,
+  Button,
+  Typography,
+  Input,
+  DatePicker,
+  Space,
+  Popconfirm,
+  Tooltip,
+} from "antd";
 import type { ColumnsType } from "antd/es/table";
 import type { Event, EventLevel } from "@repo/types";
 import dayjs from "@/shared/config/dayjs";
 import { useRouter } from "next/navigation";
-import { EyeOutlined, SearchOutlined } from "@ant-design/icons";
+import { EyeOutlined, SearchOutlined, DeleteOutlined } from "@ant-design/icons";
+import { deleteEvent } from "@/shared/api/events";
+import { EventUrlDisplay } from "@/entities/event";
 
 interface EventPerformance {
   requestDuration?: number;
@@ -46,6 +59,9 @@ interface LogsTableProps {
     endDate?: string;
     search?: string;
   }) => void;
+  onRefresh?: () => void;
+  onOptimisticDelete?: (ids: string[]) => void;
+  onOptimisticDeleteRollback?: () => void;
 }
 
 const levelColors: Record<string, { color: string; bg: string }> = {
@@ -61,7 +77,11 @@ export function LogsTable({
   pagination,
   filters = {},
   onFilterChange,
+  onRefresh,
+  onOptimisticDelete,
+  onOptimisticDeleteRollback,
 }: LogsTableProps) {
+  const { message } = App.useApp();
   const router = useRouter();
   const [dateRange, setDateRange] = useState<[dayjs.Dayjs, dayjs.Dayjs] | null>(
     filters.startDate && filters.endDate
@@ -71,6 +91,8 @@ export function LogsTable({
   const [searchFilter, setSearchFilter] = useState<string | undefined>(
     filters.search
   );
+  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+  const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     setDateRange(
@@ -103,6 +125,33 @@ export function LogsTable({
       ...filters,
       search: value || undefined,
     });
+  };
+
+  const handleBatchDelete = async () => {
+    if (selectedRowKeys.length === 0) {
+      return;
+    }
+
+    const ids = selectedRowKeys as string[];
+    setDeletingIds(new Set(ids));
+    setSelectedRowKeys([]);
+
+    // Optimistic update: вызываем callback для немедленного обновления UI
+    onOptimisticDelete?.(ids);
+
+    try {
+      await Promise.all(ids.map((id) => deleteEvent(id)));
+
+      message.success(`Удалено событий: ${ids.length}`);
+      onRefresh?.();
+    } catch {
+      // Откатываем изменения при ошибке
+      setSelectedRowKeys(ids);
+      onOptimisticDeleteRollback?.();
+      message.error("Ошибка удаления событий");
+    } finally {
+      setDeletingIds(new Set());
+    }
   };
 
   const columns: ColumnsType<Event> = [
@@ -280,17 +329,58 @@ export function LogsTable({
       key: "url",
       width: 200,
       ellipsis: { showTitle: false },
-      render: (url: string | null) =>
-        url ? (
-          <Text
-            className="text-sm font-mono w-[200px] text-ellipsis text-blue-600"
-            ellipsis={{ tooltip: url }}
+      render: (url: string | null) => {
+        if (!url) {
+          return <Text className="text-gray-400">—</Text>;
+        }
+
+        const shortUrl =
+          url.startsWith("http://") || url.startsWith("https://")
+            ? url.replace(/^https?:\/\//, "")
+            : url;
+
+        // Формируем читаемую строку для отображения
+        let displayText = shortUrl;
+        try {
+          const urlObj = new URL(
+            url.startsWith("http") ? url : `http://${url}`
+          );
+          displayText = `${urlObj.host}${urlObj.pathname}${urlObj.hash || ""}`;
+        } catch {
+          // Если не удалось распарсить, используем исходный URL без протокола
+          displayText = shortUrl;
+        }
+
+        return (
+          <Tooltip
+            title={<EventUrlDisplay url={shortUrl} />}
+            styles={{
+              body: {
+                maxWidth: "900px",
+                minWidth: "300px",
+                backgroundColor: "white",
+              },
+            }}
+            placement="topLeft"
           >
-            {url}
-          </Text>
-        ) : (
-          <Text className="text-gray-400">—</Text>
-        ),
+            <Text
+              className="text-sm font-mono text-blue-600 hover:text-blue-800 cursor-pointer w-60"
+              ellipsis={{ tooltip: false }}
+              style={{ display: "block", maxWidth: "100%" }}
+              onClick={(e) => {
+                e.stopPropagation();
+                const fullUrl =
+                  url.startsWith("http://") || url.startsWith("https://")
+                    ? url
+                    : `http://${url}`;
+                window.open(fullUrl, "_blank", "noopener,noreferrer");
+              }}
+            >
+              {displayText}
+            </Text>
+          </Tooltip>
+        );
+      },
     },
     {
       title: "User ID",
@@ -328,42 +418,93 @@ export function LogsTable({
     },
   ];
 
+  const rowSelection = {
+    selectedRowKeys,
+    onChange: (keys: React.Key[]) => {
+      setSelectedRowKeys(keys);
+    },
+  };
+
   return (
-    <div className="bg-white rounded-lg overflow-hidden border border-gray-200">
-      <Table
-        columns={columns}
-        dataSource={events}
-        loading={loading}
-        rowKey="id"
-        onChange={(paginationInfo, tableFilters) => {
-          if (tableFilters.level) {
-            const levelValue = Array.isArray(tableFilters.level)
-              ? (tableFilters.level[0] as EventLevel)
-              : (tableFilters.level as EventLevel);
-            handleLevelFilterChange(levelValue);
-          } else {
-            handleLevelFilterChange(null);
-          }
-        }}
-        pagination={
-          pagination
-            ? {
-                current: pagination.current,
-                pageSize: pagination.pageSize,
-                total: pagination.total,
-                showSizeChanger: true,
-                showTotal: (total, range) =>
-                  `${range[0]}-${range[1]} из ${total} событий`,
-                onChange: pagination.onChange,
-                onShowSizeChange: pagination.onChange,
-                pageSizeOptions: ["10", "25", "50", "100"],
-                className: "px-4 py-2",
+    <div className="relative">
+      <div className="bg-white rounded-lg overflow-hidden border border-gray-200">
+        <Table
+          columns={columns}
+          dataSource={events}
+          loading={loading}
+          rowKey="id"
+          rowSelection={rowSelection}
+          onChange={(paginationInfo, tableFilters) => {
+            // Обрабатываем только изменения фильтров, не пагинацию
+            // Пагинация обрабатывается через отдельный проп pagination.onChange
+            if (
+              tableFilters.level !== undefined &&
+              tableFilters.level !== null
+            ) {
+              const levelValue = Array.isArray(tableFilters.level)
+                ? (tableFilters.level[0] as EventLevel)
+                : (tableFilters.level as EventLevel);
+              // Проверяем, действительно ли изменился фильтр
+              const currentLevel = filters.level;
+              if (levelValue !== currentLevel) {
+                handleLevelFilterChange(levelValue);
               }
-            : false
-        }
-        scroll={{ x: "max-content" }}
-        className="[&_.ant-table-thead>tr>th]:bg-gray-50 [&_.ant-table-thead>tr>th]:font-semibold [&_.ant-table-tbody>tr:hover]:bg-blue-50/50"
-      />
+            } else if (
+              (tableFilters.level === null ||
+                tableFilters.level === undefined) &&
+              filters.level !== undefined
+            ) {
+              // Фильтр был сброшен, а раньше был установлен
+              handleLevelFilterChange(null);
+            }
+            // Если tableFilters.level === undefined, это означает что фильтр не менялся
+            // (например, при изменении пагинации), поэтому ничего не делаем
+          }}
+          pagination={
+            pagination
+              ? {
+                  current: pagination.current,
+                  pageSize: pagination.pageSize,
+                  total: pagination.total,
+                  showSizeChanger: true,
+                  showTotal: (total, range) =>
+                    `${range[0]}-${range[1]} из ${total} событий`,
+                  onChange: pagination.onChange,
+                  onShowSizeChange: pagination.onChange,
+                  pageSizeOptions: ["10", "25", "50", "100"],
+                  className: "px-4 py-2",
+                }
+              : false
+          }
+          scroll={{ x: "max-content", y: "calc(100vh - 357px)" }}
+          className="[&_.ant-table-thead>tr>th]:bg-gray-50 [&_.ant-table-thead>tr>th]:font-semibold [&_.ant-table-tbody>tr:hover]:bg-blue-50/50"
+        />
+      </div>
+      {selectedRowKeys.length > 0 && (
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50">
+          <div className="bg-white rounded-lg shadow-lg border border-gray-200 px-6 py-4 flex items-center gap-4">
+            <span className="text-sm text-gray-600 whitespace-nowrap">
+              Выбрано событий: {selectedRowKeys.length}
+            </span>
+            <Popconfirm
+              title={`Удалить ${selectedRowKeys.length} событий?`}
+              description="Это действие нельзя отменить"
+              onConfirm={handleBatchDelete}
+              okText="Удалить"
+              cancelText="Отмена"
+              okButtonProps={{ danger: true }}
+            >
+              <Button
+                danger
+                icon={<DeleteOutlined />}
+                loading={deletingIds.size > 0}
+              >
+                Удалить выбранные
+              </Button>
+            </Popconfirm>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

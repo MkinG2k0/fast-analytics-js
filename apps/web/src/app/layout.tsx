@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { AntdRegistry } from "@ant-design/nextjs-registry";
-import { ConfigProvider } from "antd";
+import { App as AntdApp, ConfigProvider } from "antd";
 import ruRU from "antd/locale/ru_RU";
 import "./globals.css";
 import AuthLayout from "./layout-auth";
@@ -27,9 +27,11 @@ export default function RootLayout({
       <body>
         <AntdRegistry>
           <ConfigProvider locale={ruRU}>
-            <SessionProviderWrapper>
-              <AuthLayout>{children}</AuthLayout>
-            </SessionProviderWrapper>
+            <AntdApp>
+              <SessionProviderWrapper>
+                <AuthLayout>{children}</AuthLayout>
+              </SessionProviderWrapper>
+            </AntdApp>
           </ConfigProvider>
         </AntdRegistry>
       </body>

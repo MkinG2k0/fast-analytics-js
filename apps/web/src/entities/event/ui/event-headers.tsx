@@ -2,6 +2,7 @@
 
 import { Typography } from "antd";
 import type { ParsedEventContext } from "../lib";
+import { EventUrlDisplay } from "./event-url-display";
 
 const { Text } = Typography;
 
@@ -20,7 +21,9 @@ function HeaderRow({ name, value }: HeaderRowProps) {
       <Text className="font-mono text-xs text-gray-600 min-w-[180px] font-medium">
         {name}:
       </Text>
-      <Text className="font-mono text-xs text-gray-900 break-all flex-1">{value}</Text>
+      <Text className="font-mono text-xs text-gray-900 break-all flex-1">
+        {value}
+      </Text>
     </div>
   );
 }
@@ -60,8 +63,12 @@ export function EventHeaders({ context }: EventHeadersProps) {
   } = context;
 
   const hasGeneralInfo = Boolean(requestUrl || method || statusCode);
-  const hasRequestHeaders = Boolean(requestHeaders && Object.keys(requestHeaders).length > 0);
-  const hasResponseHeaders = Boolean(responseHeaders && Object.keys(responseHeaders).length > 0);
+  const hasRequestHeaders = Boolean(
+    requestHeaders && Object.keys(requestHeaders).length > 0
+  );
+  const hasResponseHeaders = Boolean(
+    responseHeaders && Object.keys(responseHeaders).length > 0
+  );
 
   if (!hasGeneralInfo && !hasRequestHeaders && !hasResponseHeaders) {
     return null;
@@ -83,9 +90,9 @@ export function EventHeaders({ context }: EventHeadersProps) {
                 <Text className="font-mono text-xs text-gray-600 min-w-[180px] font-medium">
                   URL Запроса:
                 </Text>
-                <Text className="font-mono text-xs text-gray-900 break-all flex-1">
-                  {requestUrl}
-                </Text>
+                <div className="flex-1 min-w-0">
+                  <EventUrlDisplay url={requestUrl} compact />
+                </div>
               </div>
             )}
             {method && (
@@ -128,4 +135,3 @@ export function EventHeaders({ context }: EventHeadersProps) {
     </div>
   );
 }
-

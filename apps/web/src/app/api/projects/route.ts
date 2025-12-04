@@ -16,12 +16,39 @@ export async function GET() {
       return NextResponse.json({ message: "Не авторизован" }, { status: 401 });
     }
 
-    const projects = await prisma.project.findMany({
+    // Получаем проекты, где пользователь owner
+    const ownedProjects = await prisma.project.findMany({
       where: { userId: session.user.id },
       orderBy: { createdAt: "desc" },
     });
 
-    return NextResponse.json(projects);
+    // Получаем проекты, где пользователь member
+    const memberProjects = await prisma.projectMember.findMany({
+      where: { userId: session.user.id },
+      include: {
+        project: true,
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    // Объединяем и убираем дубликаты
+    const projectsMap = new Map<string, typeof ownedProjects[0]>();
+    
+    // Добавляем проекты, где пользователь owner
+    ownedProjects.forEach((project) => {
+      projectsMap.set(project.id, project);
+    });
+    
+    // Добавляем проекты, где пользователь member (если еще не добавлены)
+    memberProjects.forEach((member) => {
+      if (!projectsMap.has(member.project.id)) {
+        projectsMap.set(member.project.id, member.project);
+      }
+    });
+    
+    const allProjects = Array.from(projectsMap.values());
+
+    return NextResponse.json(allProjects);
   } catch (error) {
     return NextResponse.json(
       { message: "Внутренняя ошибка сервера" },
@@ -51,6 +78,15 @@ export async function POST(request: Request) {
       },
     });
 
+    // Создаем запись ProjectMember для владельца
+    await prisma.projectMember.create({
+      data: {
+        projectId: project.id,
+        userId: session.user.id,
+        role: "owner",
+      },
+    });
+
     return NextResponse.json(project, { status: 201 });
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -66,4 +102,5 @@ export async function POST(request: Request) {
     );
   }
 }
+
 

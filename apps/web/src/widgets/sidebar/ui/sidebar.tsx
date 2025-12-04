@@ -29,7 +29,7 @@ export function Sidebar({ collapsed }: SidebarProps) {
       collapsible
       collapsed={collapsed}
       width={240}
-      className="min-h-screen !bg-white !border-r !border-gray-200"
+      className=" !bg-white !border-r !border-gray-200"
       theme="light"
       trigger={null}
     >
@@ -47,4 +47,3 @@ export function Sidebar({ collapsed }: SidebarProps) {
     </Sider>
   );
 }
-

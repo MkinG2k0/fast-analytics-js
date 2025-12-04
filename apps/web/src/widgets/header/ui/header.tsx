@@ -21,6 +21,7 @@ import {
   PlusOutlined,
   ProjectOutlined,
 } from "@ant-design/icons";
+import { NotificationsDropdown } from "./notifications-dropdown";
 import { useRouter, usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { useSession } from "next-auth/react";
@@ -115,6 +116,10 @@ export function Header({ sidebarCollapsed, onSidebarToggle }: HeaderProps) {
       .slice(0, 2) || "U";
 
   const currentProjectId = getCurrentProjectId();
+  const currentProjectExists = projects.some(
+    (project) => project.id === currentProjectId
+  );
+  const selectValue = currentProjectExists ? currentProjectId : undefined;
 
   return (
     <>
@@ -138,7 +143,7 @@ export function Header({ sidebarCollapsed, onSidebarToggle }: HeaderProps) {
           </div>
           <Select
             placeholder="Выберите проект"
-            value={currentProjectId}
+            value={selectValue}
             onChange={handleProjectChange}
             loading={loading}
             className="min-w-[200px]"
@@ -167,6 +172,7 @@ export function Header({ sidebarCollapsed, onSidebarToggle }: HeaderProps) {
           />
         </div>
         <Space size="middle">
+          <NotificationsDropdown />
           {userName && (
             <Text className="text-gray-600 hidden sm:inline-block">
               {userName}

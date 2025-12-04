@@ -51,3 +51,14 @@ export async function getEvent(id: string): Promise<Event> {
   return response.json();
 }
 
+export async function deleteEvent(id: string): Promise<void> {
+  const response = await fetch(`${API_BASE}/${id}`, {
+    method: "DELETE",
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    throw new Error("Ошибка удаления события");
+  }
+}
+

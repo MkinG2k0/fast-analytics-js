@@ -20,9 +20,11 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  accounts Account[]
-  sessions Session[]
-  projects Project[]
+  accounts         Account[]
+  sessions         Session[]
+  projects         Project[]
+  projectMembers   ProjectMember[]
+  sentInvitations  ProjectInvitation[] @relation("Inviter")
 
   @@map("users")
 }
@@ -36,8 +38,10 @@ model Project {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  events Event[]
+  user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  events      Event[]
+  members     ProjectMember[]
+  invitations ProjectInvitation[]
 
   @@index([userId])
   @@index([apiKey])
@@ -112,5 +116,43 @@ model VerificationToken {
 
   @@unique([identifier, token])
   @@map("verification_tokens")
+}
+
+model ProjectMember {
+  id        String   @id @default(cuid())
+  projectId String
+  userId    String
+  role      String   // "owner" | "admin" | "member" | "viewer"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId])
+  @@index([projectId])
+  @@index([userId])
+  @@map("project_members")
+}
+
+model ProjectInvitation {
+  id        String   @id @default(cuid())
+  projectId String
+  email     String
+  role      String   // "admin" | "member" | "viewer"
+  token     String   @unique
+  invitedBy String   // userId того, кто отправил приглашение
+  status    String   @default("pending") // "pending" | "accepted" | "expired" | "cancelled"
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  inviter User    @relation("Inviter", fields: [invitedBy], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([token])
+  @@index([email, status])
+  @@map("project_invitations")
 }
 

@@ -79,3 +79,29 @@ export interface Event {
   metadata: unknown | null;
 }
 
+export type ProjectRole = "owner" | "admin" | "member" | "viewer";
+
+export type ProjectInvitationStatus = "pending" | "accepted" | "expired" | "cancelled";
+
+export interface ProjectMember {
+  id: string;
+  projectId: string;
+  userId: string;
+  role: ProjectRole;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface ProjectInvitation {
+  id: string;
+  projectId: string;
+  email: string;
+  role: Exclude<ProjectRole, "owner">;
+  token: string;
+  invitedBy: string;
+  status: ProjectInvitationStatus;
+  expiresAt: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
