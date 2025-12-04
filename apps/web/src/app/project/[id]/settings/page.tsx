@@ -134,7 +134,7 @@ export default function ProjectSettingsPage() {
     );
   }
 
-  const sdkCode = `import { init, logError, logWarning } from '@fast-analytics/sdk';
+  const sdkCode = `import { init, logError, logWarning } from 'fast-analytics-js';
 
 init({
   projectKey: '${project.apiKey}',
@@ -225,7 +225,7 @@ logWarning('Пользователь выполнил необычное дей�
               <Text strong>1. Установите SDK:</Text>
             </Paragraph>
             <pre className="bg-gray-100 p-4 rounded mb-4">
-              <code>npm install @fast-analytics/sdk</code>
+              <code>npm install fast-analytics-js</code>
             </pre>
 
             <Paragraph>

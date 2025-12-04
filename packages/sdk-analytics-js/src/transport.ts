@@ -9,7 +9,7 @@ class Transport {
   private batchTimer: NodeJS.Timeout | null = null;
 
   constructor(options: InitOptions) {
-    this.endpoint = options.endpoint;
+    this.endpoint = options.endpoint || "https://fast-analytics.vercel.app/api/events";
     this.projectKey = options.projectKey;
     this.batchSize = options.batchSize || 10;
     this.batchTimeout = options.batchTimeout || 5000;

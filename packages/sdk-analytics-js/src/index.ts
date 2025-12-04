@@ -26,7 +26,7 @@ class FastAnalyticsSDK {
       this.transport,
       this.sessionManager,
       () => this.userId,
-      options.endpoint
+      options.endpoint || "https://fast-analytics.vercel.app/api/events"
     );
 
     if (options.enableAutoCapture !== false) {

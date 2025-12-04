@@ -5,4 +5,11 @@ node_modules
 .DS_Store
 .git
 .gitignore
+.turbo
+example
+*.map
+*.tsbuildinfo
+.eslintcache
+.env
+.env.*
 

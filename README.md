@@ -134,13 +134,13 @@ SDK находится в директории `packages/sdk-analytics-js` и м
 1. Установите SDK:
 
 ```bash
-npm install @fast-analytics/sdk
+npm install fast-analytics-js
 ```
 
 2. Инициализируйте в вашем приложении:
 
 ```typescript
-import { init, logError, logWarning } from '@fast-analytics/sdk';
+import { init, logError, logWarning } from 'fast-analytics-js';
 
 init({
   projectKey: 'your-project-api-key',

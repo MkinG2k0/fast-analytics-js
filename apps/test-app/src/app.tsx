@@ -6,7 +6,7 @@ import {
 	logWarning,
 	logDebug,
 	getSessionId,
-} from '@fast-analytics/sdk'
+} from 'fast-analytics-js'
 
 export const App = () => {
 	const [sessionId, setSessionId] = useState<string>('')

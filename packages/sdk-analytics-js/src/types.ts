@@ -11,7 +11,7 @@ export interface EventContext {
 
 export interface InitOptions {
   projectKey: string;
-  endpoint: string;
+  endpoint?: string;
   enableAutoCapture?: boolean;
   batchSize?: number;
   batchTimeout?: number;
