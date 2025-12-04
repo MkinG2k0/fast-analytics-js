@@ -9,6 +9,12 @@ export interface EventContext {
   [key: string]: unknown;
 }
 
+export interface EventPerformance {
+  requestDuration?: number; // время выполнения запроса в миллисекундах
+  timestamp?: number; // timestamp начала запроса
+  [key: string]: unknown;
+}
+
 export interface CreateEventDto {
   level: EventLevel;
   message: string;
@@ -18,6 +24,7 @@ export interface CreateEventDto {
   url?: string;
   sessionId?: string;
   userId?: string;
+  performance?: EventPerformance;
 }
 
 export interface CreateProjectDto {

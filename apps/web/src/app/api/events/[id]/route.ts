@@ -40,7 +40,6 @@ export async function GET(
 
     return NextResponse.json(eventData);
   } catch (error) {
-    console.error("Get event error:", error);
     return NextResponse.json(
       { message: "Внутренняя ошибка сервера" },
       { status: 500 }

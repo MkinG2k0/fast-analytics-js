@@ -23,7 +23,6 @@ export async function GET() {
 
     return NextResponse.json(projects);
   } catch (error) {
-    console.error("Get projects error:", error);
     return NextResponse.json(
       { message: "Внутренняя ошибка сервера" },
       { status: 500 }
@@ -61,7 +60,6 @@ export async function POST(request: Request) {
       );
     }
 
-    console.error("Create project error:", error);
     return NextResponse.json(
       { message: "Внутренняя ошибка сервера" },
       { status: 500 }

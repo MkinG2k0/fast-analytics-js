@@ -20,7 +20,7 @@ importers:
 
   apps/test-app:
     dependencies:
-      '@fast-analytics/sdk':
+      fast-analytics-js:
         specifier: workspace:*
         version: link:../../packages/sdk-analytics-js
       react:

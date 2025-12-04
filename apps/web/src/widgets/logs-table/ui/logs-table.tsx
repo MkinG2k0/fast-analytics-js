@@ -8,6 +8,20 @@ import dayjs from "@/shared/config/dayjs";
 import { useRouter } from "next/navigation";
 import { EyeOutlined, SearchOutlined } from "@ant-design/icons";
 
+interface EventPerformance {
+  requestDuration?: number;
+  timestamp?: number;
+  [key: string]: unknown;
+}
+
+function isEventPerformance(value: unknown): value is EventPerformance {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    ("requestDuration" in value || "timestamp" in value)
+  );
+}
+
 const { Text } = Typography;
 const { RangePicker } = DatePicker;
 
@@ -132,6 +146,39 @@ export function LogsTable({
         <span className={dateRange ? "text-blue-500" : ""}>📅</span>
       ),
       filteredValue: dateRange ? [true] : null,
+    },
+    {
+      title: "Длительность",
+      key: "requestDuration",
+      width: 150,
+      render: (_: unknown, record: Event) => {
+        const performance = isEventPerformance(record.performance)
+          ? record.performance
+          : null;
+        const requestDuration = performance?.requestDuration;
+
+        if (requestDuration !== undefined && requestDuration !== null) {
+          const durationMs = requestDuration;
+          const formattedDuration =
+            durationMs >= 1000
+              ? `${(durationMs / 1000).toFixed(2)} с`
+              : `${durationMs.toFixed(0)} мс`;
+
+          return (
+            <Text className="text-sm font-mono text-gray-600">
+              {formattedDuration}
+            </Text>
+          );
+        }
+        return <Text className="text-gray-400">—</Text>;
+      },
+      sorter: (a, b) => {
+        const perfA = isEventPerformance(a.performance) ? a.performance : null;
+        const perfB = isEventPerformance(b.performance) ? b.performance : null;
+        const durationA = perfA?.requestDuration ?? 0;
+        const durationB = perfB?.requestDuration ?? 0;
+        return durationA - durationB;
+      },
     },
     {
       title: "Уровень",

@@ -12,3 +12,35 @@ export function generateApiKey(): string {
   return `${prefix}${randomBytes}`;
 }
 
+export interface ParsedUrl {
+  baseUrl: string;
+  params: Record<string, string>;
+  hasParams: boolean;
+}
+
+export function parseUrl(url: string): ParsedUrl {
+  try {
+    const urlObj = new URL(url);
+    const params: Record<string, string> = {};
+    
+    urlObj.searchParams.forEach((value, key) => {
+      params[key] = value;
+    });
+
+    const baseUrl = urlObj.origin + urlObj.pathname;
+
+    return {
+      baseUrl,
+      params,
+      hasParams: Object.keys(params).length > 0,
+    };
+  } catch {
+    // Если URL невалидный, просто возвращаем исходный URL
+    return {
+      baseUrl: url,
+      params: {},
+      hasParams: false,
+    };
+  }
+}
+

@@ -83,7 +83,7 @@ export default function ProjectSettingsPage() {
         <Space direction="vertical" size="large" className="w-full">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-              <SettingOutlined className="text-white text-lg" />
+              <SettingOutlined className="!text-white text-lg" />
             </div>
             <Title level={2} className="!mb-0">
               Настройки проекта

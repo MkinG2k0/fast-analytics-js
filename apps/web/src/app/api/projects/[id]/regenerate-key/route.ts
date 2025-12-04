@@ -35,7 +35,6 @@ export async function POST(
 
     return NextResponse.json({ apiKey: updatedProject.apiKey });
   } catch (error) {
-    console.error("Regenerate key error:", error);
     return NextResponse.json(
       { message: "Внутренняя ошибка сервера" },
       { status: 500 }

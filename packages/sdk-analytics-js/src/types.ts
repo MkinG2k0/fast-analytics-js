@@ -18,6 +18,12 @@ export interface InitOptions {
   userId?: string;
 }
 
+export interface EventPerformance {
+  requestDuration?: number; // время выполнения запроса в миллисекундах
+  timestamp?: number; // timestamp начала запроса
+  [key: string]: unknown;
+}
+
 export interface EventPayload {
   level: EventLevel;
   message: string;
@@ -27,5 +33,6 @@ export interface EventPayload {
   url?: string;
   sessionId?: string;
   userId?: string;
+  performance?: EventPerformance;
 }
 

@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Card, Button, Spin, message } from "antd";
-import { ArrowLeftOutlined } from "@ant-design/icons";
+import { Spin, message } from "antd";
 import { EventDetails } from "@/features/view-log-details";
 import { getEvent } from "@/shared/api/events";
 import type { Event } from "@repo/types";
@@ -47,15 +46,7 @@ export default function EventPage() {
 
   return (
     <div className="p-6 max-w-[1600px] mx-auto">
-      <Button
-        icon={<ArrowLeftOutlined />}
-        onClick={() => router.back()}
-        className="mb-6"
-      >
-        Назад
-      </Button>
       <EventDetails event={event} />
     </div>
   );
 }
-

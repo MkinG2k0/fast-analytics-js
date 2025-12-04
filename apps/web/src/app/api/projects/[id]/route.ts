@@ -27,7 +27,6 @@ export async function GET(
 
     return NextResponse.json(project);
   } catch (error) {
-    console.error("Get project error:", error);
     return NextResponse.json(
       { message: "Внутренняя ошибка сервера" },
       { status: 500 }

@@ -249,8 +249,15 @@ class Interceptors {
         }
       }
 
+      // Засекаем время начала запроса
+      const requestStartTime = performance.now();
+      const requestStartTimestamp = Date.now();
+
       try {
         const response = await self.originalFetch!.call(window, input, init);
+
+        // Вычисляем время выполнения запроса
+        const requestDuration = performance.now() - requestStartTime;
 
         // Логируем ошибки HTTP (4xx, 5xx статусы)
         if (!response.ok) {
@@ -315,6 +322,12 @@ class Interceptors {
             }
           );
 
+          // Добавляем метрики производительности
+          payload.performance = {
+            requestDuration,
+            timestamp: requestStartTimestamp,
+          };
+
           self.transport.send(payload).catch(() => {
             // Игнорируем ошибки отправки, чтобы не создавать бесконечный цикл
           });
@@ -342,6 +355,12 @@ class Interceptors {
             },
           }
         );
+
+        // Добавляем метрики производительности
+        payload.performance = {
+          requestDuration: performance.now() - requestStartTime,
+          timestamp: requestStartTimestamp,
+        };
 
         self.transport.send(payload).catch(() => {
           // Игнорируем ошибки отправки, чтобы не создавать бесконечный цикл
@@ -418,6 +437,8 @@ class Interceptors {
         _fastAnalyticsRequestBody?: string;
         _fastAnalyticsRequestData?: unknown;
         _fastAnalyticsRequestContentType?: string;
+        _fastAnalyticsRequestStartTime?: number;
+        _fastAnalyticsRequestStartTimestamp?: number;
       };
 
       // Пропускаем запросы к самому SDK
@@ -425,6 +446,10 @@ class Interceptors {
         self.originalXHRSend!.call(this, body);
         return;
       }
+
+      // Засекаем время начала запроса
+      xhr._fastAnalyticsRequestStartTime = performance.now();
+      xhr._fastAnalyticsRequestStartTimestamp = Date.now();
 
       // Извлекаем тело запроса для логирования
       if (body) {
@@ -455,6 +480,10 @@ class Interceptors {
       const originalOnLoad = xhr.onload;
 
       xhr.onerror = function (event: ProgressEvent<EventTarget>): void {
+        const requestDuration = xhr._fastAnalyticsRequestStartTime
+          ? performance.now() - xhr._fastAnalyticsRequestStartTime
+          : undefined;
+
         const payload = self.createErrorPayload(
           `XMLHttpRequest ошибка: ${xhr.status} ${xhr.statusText || "Network Error"}`,
           xhr._fastAnalyticsUrl,
@@ -472,6 +501,14 @@ class Interceptors {
           }
         );
 
+        // Добавляем метрики производительности
+        if (requestDuration !== undefined && xhr._fastAnalyticsRequestStartTimestamp) {
+          payload.performance = {
+            requestDuration,
+            timestamp: xhr._fastAnalyticsRequestStartTimestamp,
+          };
+        }
+
         self.transport.send(payload).catch(() => {
           // Игнорируем ошибки отправки, чтобы не создавать бесконечный цикл
         });
@@ -482,6 +519,11 @@ class Interceptors {
       };
 
       xhr.onload = function (event: ProgressEvent<EventTarget>): void {
+        // Вычисляем время выполнения запроса
+        const requestDuration = xhr._fastAnalyticsRequestStartTime
+          ? performance.now() - xhr._fastAnalyticsRequestStartTime
+          : undefined;
+
         // Логируем ошибки HTTP (4xx, 5xx статусы)
         if (xhr.status >= 400) {
           let responseBody: string | undefined;
@@ -545,6 +587,14 @@ class Interceptors {
                 : {}),
             }
           );
+
+          // Добавляем метрики производительности
+          if (requestDuration !== undefined && xhr._fastAnalyticsRequestStartTimestamp) {
+            payload.performance = {
+              requestDuration,
+              timestamp: xhr._fastAnalyticsRequestStartTimestamp,
+            };
+          }
 
           self.transport.send(payload).catch(() => {
             // Игнорируем ошибки отправки, чтобы не создавать бесконечный цикл

@@ -19,7 +19,7 @@ import { init } from "fast-analytics-js";
 
 init({
   projectKey: "your-project-api-key",
-  endpoint: "https://your-domain.com/api/events",
+  // endpoint is optional - defaults to "https://fast-analytics.vercel.app/api/events"
 });
 ```
 
@@ -86,7 +86,7 @@ logDebug("Debug information", { data: someData });
 ```typescript
 init({
   projectKey: "your-project-api-key",
-  endpoint: "https://your-domain.com/api/events",
+  endpoint: "https://your-domain.com/api/events", // Optional: defaults to "https://fast-analytics.vercel.app/api/events"
   userId: "optional-user-id", // Optional: set user ID globally
   enableAutoCapture: true, // Enable automatic error capture (default: true)
   batchSize: 10, // Batch size for sending events (default: 10)
@@ -101,7 +101,7 @@ If you want to disable automatic error capture and handle errors manually:
 ```typescript
 init({
   projectKey: "your-project-api-key",
-  endpoint: "https://your-domain.com/api/events",
+  // endpoint is optional - defaults to "https://fast-analytics.vercel.app/api/events"
   enableAutoCapture: false, // Disable automatic capture
 });
 ```
@@ -148,7 +148,8 @@ function App() {
   useEffect(() => {
     init({
       projectKey: process.env.NEXT_PUBLIC_FAST_ANALYTICS_KEY!,
-      endpoint: process.env.NEXT_PUBLIC_FAST_ANALYTICS_ENDPOINT!
+      // endpoint is optional - defaults to "https://fast-analytics.vercel.app/api/events"
+      // endpoint: process.env.NEXT_PUBLIC_FAST_ANALYTICS_ENDPOINT
     });
     // All errors are automatically captured - no additional code needed!
   }, []);
@@ -165,7 +166,8 @@ import { init } from "fast-analytics-js";
 
 init({
   projectKey: import.meta.env.VITE_FAST_ANALYTICS_KEY,
-  endpoint: import.meta.env.VITE_FAST_ANALYTICS_ENDPOINT,
+  // endpoint is optional - defaults to "https://fast-analytics.vercel.app/api/events"
+  // endpoint: import.meta.env.VITE_FAST_ANALYTICS_ENDPOINT
 });
 
 const app = createApp(App);
@@ -181,7 +183,7 @@ app.mount("#app");
 
   init({
     projectKey: "your-project-api-key",
-    endpoint: "https://your-domain.com/api/events",
+    // endpoint is optional - defaults to "https://fast-analytics.vercel.app/api/events"
   });
 
   // All errors are automatically captured!
@@ -207,7 +209,7 @@ import { init } from "fast-analytics-js";
 
 init({
   projectKey: "your-project-api-key",
-  endpoint: "https://your-domain.com/api/events",
+  // endpoint опционально - по умолчанию "https://fast-analytics.vercel.app/api/events"
 });
 ```
 
@@ -275,7 +277,7 @@ logDebug("Отладочная информация", { data: someData });
 ```typescript
 init({
   projectKey: "your-project-api-key",
-  endpoint: "https://your-domain.com/api/events",
+  endpoint: "https://your-domain.com/api/events", // Опционально: по умолчанию "https://fast-analytics.vercel.app/api/events"
   userId: "optional-user-id", // Опционально: установить ID пользователя глобально
   enableAutoCapture: true, // Включить автоматический перехват (по умолчанию: true)
   batchSize: 10, // Размер батча для отправки (по умолчанию: 10)
@@ -290,7 +292,7 @@ init({
 ```typescript
 init({
   projectKey: "your-project-api-key",
-  endpoint: "https://your-domain.com/api/events",
+  // endpoint опционально - по умолчанию "https://fast-analytics.vercel.app/api/events"
   enableAutoCapture: false, // Отключить автоматический перехват
 });
 ```
@@ -337,7 +339,8 @@ function App() {
   useEffect(() => {
     init({
       projectKey: process.env.NEXT_PUBLIC_FAST_ANALYTICS_KEY!,
-      endpoint: process.env.NEXT_PUBLIC_FAST_ANALYTICS_ENDPOINT!
+      // endpoint опционально - по умолчанию "https://fast-analytics.vercel.app/api/events"
+      // endpoint: process.env.NEXT_PUBLIC_FAST_ANALYTICS_ENDPOINT
     });
     // Все ошибки автоматически перехватываются - дополнительный код не требуется!
   }, []);
@@ -354,7 +357,8 @@ import { init } from "fast-analytics-js";
 
 init({
   projectKey: import.meta.env.VITE_FAST_ANALYTICS_KEY,
-  endpoint: import.meta.env.VITE_FAST_ANALYTICS_ENDPOINT,
+  // endpoint опционально - по умолчанию "https://fast-analytics.vercel.app/api/events"
+  // endpoint: import.meta.env.VITE_FAST_ANALYTICS_ENDPOINT
 });
 
 const app = createApp(App);
@@ -370,7 +374,7 @@ app.mount("#app");
 
   init({
     projectKey: "your-project-api-key",
-    endpoint: "https://your-domain.com/api/events",
+    // endpoint опционально - по умолчанию "https://fast-analytics.vercel.app/api/events"
   });
 
   // Все ошибки автоматически перехватываются!

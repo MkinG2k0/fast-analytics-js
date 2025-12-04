@@ -160,5 +160,6 @@ export type {
   InitOptions,
   EventContext,
   EventPayload,
+  EventPerformance,
   EventLevel,
 } from "./types";

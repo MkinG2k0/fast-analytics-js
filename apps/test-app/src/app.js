@@ -1,6 +1,6 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useEffect, useState } from 'react';
-import { init, logError, logInfo, logWarning, logDebug, getSessionId, } from '@fast-analytics/sdk';
+import { init, logError, logInfo, logWarning, logDebug, getSessionId, } from 'fast-analytics-js';
 export const App = () => {
     const [sessionId, setSessionId] = useState('');
     const [projectKey, setProjectKey] = useState(localStorage.getItem('projectKey') || 'fa_test');
