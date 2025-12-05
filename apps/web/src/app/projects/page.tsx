@@ -21,7 +21,7 @@ import {
   InboxOutlined,
 } from "@ant-design/icons";
 import { getProjects, createProject } from "@/shared/api/projects";
-import type { Project } from "@repo/types";
+import type { Project } from "@repo/database";
 import { useRouter } from "next/navigation";
 
 const { Text, Title } = Typography;

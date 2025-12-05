@@ -14,7 +14,8 @@ import {
   Tooltip,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import type { Event, EventLevel } from "@repo/types";
+import type { Event } from "@repo/database";
+import type { EventLevel } from "@repo/database";
 import dayjs from "@/shared/config/dayjs";
 import { useRouter } from "next/navigation";
 import { EyeOutlined, SearchOutlined, DeleteOutlined } from "@ant-design/icons";

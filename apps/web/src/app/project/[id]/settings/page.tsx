@@ -26,7 +26,7 @@ import {
   MembersList,
   InvitationsList,
 } from "@/features/manage-members";
-import type { Project } from "@repo/types";
+import type { Project } from "@repo/database";
 
 const { Title, Paragraph, Text } = Typography;
 

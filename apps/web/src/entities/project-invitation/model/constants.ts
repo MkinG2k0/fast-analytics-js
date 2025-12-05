@@ -1,4 +1,4 @@
-import type { ProjectInvitationStatus } from "@repo/types";
+import type { ProjectInvitationStatus } from "@repo/database";
 
 export const INVITATION_STATUSES: ProjectInvitationStatus[] = [
   "pending",

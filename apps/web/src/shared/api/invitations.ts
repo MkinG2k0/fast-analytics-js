@@ -1,4 +1,4 @@
-import type { ProjectInvitation, ProjectMember } from "@repo/types";
+import type { ProjectInvitation, ProjectMember } from "@repo/database";
 
 const API_BASE = "/api/projects";
 

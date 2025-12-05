@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { Spin, message } from "antd";
 import { EventDetails } from "@/features/view-log-details";
 import { getEvent } from "@/shared/api/events";
-import type { Event } from "@repo/types";
+import type { Event } from "@repo/database";
 
 export default function EventPage() {
   const params = useParams();

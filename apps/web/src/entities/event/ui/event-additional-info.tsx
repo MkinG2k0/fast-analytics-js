@@ -1,7 +1,7 @@
 "use client";
 
 import { Card, Descriptions, Tag, Typography } from "antd";
-import type { Event } from "@repo/types";
+import type { Event } from "@repo/database";
 import type { ParsedEventContext } from "../lib";
 import dayjs from "@/shared/config/dayjs";
 

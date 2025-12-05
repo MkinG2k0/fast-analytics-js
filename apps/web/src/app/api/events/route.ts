@@ -8,7 +8,7 @@ import {
   ProjectPermission,
 } from "@/shared/lib/project-access";
 import { z } from "zod";
-import type { EventLevel } from "@repo/types";
+import type { EventLevel } from "@repo/database";
 
 const createEventSchema = z.object({
   level: z.enum(["error", "warn", "info", "debug"]),

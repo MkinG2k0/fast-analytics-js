@@ -1,4 +1,4 @@
-import type { Event } from "@repo/types";
+import type { Event } from "@repo/database";
 
 export interface ParsedEventContext {
   customTags?: Record<string, string>;

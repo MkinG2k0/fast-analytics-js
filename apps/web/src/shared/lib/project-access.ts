@@ -1,5 +1,5 @@
 import { prisma } from "./prisma";
-import type { ProjectRole } from "@repo/types";
+import type { ProjectRole } from "@repo/database";
 
 export enum ProjectPermission {
   VIEW = "view",

@@ -1,4 +1,4 @@
-import { Event } from "@repo/types";
+import type { Event } from "@repo/database";
 
 const API_BASE = "/api/events";
 

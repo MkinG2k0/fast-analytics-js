@@ -1,4 +1,4 @@
-import type { ProjectRole } from "@repo/types";
+import type { ProjectRole } from "@repo/database";
 
 export const PROJECT_ROLES: ProjectRole[] = ["owner", "admin", "member", "viewer"];
 

@@ -16,6 +16,11 @@
       "dependsOn": ["^check-types"],
       "env": ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "NEXTAUTH_SECRET", "NODE_ENV"]
     },
+    "test": {
+      "dependsOn": ["^build"],
+      "outputs": ["coverage/**"],
+      "env": ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "NEXTAUTH_SECRET", "NODE_ENV"]
+    },
     "dev": {
       "cache": false,
       "persistent": true,

@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { Card, Button, message, Space, Typography, Spin, Alert, Avatar } from "antd";
 import { CheckOutlined, UserOutlined, MailOutlined } from "@ant-design/icons";
 import { useSession } from "next-auth/react";
-import type { ProjectInvitation } from "@repo/types";
+import type { ProjectInvitation } from "@repo/database";
 
 const { Title, Paragraph, Text } = Typography;
 

@@ -10,7 +10,8 @@ import {
 } from "@ant-design/icons";
 import { LogsTable } from "@/widgets/logs-table";
 import { getEvents } from "@/shared/api/events";
-import type { Event, EventLevel } from "@repo/types";
+import type { Event } from "@repo/database";
+import type { EventLevel } from "@repo/database";
 
 const { Title } = Typography;
 

@@ -1,4 +1,5 @@
-import { CreateProjectDto, Project } from "@repo/types";
+import type { Project } from "@repo/database";
+import type { CreateProjectDto } from "@repo/database";
 
 const API_BASE = "/api/projects";
 

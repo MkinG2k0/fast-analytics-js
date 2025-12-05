@@ -1,4 +1,4 @@
-import type { Project } from "@repo/types";
+import type { Project } from "@repo/database";
 
 export type { Project };
 

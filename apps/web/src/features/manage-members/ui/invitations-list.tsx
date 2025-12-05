@@ -5,7 +5,7 @@ import { Table, Tag, Button, Popconfirm, message } from "antd";
 import { CloseOutlined } from "@ant-design/icons";
 import { getInvitations, cancelInvitation } from "@/shared/api/invitations";
 import { INVITATION_STATUS_LABELS } from "@/entities/project-invitation";
-import type { ProjectInvitation } from "@repo/types";
+import type { ProjectInvitation } from "@repo/database";
 
 interface InvitationsListProps {
   projectId: string;

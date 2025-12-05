@@ -1,4 +1,5 @@
-import { RegisterDto, User } from "@repo/types";
+import type { User } from "@repo/database";
+import type { RegisterDto } from "@repo/database";
 
 const API_BASE = "/api/auth";
 
