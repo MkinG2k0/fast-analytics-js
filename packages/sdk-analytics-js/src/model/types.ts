@@ -13,6 +13,7 @@ export interface InitOptions {
   projectKey: string;
   endpoint?: string;
   enableAutoCapture?: boolean;
+  enablePageTracking?: boolean;
   batchSize?: number;
   batchTimeout?: number;
   userId?: string;
@@ -34,5 +35,15 @@ export interface EventPayload {
   sessionId?: string;
   userId?: string;
   performance?: EventPerformance;
+}
+
+export interface PageVisitPayload {
+  url: string;
+  pathname?: string;
+  referrer?: string;
+  userAgent?: string;
+  sessionId?: string;
+  userId?: string;
+  duration?: number;
 }
 

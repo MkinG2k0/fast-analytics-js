@@ -1,61 +1,29 @@
-import type { Project } from "@repo/database";
+import type { Project } from "@/entities/project";
 import type { CreateProjectDto } from "@repo/database";
+import { apiClient } from "@/shared/lib/axios";
 
 const API_BASE = "/api/projects";
 
 export async function getProjects(): Promise<Project[]> {
-  const response = await fetch(API_BASE, {
-    credentials: "include",
-  });
-
-  if (!response.ok) {
-    throw new Error("Ошибка загрузки проектов");
-  }
-
-  return response.json();
+  const { data } = await apiClient.get<Project[]>(API_BASE);
+  return data;
 }
 
 export async function createProject(data: CreateProjectDto): Promise<Project> {
-  const response = await fetch(API_BASE, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    credentials: "include",
-    body: JSON.stringify(data),
-  });
-
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || "Ошибка создания проекта");
-  }
-
-  return response.json();
+  const { data: result } = await apiClient.post<Project>(API_BASE, data);
+  return result;
 }
 
 export async function getProject(id: string): Promise<Project> {
-  const response = await fetch(`${API_BASE}/${id}`, {
-    credentials: "include",
-  });
-
-  if (!response.ok) {
-    throw new Error("Ошибка загрузки проекта");
-  }
-
-  return response.json();
+  const { data } = await apiClient.get<Project>(`${API_BASE}/${id}`);
+  return data;
 }
 
-export async function regenerateApiKey(projectId: string): Promise<{ apiKey: string }> {
-  const response = await fetch(`${API_BASE}/${projectId}/regenerate-key`, {
-    method: "POST",
-    credentials: "include",
-  });
-
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || "Ошибка обновления ключа");
-  }
-
-  return response.json();
+export async function regenerateApiKey(
+  projectId: string
+): Promise<{ apiKey: string }> {
+  const { data } = await apiClient.post<{ apiKey: string }>(
+    `${API_BASE}/${projectId}/regenerate-key`
+  );
+  return data;
 }
-

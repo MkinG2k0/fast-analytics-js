@@ -5,7 +5,7 @@ import { Table, Tag, Button, Popconfirm, Avatar, message, Space } from "antd";
 import { DeleteOutlined, UserOutlined } from "@ant-design/icons";
 import { getMembers, removeMember } from "@/shared/api/invitations";
 import { PROJECT_ROLE_LABELS } from "@/entities/project-member";
-import type { ProjectMember } from "@repo/database";
+import type { ProjectMember } from "@/entities/project-member";
 
 interface MembersListProps {
   projectId: string;

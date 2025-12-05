@@ -1,19 +1,24 @@
-import type { EventContext, EventLevel, InitOptions } from "./model";
+import type { EventContext, EventLevel, InitOptions, PageVisitPayload } from "./model";
 import { getDefaultEndpoint } from "./config";
-import { createEventPayload } from "./lib";
+import { createEventPayload, PageVisitTracker } from "./lib";
 import { Interceptors } from "./interceptors";
 import { SessionManager } from "./session";
-import { Transport } from "./transport";
+import { PageVisitTransport, Transport } from "./transport";
 
 export class FastAnalyticsSDK {
   private transport: Transport | null = null;
+  private pageVisitTransport: PageVisitTransport | null = null;
   private sessionManager: SessionManager;
   private interceptors: Interceptors | null = null;
+  private pageVisitTracker: PageVisitTracker;
   private initialized = false;
   private userId: string | undefined;
+  private enablePageTracking: boolean = false;
+  private pageTrackingCleanup: (() => void) | null = null;
 
   constructor() {
     this.sessionManager = new SessionManager();
+    this.pageVisitTracker = new PageVisitTracker();
   }
 
   init(options: InitOptions): void {
@@ -24,6 +29,7 @@ export class FastAnalyticsSDK {
 
     this.userId = options.userId;
     this.transport = new Transport(options);
+    this.pageVisitTransport = new PageVisitTransport(options);
     this.interceptors = new Interceptors(
       this.transport,
       this.sessionManager,
@@ -35,7 +41,14 @@ export class FastAnalyticsSDK {
       this.interceptors.setup();
     }
 
+    // Устанавливаем initialized перед setupPageTracking, так как он вызывает trackPageVisit
     this.initialized = true;
+
+    // Автоматическое отслеживание посещений страниц
+    if (options.enablePageTracking !== false) {
+      this.enablePageTracking = true;
+      this.setupPageTracking();
+    }
   }
 
   private ensureInitialized(): void {
@@ -89,6 +102,9 @@ export class FastAnalyticsSDK {
     if (this.transport) {
       await this.transport.flush();
     }
+    if (this.pageVisitTransport) {
+      await this.pageVisitTransport.flush();
+    }
   }
 
   getSessionId(): string {
@@ -99,13 +115,91 @@ export class FastAnalyticsSDK {
     this.sessionManager.resetSession();
   }
 
+  private setupPageTracking(): void {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    // Отслеживаем первое посещение страницы
+    this.trackPageVisit();
+
+    // Перехватываем History API для SPA
+    const originalPushState = history.pushState;
+    const originalReplaceState = history.replaceState;
+
+    const handleStateChange = () => {
+      // Небольшая задержка, чтобы URL успел обновиться
+      setTimeout(() => {
+        this.trackPageVisit();
+      }, 0);
+    };
+
+    history.pushState = function (...args) {
+      originalPushState.apply(history, args);
+      handleStateChange();
+    };
+
+    history.replaceState = function (...args) {
+      originalReplaceState.apply(history, args);
+      handleStateChange();
+    };
+
+    // Отслеживаем события popstate (назад/вперед в истории)
+    const handlePopState = () => {
+      this.trackPageVisit();
+    };
+    window.addEventListener("popstate", handlePopState);
+
+    // Отслеживаем перед уходом со страницы
+    const handleBeforeUnload = () => {
+      this.trackPageVisit();
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    // Сохраняем функцию очистки
+    this.pageTrackingCleanup = () => {
+      history.pushState = originalPushState;
+      history.replaceState = originalReplaceState;
+      window.removeEventListener("popstate", handlePopState);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }
+
+  async trackPageVisit(
+    url?: string,
+    pathname?: string,
+    referrer?: string
+  ): Promise<void> {
+    this.ensureInitialized();
+
+    if (!this.pageVisitTransport) {
+      return;
+    }
+
+    const visit = this.pageVisitTracker.trackPageView(
+      url,
+      pathname,
+      referrer,
+      typeof navigator !== "undefined" ? navigator.userAgent : undefined,
+      this.sessionManager.getSessionId(),
+      this.userId
+    );
+
+    await this.pageVisitTransport.send(visit);
+  }
+
   teardown(): void {
     if (this.interceptors) {
       this.interceptors.teardown();
     }
+    if (this.pageTrackingCleanup) {
+      this.pageTrackingCleanup();
+      this.pageTrackingCleanup = null;
+    }
     this.initialized = false;
     this.userId = undefined;
     this.transport = null;
+    this.pageVisitTransport = null;
     this.interceptors = null;
   }
 }

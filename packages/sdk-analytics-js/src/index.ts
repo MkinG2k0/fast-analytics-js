@@ -5,6 +5,7 @@ import type {
   EventPayload,
   EventPerformance,
   InitOptions,
+  PageVisitPayload,
 } from "./model";
 
 const sdk = new FastAnalyticsSDK();
@@ -37,6 +38,12 @@ export const getSessionId = (): string => sdk.getSessionId();
 
 export const resetSession = (): void => sdk.resetSession();
 
+export const trackPageVisit = (
+  url?: string,
+  pathname?: string,
+  referrer?: string
+): Promise<void> => sdk.trackPageVisit(url, pathname, referrer);
+
 export const teardown = (): void => sdk.teardown();
 
 export type {
@@ -45,4 +52,5 @@ export type {
   EventPayload,
   EventPerformance,
   InitOptions,
+  PageVisitPayload,
 };

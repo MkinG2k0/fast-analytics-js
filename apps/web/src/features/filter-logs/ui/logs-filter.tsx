@@ -6,7 +6,7 @@ import {
   ReloadOutlined,
   FilterOutlined,
 } from "@ant-design/icons";
-import type { EventLevel } from "@repo/database";
+import type { EventLevel } from "@/entities/event";
 import dayjs from "@/shared/config/dayjs";
 
 const { RangePicker } = DatePicker;

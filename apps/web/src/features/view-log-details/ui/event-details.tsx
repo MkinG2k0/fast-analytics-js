@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Card, Descriptions, Tag, Typography, Button, Popconfirm, message, Space } from "antd";
 import { ArrowLeftOutlined, DeleteOutlined } from "@ant-design/icons";
-import type { Event } from "@repo/database";
+import type { Event } from "@/entities/event";
 
 import {
   EventAdditionalInfo,

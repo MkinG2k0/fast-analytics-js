@@ -1,4 +1,5 @@
-import type { Event } from "@repo/database";
+import type { Event } from "@/entities/event";
+import { apiClient } from "@/shared/lib/axios";
 
 const API_BASE = "/api/events";
 
@@ -8,6 +9,8 @@ export interface GetEventsParams {
   startDate?: string;
   endDate?: string;
   search?: string;
+  url?: string;
+  userId?: string;
   page?: number;
   limit?: number;
 }
@@ -20,45 +23,18 @@ export interface GetEventsResponse {
 }
 
 export async function getEvents(params: GetEventsParams): Promise<GetEventsResponse> {
-  const queryParams = new URLSearchParams();
-  
-  Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined && value !== null) {
-      queryParams.append(key, String(value));
-    }
+  const { data } = await apiClient.get<GetEventsResponse>(API_BASE, {
+    params,
   });
-
-  const response = await fetch(`${API_BASE}?${queryParams.toString()}`, {
-    credentials: "include",
-  });
-
-  if (!response.ok) {
-    throw new Error("Ошибка загрузки событий");
-  }
-
-  return response.json();
+  return data;
 }
 
 export async function getEvent(id: string): Promise<Event> {
-  const response = await fetch(`${API_BASE}/${id}`, {
-    credentials: "include",
-  });
-
-  if (!response.ok) {
-    throw new Error("Ошибка загрузки события");
-  }
-
-  return response.json();
+  const { data } = await apiClient.get<Event>(`${API_BASE}/${id}`);
+  return data;
 }
 
 export async function deleteEvent(id: string): Promise<void> {
-  const response = await fetch(`${API_BASE}/${id}`, {
-    method: "DELETE",
-    credentials: "include",
-  });
-
-  if (!response.ok) {
-    throw new Error("Ошибка удаления события");
-  }
+  await apiClient.delete(`${API_BASE}/${id}`);
 }
 

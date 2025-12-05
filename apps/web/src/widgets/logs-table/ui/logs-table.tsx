@@ -14,8 +14,7 @@ import {
   Tooltip,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import type { Event } from "@repo/database";
-import type { EventLevel } from "@repo/database";
+import type { Event, EventLevel } from "@/entities/event";
 import dayjs from "@/shared/config/dayjs";
 import { useRouter } from "next/navigation";
 import { EyeOutlined, SearchOutlined, DeleteOutlined } from "@ant-design/icons";
@@ -53,12 +52,16 @@ interface LogsTableProps {
     startDate?: string;
     endDate?: string;
     search?: string;
+    url?: string;
+    userId?: string;
   };
   onFilterChange?: (filters: {
     level?: EventLevel;
     startDate?: string;
     endDate?: string;
     search?: string;
+    url?: string;
+    userId?: string;
   }) => void;
   onRefresh?: () => void;
   onOptimisticDelete?: (ids: string[]) => void;
@@ -87,10 +90,14 @@ export function LogsTable({
   const [dateRange, setDateRange] = useState<[dayjs.Dayjs, dayjs.Dayjs] | null>(
     filters.startDate && filters.endDate
       ? [dayjs(filters.startDate), dayjs(filters.endDate)]
-      : null
+      : [dayjs().subtract(1, "month"), dayjs()]
   );
   const [searchFilter, setSearchFilter] = useState<string | undefined>(
     filters.search
+  );
+  const [urlFilter, setUrlFilter] = useState<string | undefined>(filters.url);
+  const [userIdFilter, setUserIdFilter] = useState<string | undefined>(
+    filters.userId
   );
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
@@ -99,9 +106,11 @@ export function LogsTable({
     setDateRange(
       filters.startDate && filters.endDate
         ? [dayjs(filters.startDate), dayjs(filters.endDate)]
-        : null
+        : [dayjs().subtract(1, "month"), dayjs()]
     );
     setSearchFilter(filters.search);
+    setUrlFilter(filters.url);
+    setUserIdFilter(filters.userId);
   }, [filters]);
 
   const handleLevelFilterChange = (level: EventLevel | null | undefined) => {
@@ -115,8 +124,8 @@ export function LogsTable({
     setDateRange(dates);
     onFilterChange?.({
       ...filters,
-      startDate: dates?.[0]?.toISOString(),
-      endDate: dates?.[1]?.toISOString(),
+      startDate: dates?.[0]?.startOf("day").toISOString(),
+      endDate: dates?.[1]?.endOf("day").toISOString(),
     });
   };
 
@@ -125,6 +134,22 @@ export function LogsTable({
     onFilterChange?.({
       ...filters,
       search: value || undefined,
+    });
+  };
+
+  const handleUrlFilter = (value: string) => {
+    setUrlFilter(value);
+    onFilterChange?.({
+      ...filters,
+      url: value || undefined,
+    });
+  };
+
+  const handleUserIdFilter = (value: string) => {
+    setUserIdFilter(value);
+    onFilterChange?.({
+      ...filters,
+      userId: value || undefined,
     });
   };
 
@@ -169,19 +194,17 @@ export function LogsTable({
       sorter: (a, b) =>
         new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
       filterDropdown: () => (
-        <div className="p-2">
+        <div className="flex gap-2 p-2">
           <RangePicker
-            showTime
             value={dateRange}
             onChange={(dates) =>
               handleDateRangeFilter(dates as [dayjs.Dayjs, dayjs.Dayjs] | null)
             }
-            className="w-full mb-2"
+            className="w-full mb-2 flex-auto"
             placeholder={["Начальная дата", "Конечная дата"]}
           />
-          <Space className="w-full justify-end">
+          <Space className="justify-end">
             <Button
-              size="small"
               onClick={() => {
                 setDateRange(null);
                 handleDateRangeFilter(null);
@@ -196,39 +219,6 @@ export function LogsTable({
         <span className={dateRange ? "text-blue-500" : ""}>📅</span>
       ),
       filteredValue: dateRange ? [true] : null,
-    },
-    {
-      title: "Длительность",
-      key: "requestDuration",
-      width: 150,
-      render: (_: unknown, record: Event) => {
-        const performance = isEventPerformance(record.performance)
-          ? record.performance
-          : null;
-        const requestDuration = performance?.requestDuration;
-
-        if (requestDuration !== undefined && requestDuration !== null) {
-          const durationMs = requestDuration;
-          const formattedDuration =
-            durationMs >= 1000
-              ? `${(durationMs / 1000).toFixed(2)} с`
-              : `${durationMs.toFixed(0)} мс`;
-
-          return (
-            <Text className="text-sm font-mono text-gray-600">
-              {formattedDuration}
-            </Text>
-          );
-        }
-        return <Text className="text-gray-400">—</Text>;
-      },
-      sorter: (a, b) => {
-        const perfA = isEventPerformance(a.performance) ? a.performance : null;
-        const perfB = isEventPerformance(b.performance) ? b.performance : null;
-        const durationA = perfA?.requestDuration ?? 0;
-        const durationB = perfB?.requestDuration ?? 0;
-        return durationA - durationB;
-      },
     },
     {
       title: "Уровень",
@@ -278,14 +268,13 @@ export function LogsTable({
         </Text>
       ),
       filterDropdown: () => (
-        <div className="p-2">
+        <div className="p-2 min-w-[400px]">
           <Input
             placeholder="Поиск по сообщению"
             prefix={<SearchOutlined className="text-gray-400" />}
             value={searchFilter}
             onChange={(e) => handleSearchFilter(e.target.value)}
             allowClear
-            className="mb-2"
             onPressEnter={() => {
               onFilterChange?.({
                 ...filters,
@@ -293,30 +282,6 @@ export function LogsTable({
               });
             }}
           />
-          <Space className="w-full justify-end">
-            <Button
-              size="small"
-              type="primary"
-              icon={<SearchOutlined />}
-              onClick={() => {
-                onFilterChange?.({
-                  ...filters,
-                  search: searchFilter || undefined,
-                });
-              }}
-            >
-              Применить
-            </Button>
-            <Button
-              size="small"
-              onClick={() => {
-                setSearchFilter(undefined);
-                handleSearchFilter("");
-              }}
-            >
-              Сбросить
-            </Button>
-          </Space>
         </div>
       ),
       filterIcon: () => (
@@ -383,6 +348,27 @@ export function LogsTable({
           </Tooltip>
         );
       },
+      filterDropdown: () => (
+        <div className="p-2 min-w-[400px]">
+          <Input
+            placeholder="Поиск по URL"
+            prefix={<SearchOutlined className="text-gray-400" />}
+            value={urlFilter}
+            onChange={(e) => handleUrlFilter(e.target.value)}
+            allowClear
+            onPressEnter={() => {
+              onFilterChange?.({
+                ...filters,
+                url: urlFilter || undefined,
+              });
+            }}
+          />
+        </div>
+      ),
+      filterIcon: () => (
+        <SearchOutlined className={urlFilter ? "text-blue-500" : ""} />
+      ),
+      filteredValue: urlFilter ? [urlFilter] : null,
     },
     {
       title: "User ID",
@@ -401,6 +387,27 @@ export function LogsTable({
         ) : (
           <Text className="text-gray-400">—</Text>
         ),
+      filterDropdown: () => (
+        <div className="p-2 min-w-[400px]">
+          <Input
+            placeholder="Поиск по User ID"
+            prefix={<SearchOutlined className="text-gray-400" />}
+            value={userIdFilter}
+            onChange={(e) => handleUserIdFilter(e.target.value)}
+            allowClear
+            onPressEnter={() => {
+              onFilterChange?.({
+                ...filters,
+                userId: userIdFilter || undefined,
+              });
+            }}
+          />
+        </div>
+      ),
+      filterIcon: () => (
+        <SearchOutlined className={userIdFilter ? "text-blue-500" : ""} />
+      ),
+      filteredValue: userIdFilter ? [userIdFilter] : null,
     },
     {
       title: "Действия",
@@ -412,7 +419,7 @@ export function LogsTable({
           type="link"
           icon={<EyeOutlined />}
           onClick={() => router.push(`/event/${record.id}`)}
-          className="p-0 h-auto font-medium"
+          className="!p-0 h-auto font-medium"
         >
           Подробнее
         </Button>

@@ -42,6 +42,7 @@ model Project {
   events      Event[]
   members     ProjectMember[]
   invitations ProjectInvitation[]
+  pageVisits  PageVisit[]
 
   @@index([userId])
   @@index([apiKey])
@@ -154,5 +155,29 @@ model ProjectInvitation {
   @@index([token])
   @@index([email, status])
   @@map("project_invitations")
+}
+
+model PageVisit {
+  id          String   @id @default(cuid())
+  projectId   String
+  url         String
+  pathname    String?  // путь без домена
+  referrer    String?  // откуда пришел пользователь
+  userAgent   String?
+  sessionId   String?
+  userId      String?
+  duration    Int?     // время на странице в миллисекундах
+  timestamp   DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([timestamp])
+  @@index([url])
+  @@index([sessionId])
+  @@index([projectId, timestamp])
+  @@index([projectId, url])
+  @@map("page_visits")
 }
 

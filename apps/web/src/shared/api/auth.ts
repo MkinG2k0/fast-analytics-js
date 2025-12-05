@@ -1,20 +1,16 @@
-import type { User } from "@repo/database";
+import type { User } from "@/entities/user";
 import type { RegisterDto } from "@repo/database";
+import { apiClient } from "@/shared/lib/axios";
 
 const API_BASE = "/api/auth";
 
-export async function register(data: RegisterDto): Promise<{ user: User; token: string }> {
-  const response = await fetch(`${API_BASE}/register`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
+export interface RegisterResponse {
+  user: User;
+  token: string;
+}
 
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || "Ошибка регистрации");
-  }
-
-  return response.json();
+export async function register(data: RegisterDto): Promise<RegisterResponse> {
+  const { data: result } = await apiClient.post<RegisterResponse>(`${API_BASE}/register`, data);
+  return result;
 }
 

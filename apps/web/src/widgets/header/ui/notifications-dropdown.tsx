@@ -15,7 +15,7 @@ import { BellOutlined, UserOutlined } from "@ant-design/icons";
 import { useRouter } from "next/navigation";
 import { getUserInvitations, acceptInvitation } from "@/shared/api/invitations";
 import { message } from "antd";
-import type { ProjectInvitation } from "@repo/database";
+import type { ProjectInvitation } from "@/entities/project-invitation";
 import dayjs from "@/shared/config/dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 

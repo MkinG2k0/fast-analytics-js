@@ -1,4 +1,6 @@
-import type { ProjectInvitation, ProjectMember } from "@repo/database";
+import type { ProjectInvitation } from "@/entities/project-invitation";
+import type { ProjectMember } from "@/entities/project-member";
+import { apiClient } from "@/shared/lib/axios";
 
 const API_BASE = "/api/projects";
 
@@ -7,136 +9,91 @@ export interface CreateInvitationDto {
   role: "admin" | "member" | "viewer";
 }
 
-export async function getInvitations(projectId: string): Promise<ProjectInvitation[]> {
-  const response = await fetch(`${API_BASE}/${projectId}/invitations`, {
-    credentials: "include",
-  });
-
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || "Ошибка загрузки приглашений");
-  }
-
-  return response.json();
+export async function getInvitations(
+  projectId: string
+): Promise<ProjectInvitation[]> {
+  const { data } = await apiClient.get<ProjectInvitation[]>(
+    `${API_BASE}/${projectId}/invitations`
+  );
+  return data;
 }
 
 export async function createInvitation(
   projectId: string,
   data: CreateInvitationDto
 ): Promise<ProjectInvitation> {
-  const response = await fetch(`${API_BASE}/${projectId}/invitations`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    credentials: "include",
-    body: JSON.stringify(data),
-  });
-
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || "Ошибка создания приглашения");
-  }
-
-  return response.json();
+  const { data: result } = await apiClient.post<ProjectInvitation>(
+    `${API_BASE}/${projectId}/invitations`,
+    data
+  );
+  return result;
 }
 
 export async function cancelInvitation(
   projectId: string,
   invitationId: string
 ): Promise<void> {
-  const response = await fetch(`${API_BASE}/${projectId}/invitations/${invitationId}`, {
-    method: "DELETE",
-    credentials: "include",
-  });
-
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || "Ошибка отмены приглашения");
-  }
+  await apiClient.delete(
+    `${API_BASE}/${projectId}/invitations/${invitationId}`
+  );
 }
 
 export async function getMembers(projectId: string): Promise<ProjectMember[]> {
-  const response = await fetch(`${API_BASE}/${projectId}/members`, {
-    credentials: "include",
-  });
-
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || "Ошибка загрузки участников");
-  }
-
-  return response.json();
+  const { data } = await apiClient.get<ProjectMember[]>(
+    `${API_BASE}/${projectId}/members`
+  );
+  return data;
 }
 
-export async function removeMember(projectId: string, userId: string): Promise<void> {
-  const response = await fetch(`${API_BASE}/${projectId}/members/${userId}`, {
-    method: "DELETE",
-    credentials: "include",
-  });
-
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || "Ошибка удаления участника");
-  }
+export async function removeMember(
+  projectId: string,
+  userId: string
+): Promise<void> {
+  await apiClient.delete(`${API_BASE}/${projectId}/members/${userId}`);
 }
 
-export async function getProjectRole(projectId: string): Promise<{ role: string | null }> {
-  const response = await fetch(`${API_BASE}/${projectId}/role`, {
-    credentials: "include",
-  });
-
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || "Ошибка загрузки роли");
-  }
-
-  return response.json();
+export async function getProjectRole(
+  projectId: string
+): Promise<{ role: string | null }> {
+  const { data } = await apiClient.get<{ role: string | null }>(
+    `${API_BASE}/${projectId}/role`
+  );
+  return data;
 }
 
-export async function getInvitationByToken(token: string): Promise<ProjectInvitation & {
+export interface InvitationWithRelations extends ProjectInvitation {
   project?: { id: string; name: string; description: string | null };
   inviter?: { name: string | null; email: string };
-}> {
-  const response = await fetch(`/api/invitations/${token}`, {
-    credentials: "include",
-  });
-
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || "Ошибка загрузки приглашения");
-  }
-
-  return response.json();
 }
 
-export async function acceptInvitation(token: string): Promise<{ success: boolean }> {
-  const response = await fetch(`/api/invitations/${token}`, {
-    method: "POST",
-    credentials: "include",
-  });
-
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || "Ошибка принятия приглашения");
-  }
-
-  return response.json();
+export async function getInvitationByToken(
+  token: string
+): Promise<InvitationWithRelations> {
+  const { data } = await apiClient.get<InvitationWithRelations>(
+    `/api/invitations/${token}`
+  );
+  return data;
 }
 
-export async function getUserInvitations(): Promise<(ProjectInvitation & {
+export async function acceptInvitation(
+  token: string
+): Promise<{ success: boolean }> {
+  const { data } = await apiClient.post<{ success: boolean }>(
+    `/api/invitations/${token}`
+  );
+  return data;
+}
+
+export interface UserInvitationWithRelations extends ProjectInvitation {
   project?: { id: string; name: string; description: string | null };
   inviter?: { id: string; name: string | null; email: string };
-})[]> {
-  const response = await fetch("/api/invitations/user", {
-    credentials: "include",
-  });
-
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || "Ошибка загрузки приглашений");
-  }
-
-  return response.json();
 }
 
+export async function getUserInvitations(): Promise<
+  UserInvitationWithRelations[]
+> {
+  const { data } = await apiClient.get<UserInvitationWithRelations[]>(
+    "/api/invitations/user"
+  );
+  return data;
+}

@@ -38,6 +38,7 @@ The dashboard provides:
 - Filtering and search capabilities
 - Session tracking
 - Custom tags and metadata
+- Page visit analytics
 
 ### Automatic Error Capture
 
@@ -81,6 +82,43 @@ logInfo("User visited page", { url: "/dashboard" });
 logDebug("Debug information", { data: someData });
 ```
 
+### Page Visit Tracking
+
+By default, the SDK automatically tracks page visits:
+
+- ✅ **Automatic page view tracking** - tracks every page visit automatically
+- ✅ **SPA support** - tracks route changes in Single Page Applications
+- ✅ **Time on page** - measures how long users spend on each page
+- ✅ **Referrer tracking** - tracks where users came from
+
+**You don't need to manually track page views** - the SDK handles everything automatically!
+
+#### Manual Page Visit Tracking (Optional)
+
+You can also manually track page visits:
+
+```typescript
+import { trackPageVisit } from "fast-analytics-js";
+
+// Track a page visit manually
+await trackPageVisit(
+  "https://example.com/page",
+  "/page",
+  "https://example.com/referrer"
+);
+```
+
+#### Disable Automatic Page Tracking
+
+If you want to disable automatic page tracking:
+
+```typescript
+init({
+  projectKey: "your-project-api-key",
+  enablePageTracking: false, // Disable automatic page tracking
+});
+```
+
 ### Initialization Options
 
 ```typescript
@@ -89,6 +127,7 @@ init({
   endpoint: "https://your-domain.com/api/events", // Optional: defaults to "https://fast-analytics.vercel.app/api/events"
   userId: "optional-user-id", // Optional: set user ID globally
   enableAutoCapture: true, // Enable automatic error capture (default: true)
+  enablePageTracking: true, // Enable automatic page visit tracking (default: true)
   batchSize: 10, // Batch size for sending events (default: 10)
   batchTimeout: 5000, // Batch timeout in ms (default: 5000)
 });
@@ -228,6 +267,7 @@ init({
 - Возможности фильтрации и поиска
 - Отслеживание сессий
 - Пользовательские теги и метаданные
+- Аналитика посещений страниц
 
 ### Автоматический перехват ошибок
 
@@ -272,6 +312,43 @@ logInfo("Пользователь зашел на страницу", { url: "/da
 logDebug("Отладочная информация", { data: someData });
 ```
 
+### Отслеживание посещений страниц
+
+По умолчанию SDK автоматически отслеживает посещения страниц:
+
+- ✅ **Автоматическое отслеживание просмотров страниц** - отслеживает каждое посещение страницы автоматически
+- ✅ **Поддержка SPA** - отслеживает изменения маршрутов в одностраничных приложениях
+- ✅ **Время на странице** - измеряет, сколько времени пользователи проводят на каждой странице
+- ✅ **Отслеживание реферера** - отслеживает, откуда пришли пользователи
+
+**Вам не нужно вручную отслеживать просмотры страниц** - SDK делает всё автоматически!
+
+#### Ручное отслеживание посещений (опционально)
+
+Вы также можете вручную отслеживать посещения страниц:
+
+```typescript
+import { trackPageVisit } from "fast-analytics-js";
+
+// Отследить посещение страницы вручную
+await trackPageVisit(
+  "https://example.com/page",
+  "/page",
+  "https://example.com/referrer"
+);
+```
+
+#### Отключение автоматического отслеживания страниц
+
+Если вы хотите отключить автоматическое отслеживание страниц:
+
+```typescript
+init({
+  projectKey: "your-project-api-key",
+  enablePageTracking: false, // Отключить автоматическое отслеживание страниц
+});
+```
+
 ### Опции инициализации
 
 ```typescript
@@ -280,6 +357,7 @@ init({
   endpoint: "https://your-domain.com/api/events", // Опционально: по умолчанию "https://fast-analytics.vercel.app/api/events"
   userId: "optional-user-id", // Опционально: установить ID пользователя глобально
   enableAutoCapture: true, // Включить автоматический перехват (по умолчанию: true)
+  enablePageTracking: true, // Включить автоматическое отслеживание посещений страниц (по умолчанию: true)
   batchSize: 10, // Размер батча для отправки (по умолчанию: 10)
   batchTimeout: 5000, // Таймаут отправки батча в мс (по умолчанию: 5000)
 });

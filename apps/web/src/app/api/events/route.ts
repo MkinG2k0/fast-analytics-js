@@ -161,6 +161,8 @@ export async function GET(request: Request) {
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
     const search = searchParams.get("search");
+    const url = searchParams.get("url");
+    const userId = searchParams.get("userId");
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "50");
 
@@ -187,6 +189,8 @@ export async function GET(request: Request) {
       level?: string;
       timestamp?: { gte?: Date; lte?: Date };
       message?: { contains: string; mode?: "insensitive" };
+      url?: { contains: string; mode?: "insensitive" };
+      userId?: string;
     } = {
       projectId,
     };
@@ -207,6 +211,14 @@ export async function GET(request: Request) {
 
     if (search) {
       where.message = { contains: search, mode: "insensitive" };
+    }
+
+    if (url) {
+      where.url = { contains: url, mode: "insensitive" };
+    }
+
+    if (userId) {
+      where.userId = userId;
     }
 
     const [events, total] = await Promise.all([

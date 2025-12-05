@@ -1,27 +1,6 @@
-"use client";
+import { AcceptInvitationPage } from "@/page-components/invite";
 
-import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { Card, Button, message, Space, Typography, Spin, Alert, Avatar } from "antd";
-import { CheckOutlined, UserOutlined, MailOutlined } from "@ant-design/icons";
-import { useSession } from "next-auth/react";
-import type { ProjectInvitation } from "@repo/database";
-
-const { Title, Paragraph, Text } = Typography;
-
-interface InvitationDetails extends ProjectInvitation {
-  project?: {
-    id: string;
-    name: string;
-    description: string | null;
-  };
-  inviter?: {
-    name: string | null;
-    email: string;
-  };
-}
-
-export default function AcceptInvitationPage() {
+export default AcceptInvitationPage;
   const params = useParams();
   const router = useRouter();
   const { data: session, status } = useSession();

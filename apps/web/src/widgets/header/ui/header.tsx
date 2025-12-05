@@ -27,7 +27,7 @@ import { signOut } from "next-auth/react";
 import { useSession } from "next-auth/react";
 import type { MenuProps } from "antd";
 import { getProjects, createProject } from "@/shared/api/projects";
-import type { Project } from "@repo/database";
+import type { Project } from "@/entities/project";
 
 const { Header: AntHeader } = Layout;
 const { Text } = Typography;
