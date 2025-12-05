@@ -4,7 +4,7 @@ import { App as AntdApp, ConfigProvider } from "antd";
 import ruRU from "antd/locale/ru_RU";
 import "./globals.css";
 import AuthLayout from "./layout-auth";
-import { SessionProviderWrapper } from "./providers";
+import { QueryProvider, SessionProviderWrapper } from "./providers";
 
 // Подавление предупреждения о совместимости antd v5 с React 19
 if (typeof window !== "undefined") {
@@ -28,9 +28,11 @@ export default function RootLayout({
         <AntdRegistry>
           <ConfigProvider locale={ruRU}>
             <AntdApp>
-              <SessionProviderWrapper>
-                <AuthLayout>{children}</AuthLayout>
-              </SessionProviderWrapper>
+              <QueryProvider>
+                <SessionProviderWrapper>
+                  <AuthLayout>{children}</AuthLayout>
+                </SessionProviderWrapper>
+              </QueryProvider>
             </AntdApp>
           </ConfigProvider>
         </AntdRegistry>

@@ -2,8 +2,13 @@
 
 import { Layout, Menu } from "antd";
 import { usePathname, useRouter } from "next/navigation";
-import { ProjectOutlined } from "@ant-design/icons";
+import {
+  BarChartOutlined,
+  FileTextOutlined,
+  SettingOutlined,
+} from "@ant-design/icons";
 import type { MenuProps } from "antd";
+import { useMemo } from "react";
 
 const { Sider } = Layout;
 
@@ -15,14 +20,43 @@ export function Sidebar({ collapsed }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
 
-  const menuItems: MenuProps["items"] = [
-    {
-      key: "/projects",
-      icon: <ProjectOutlined />,
-      label: "Проекты",
-      onClick: () => router.push("/projects"),
-    },
-  ];
+  const projectId = useMemo(() => {
+    const match = pathname?.match(/^\/project\/([^/]+)/);
+    return match ? match[1] : null;
+  }, [pathname]);
+
+  const menuItems: MenuProps["items"] = useMemo(() => {
+    if (!projectId) {
+      return [];
+    }
+
+    return [
+      {
+        key: `/project/${projectId}/logs`,
+        icon: <FileTextOutlined />,
+        label: "Логи",
+        onClick: () => {
+          router.push(`/project/${projectId}/logs`);
+        },
+      },
+      {
+        key: `/project/${projectId}/analytics`,
+        icon: <BarChartOutlined />,
+        label: "Аналитика",
+        onClick: () => {
+          router.push(`/project/${projectId}/analytics`);
+        },
+      },
+      {
+        key: `/project/${projectId}/settings`,
+        icon: <SettingOutlined />,
+        label: "Настройки",
+        onClick: () => {
+          router.push(`/project/${projectId}/settings`);
+        },
+      },
+    ];
+  }, [projectId, router]);
 
   return (
     <Sider

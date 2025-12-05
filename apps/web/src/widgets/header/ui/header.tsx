@@ -133,7 +133,7 @@ export function Header({ sidebarCollapsed, onSidebarToggle }: HeaderProps) {
             onClick={onSidebarToggle}
             className="flex items-center justify-center"
           />
-          <div className="flex items-center gap-2">
+          <div className="ml-8 flex items-center gap-2">
             <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-sm">FA</span>
             </div>
@@ -141,35 +141,45 @@ export function Header({ sidebarCollapsed, onSidebarToggle }: HeaderProps) {
               Fast Analytics
             </Text>
           </div>
-          <Select
-            placeholder="Выберите проект"
-            value={selectValue}
-            onChange={handleProjectChange}
-            loading={loading}
-            className="min-w-[200px]"
-            suffixIcon={<ProjectOutlined />}
-            popupRender={(menu) => (
-              <>
-                {menu}
-                <div className="border-t border-gray-200 p-2">
-                  <Button
-                    type="text"
-                    icon={<PlusOutlined />}
-                    onClick={() => {
-                      setModalOpen(true);
-                    }}
-                    className="w-full justify-start"
-                  >
-                    Создать проект
-                  </Button>
-                </div>
-              </>
-            )}
-            options={projects.map((project) => ({
-              label: project.name,
-              value: project.id,
-            }))}
-          />
+          <div className="flex items-center gap-2">
+            <Select
+              placeholder="Выберите проект"
+              value={selectValue}
+              onChange={handleProjectChange}
+              loading={loading}
+              className="min-w-[200px]"
+              suffixIcon={<ProjectOutlined />}
+              popupRender={(menu) => (
+                <>
+                  {menu}
+                  <div className="border-t border-gray-200 p-2">
+                    <Button
+                      type="text"
+                      icon={<ProjectOutlined />}
+                      onClick={() => router.push("/projects")}
+                      className="w-full justify-start"
+                    >
+                      Все проекты
+                    </Button>
+                    <Button
+                      type="text"
+                      icon={<PlusOutlined />}
+                      onClick={() => {
+                        setModalOpen(true);
+                      }}
+                      className="w-full justify-start"
+                    >
+                      Создать проект
+                    </Button>
+                  </div>
+                </>
+              )}
+              options={projects.map((project) => ({
+                label: project.name,
+                value: project.id,
+              }))}
+            />
+          </div>
         </div>
         <Space size="middle">
           <NotificationsDropdown />
