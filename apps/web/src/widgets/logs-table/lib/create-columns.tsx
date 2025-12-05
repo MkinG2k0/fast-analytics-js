@@ -215,7 +215,7 @@ export function createColumns({
           icon={<EyeOutlined />}
           onClick={() => {
             // navigate to event details page
-            router.push(`/events/${record.id}`);
+            router.push(`/event/${record.id}`);
           }}
           className="!p-0 h-auto font-medium"
         >

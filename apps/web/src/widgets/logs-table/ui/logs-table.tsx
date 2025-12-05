@@ -40,14 +40,14 @@ export function LogsTable({ projectId }: LogsTableProps) {
   }, [error, message]);
 
   return (
-    <div className="relative">
+    <div className="relative h-full">
       <div className="bg-white rounded-lg overflow-hidden border border-gray-200">
         <Table
           columns={columns}
           dataSource={data?.events}
           rowKey="id"
           loading={isLoading}
-          scroll={{ x: "max-content", y: "calc(100vh - 357px)" }}
+          scroll={{ x: "max-content", y: "calc(100vh - 295px)" }}
           className="[&_.ant-table-thead>tr>th]:bg-gray-50 [&_.ant-table-thead>tr>th]:font-semibold [&_.ant-table-tbody>tr:hover]:bg-blue-50/50"
           pagination={{
             current: pagination.current,

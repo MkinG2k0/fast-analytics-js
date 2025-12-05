@@ -336,7 +336,7 @@ export function PageVisitsAnalytics({ projectId }: PageVisitsAnalyticsProps) {
         )}
       </Card>
 
-      <Card title="Статистика по группам" loading={loading}>
+      <Card title="Статистика по страницам" loading={loading}>
         <Table
           columns={analyticsColumns}
           dataSource={analytics?.analytics || []}
