@@ -145,7 +145,7 @@ export default function ProjectsPage() {
 
       <Card
         className="shadow-sm border-gray-200 hover:shadow-md transition-shadow duration-200"
-        bodyStyle={{ padding: 0 }}
+        styles={{ body: { padding: 0 } }}
       >
         {projects.length === 0 && !loading ? (
           <div className="py-16">

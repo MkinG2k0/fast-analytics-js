@@ -138,7 +138,7 @@ export function EventUrlDisplay({
                   </Text>
                   <div className="flex-1 min-w-0">
                     {jsonValue ? (
-                      <div className="bg-white rounded border p-2">
+                      <div className="bg-white rounded border p-2 min-w-60">
                         <JsonViewer data={jsonValue} />
                       </div>
                     ) : (

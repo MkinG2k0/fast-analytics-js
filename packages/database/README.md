@@ -39,6 +39,25 @@ const data = {
 - `pnpm db:reset` - Сброс БД и применение всех миграций
 - `pnpm db:studio` - Запуск Prisma Studio
 
+## Решение проблем
+
+### Ошибка P1017: Server has closed the connection (Neon PostgreSQL)
+
+Если вы используете **Neon PostgreSQL** и получаете ошибку `P1017: Server has closed the connection` при выполнении миграций, это происходит потому, что Prisma миграции **не работают с pooler URL**.
+
+**Решение:**
+
+1. **Используйте прямой URL (direct connection)** вместо pooler URL в `DATABASE_URL`:
+   - ❌ Pooler URL: `postgresql://user:pass@ep-xxx-**pooler**.region.aws.neon.tech/db`
+   - ✅ Прямой URL: `postgresql://user:pass@ep-xxx.region.aws.neon.tech/db` (без `-pooler`)
+
+2. **Где найти прямой URL в Neon:**
+   - Откройте ваш проект в Neon Console
+   - Перейдите в раздел "Connection Details"
+   - Используйте строку подключения из секции "Direct connection" (не "Pooled connection")
+
+3. **Альтернатива:** Если нужно использовать pooler URL для приложения, создайте отдельный `.env` файл в `packages/database/` с прямым URL только для миграций, или временно замените `DATABASE_URL` на прямой URL перед выполнением миграций.
+
 ## Структура
 
 - `prisma/schema.prisma` - Схема базы данных

@@ -359,6 +359,7 @@ export function LogsTable({
               body: {
                 maxWidth: "900px",
                 minWidth: "300px",
+                width: "500px",
                 backgroundColor: "white",
               },
             }}

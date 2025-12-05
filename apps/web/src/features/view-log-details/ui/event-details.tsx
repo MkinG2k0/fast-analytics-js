@@ -81,7 +81,7 @@ export function EventDetails({ event }: EventDetailsProps) {
             </Space>
           </div>
         }
-        bodyStyle={{ padding: "12px 16px" }}
+        styles={{ body: { padding: "12px 16px" } }}
       >
         <Descriptions column={2} bordered size="small">
           <Descriptions.Item label="ID" span={2}>

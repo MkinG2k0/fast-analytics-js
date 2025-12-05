@@ -81,7 +81,7 @@ export function EventHttpRequest({ context }: EventHttpRequestProps) {
           />
         </div>
       }
-      bodyStyle={{ padding: 0 }}
+      styles={{ body: { padding: 0 } }}
     >
       {requestData ? (
         <JsonViewer data={requestData} defaultExpanded />

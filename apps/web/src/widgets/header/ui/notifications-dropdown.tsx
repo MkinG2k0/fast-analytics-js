@@ -200,7 +200,7 @@ export function NotificationsDropdown() {
 
   return (
     <Dropdown
-      dropdownRender={() => dropdownContent}
+      popupRender={() => dropdownContent}
       trigger={["click"]}
       placement="bottomRight"
       overlayClassName="notification-dropdown"
