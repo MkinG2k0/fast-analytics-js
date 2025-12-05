@@ -1,5 +1,5 @@
 {
-  "name": "Fast Analytics",
+  "name": "fast-analytics",
   "private": true,
   "scripts": {
     "build": "turbo run build",
