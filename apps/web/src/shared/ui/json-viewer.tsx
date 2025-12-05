@@ -289,7 +289,6 @@ function JsonValue({
               ))}
             </div>
             <span className="json-bracket">
-              {" "}
               <br />
               {"}"}
             </span>

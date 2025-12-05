@@ -16,18 +16,6 @@ export const authConfig: NextAuthOptions = {
     error: "/login",
   },
   callbacks: {
-    jwt({ token, user }) {
-      if (user) {
-        token.id = user.id;
-      }
-      return token;
-    },
-    session({ session, token }) {
-      if (token.id) {
-        session.user.id = token.id;
-      }
-      return session;
-    },
     async signIn({ account }) {
       // Разрешаем вход для всех пользователей Google
       if (account?.provider === "google") {
