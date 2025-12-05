@@ -1,0 +1,2 @@
+export { setupAuthenticatedSession } from "./auth";
+
