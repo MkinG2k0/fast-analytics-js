@@ -1,6 +1,6 @@
 {
   "name": "fast-analytics-js",
-  "version": "0.2.1",
+  "version": "0.3.1",
   "description": "SDK для отправки логов и ошибок в Fast Analytics",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",

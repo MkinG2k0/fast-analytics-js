@@ -265,7 +265,6 @@ export function PageVisitsAnalytics({ projectId }: PageVisitsAnalyticsProps) {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <BarChartOutlined className="text-blue-500 text-lg" />
-            <span className="font-semibold text-lg">Аналитика посещений</span>
           </div>
           <Space>
             <Select
@@ -318,7 +317,6 @@ export function PageVisitsAnalytics({ projectId }: PageVisitsAnalyticsProps) {
                 <Statistic
                   title="Среднее время (мс)"
                   value={analytics.summary.avgDuration}
-                  valueStyle={{ color: "#cf1322" }}
                   suffix="мс"
                 />
               </Card>
