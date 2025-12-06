@@ -7,18 +7,28 @@ import {
   Button,
   Input,
   message,
+  Popconfirm,
   Space,
   Typography,
   Skeleton,
+  Form,
 } from "antd";
 import {
   CopyOutlined,
+  DeleteOutlined,
+  EditOutlined,
   ReloadOutlined,
+  SaveOutlined,
   SettingOutlined,
 } from "@ant-design/icons";
 import { useSession } from "next-auth/react";
 
-import { getProject, regenerateApiKey } from "@/shared/api/projects";
+import {
+  deleteProject,
+  getProject,
+  regenerateApiKey,
+  updateProject,
+} from "@/shared/api/projects";
 import { getProjectRole } from "@/shared/api/invitations";
 import {
   InviteMemberForm,
@@ -28,6 +38,7 @@ import {
 import type { Project } from "@/entities/project";
 
 const { Title, Paragraph, Text } = Typography;
+const { TextArea } = Input;
 
 export function ProjectSettingsPage() {
   const params = useParams();
@@ -37,7 +48,11 @@ export function ProjectSettingsPage() {
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(false);
   const [regeneratingKey, setRegeneratingKey] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [form] = Form.useForm();
 
   const loadProject = async () => {
     try {
@@ -85,7 +100,61 @@ export function ProjectSettingsPage() {
     message.success("Скопировано в буфер обмена");
   };
 
+  const handleDelete = async () => {
+    try {
+      setDeleting(true);
+      await deleteProject(projectId);
+      message.success("Проект успешно удален");
+      router.push("/projects");
+    } catch {
+      message.error("Ошибка удаления проекта");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   const canManageMembers = userRole === "owner" || userRole === "admin";
+  const canManageSettings = userRole === "owner" || userRole === "admin";
+  const isOwner = userRole === "owner";
+
+  const handleEdit = () => {
+    if (project) {
+      form.setFieldsValue({
+        name: project.name,
+        description: project.description || "",
+      });
+      setEditing(true);
+    }
+  };
+
+  const handleCancel = () => {
+    form.resetFields();
+    setEditing(false);
+  };
+
+  const handleSave = async () => {
+    try {
+      const values = await form.validateFields();
+      setSaving(true);
+      const updatedProject = await updateProject(projectId, {
+        name: values.name,
+        description: values.description || undefined,
+      });
+      setProject(updatedProject);
+      setEditing(false);
+      message.success("Проект успешно обновлен");
+    } catch (error) {
+      if (error && typeof error === "object" && "errorFields" in error) {
+        // Ошибки валидации формы
+        return;
+      }
+      message.error(
+        error instanceof Error ? error.message : "Ошибка обновления проекта"
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
 
   if (loading || !project) {
     return (
@@ -116,31 +185,6 @@ export function ProjectSettingsPage() {
     );
   }
 
-  const sdkCode = `import { init, logError, logWarning } from 'fast-analytics-js';
-
-init({
-  projectKey: '${project.apiKey}',
-  endpoint: 'http://localhost:3000/api/events'
-});
-
-// Автоматический перехват ошибок
-// window.onerror и window.onunhandledrejection уже обрабатываются
-
-// Ручная отправка ошибки
-try {
-  // ваш код
-} catch (error) {
-  logError(error, {
-    customTags: { section: 'checkout' }
-  });
-}
-
-// Отправка предупреждения
-logWarning('Пользователь выполнил необычное действие', {
-  userId: 'user123',
-  customTags: { action: 'unusual_behavior' }
-});`;
-
   return (
     <div className="p-6 max-w-[1600px] mx-auto">
       <Space direction="vertical" size="large" className="w-full">
@@ -154,16 +198,104 @@ logWarning('Пользователь выполнил необычное дей�
         </div>
 
         <Space direction="vertical" size="large" className="w-full">
-          <Card title="Информация о проекте" className="mb-4">
-            <Paragraph>
-              <Text strong>Название:</Text> {project.name}
-            </Paragraph>
-            {project.description && (
-              <Paragraph>
-                <Text strong>Описание:</Text> {project.description}
-              </Paragraph>
+          <Card
+            title="Информация о проекте"
+            className="mb-4"
+            extra={
+              canManageSettings &&
+              !editing && (
+                <Button
+                  icon={<EditOutlined />}
+                  onClick={handleEdit}
+                  type="text"
+                >
+                  Редактировать
+                </Button>
+              )
+            }
+          >
+            {editing ? (
+              <Form
+                form={form}
+                layout="vertical"
+                onFinish={handleSave}
+                initialValues={{
+                  name: project.name,
+                  description: project.description || "",
+                }}
+              >
+                <Form.Item
+                  name="name"
+                  label="Название"
+                  rules={[
+                    { required: true, message: "Название проекта обязательно" },
+                  ]}
+                >
+                  <Input placeholder="Введите название проекта" />
+                </Form.Item>
+                <Form.Item name="description" label="Описание">
+                  <TextArea
+                    placeholder="Введите описание проекта (необязательно)"
+                    rows={4}
+                  />
+                </Form.Item>
+                <Form.Item>
+                  <Space>
+                    <Button
+                      type="primary"
+                      icon={<SaveOutlined />}
+                      onClick={handleSave}
+                      loading={saving}
+                    >
+                      Сохранить
+                    </Button>
+                    <Button onClick={handleCancel} disabled={saving}>
+                      Отмена
+                    </Button>
+                  </Space>
+                </Form.Item>
+              </Form>
+            ) : (
+              <>
+                <Paragraph>
+                  <Text strong>Название:</Text> {project.name}
+                </Paragraph>
+                {project.description && (
+                  <Paragraph>
+                    <Text strong>Описание:</Text> {project.description}
+                  </Paragraph>
+                )}
+              </>
             )}
           </Card>
+
+          {canManageMembers && (
+            <Card title="Участники проекта" className="mb-4">
+              <Space direction="vertical" size="large" className="w-full">
+                <div>
+                  <Title level={5}>Пригласить участника</Title>
+                  <InviteMemberForm
+                    projectId={projectId}
+                    onSuccess={() => {
+                      loadProject();
+                    }}
+                  />
+                </div>
+                <div>
+                  <Title level={5}>Активные приглашения</Title>
+                  <InvitationsList projectId={projectId} />
+                </div>
+                <div>
+                  <Title level={5}>Участники</Title>
+                  <MembersList
+                    projectId={projectId}
+                    currentUserId={session?.user?.id || ""}
+                    currentUserRole={userRole || ""}
+                  />
+                </div>
+              </Space>
+            </Card>
+          )}
 
           <Card title="API Key" className="mb-4">
             <Space direction="vertical" style={{ width: "100%" }}>
@@ -194,30 +326,35 @@ logWarning('Пользователь выполнил необычное дей�
             </Space>
           </Card>
 
-          {canManageMembers && (
-            <Card title="Участники проекта" className="mb-4">
-              <Space direction="vertical" size="large" className="w-full">
-                <div>
-                  <Title level={5}>Пригласить участника</Title>
-                  <InviteMemberForm
-                    projectId={projectId}
-                    onSuccess={() => {
-                      loadProject();
-                    }}
-                  />
-                </div>
-                <div>
-                  <Title level={5}>Активные приглашения</Title>
-                  <InvitationsList projectId={projectId} />
-                </div>
-                <div>
-                  <Title level={5}>Участники</Title>
-                  <MembersList
-                    projectId={projectId}
-                    currentUserId={session?.user?.id || ""}
-                    currentUserRole={userRole || ""}
-                  />
-                </div>
+          {isOwner && (
+            <Card
+              title="Опасная зона"
+              className="mb-4 border-red-200"
+              headStyle={{ borderColor: "#ffccc7" }}
+            >
+              <Space direction="vertical" style={{ width: "100%" }}>
+                <Paragraph type="secondary">
+                  Удаление проекта приведет к безвозвратному удалению всех
+                  данных, включая события, логи и настройки. Это действие нельзя
+                  отменить.
+                </Paragraph>
+                <Popconfirm
+                  title="Удалить проект?"
+                  description={`Вы уверены, что хотите удалить проект "${project?.name}"? Это действие нельзя отменить. Все данные проекта будут безвозвратно удалены.`}
+                  onConfirm={handleDelete}
+                  okText="Удалить"
+                  cancelText="Отмена"
+                  okButtonProps={{ danger: true }}
+                >
+                  <Button
+                    type="primary"
+                    danger
+                    icon={<DeleteOutlined />}
+                    loading={deleting}
+                  >
+                    Удалить проект
+                  </Button>
+                </Popconfirm>
               </Space>
             </Card>
           )}

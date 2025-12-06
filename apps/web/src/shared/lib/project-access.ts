@@ -21,6 +21,7 @@ const rolePermissions: Record<ProjectRole, ProjectPermission[]> = {
     ProjectPermission.VIEW,
     ProjectPermission.EDIT,
     ProjectPermission.MANAGE_MEMBERS,
+    ProjectPermission.MANAGE_SETTINGS,
   ],
   member: [ProjectPermission.VIEW, ProjectPermission.EDIT],
   viewer: [ProjectPermission.VIEW],

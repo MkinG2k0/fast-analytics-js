@@ -120,7 +120,7 @@ export function ProjectsPage() {
   ];
 
   return (
-    <div className="p-6 max-w-[1600px] mx-auto min-h-screen">
+    <div className="p-6 max-w-[1600px] mx-auto ">
       <div className="flex justify-between items-center mb-8">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 bg-gradient-to-br from-blue-500 via-blue-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
@@ -292,4 +292,3 @@ export function ProjectsPage() {
     </div>
   );
 }
-

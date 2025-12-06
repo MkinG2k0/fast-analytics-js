@@ -27,3 +27,18 @@ export async function regenerateApiKey(
   );
   return data;
 }
+
+export async function updateProject(
+  projectId: string,
+  data: { name?: string; description?: string }
+): Promise<Project> {
+  const { data: result } = await apiClient.patch<Project>(
+    `${API_BASE}/${projectId}`,
+    data
+  );
+  return result;
+}
+
+export async function deleteProject(projectId: string): Promise<void> {
+  await apiClient.delete(`${API_BASE}/${projectId}`);
+}
