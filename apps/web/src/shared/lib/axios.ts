@@ -22,7 +22,7 @@ apiClient.interceptors.response.use(
         // Сохраняем текущий URL для возврата после входа
         const currentPath = window.location.pathname;
         const isPublicRoute =
-          ["/login", "/register"].includes(currentPath) ||
+          ["/login", "/register", "/"].includes(currentPath) ||
           currentPath.startsWith("/invite/");
 
         // Перенаправляем на страницу входа только если не находимся на публичной странице

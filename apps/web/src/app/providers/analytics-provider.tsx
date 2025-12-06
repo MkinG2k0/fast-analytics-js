@@ -1,21 +1,21 @@
-'use client'
+"use client";
 
-import { init } from 'fast-analytics-js'
-import { ReactNode, useEffect } from 'react'
+import { init } from "fast-analytics-js";
+import { ReactNode, useEffect } from "react";
+import { useMount } from "react-use";
 
 interface AnalyticsProviderWrapperProps {
-	children: ReactNode;
+  children: ReactNode;
 }
 
 export function AnalyticsProviderWrapper({
-	children,
+  children,
 }: AnalyticsProviderWrapperProps) {
+  useMount(() => {
+    init({
+      projectKey: process.env.NEXT_PUBLIC_FAST_ANALYTICS_KEY!,
+    });
+  });
 
-	useEffect(() => {
-		init({
-			projectKey: process.env.NEXT_PUBLIC_FAST_ANALYTICS_KEY!,
-		})
-	}, [])
-
-	return <>{children}</>
+  return <>{children}</>;
 }

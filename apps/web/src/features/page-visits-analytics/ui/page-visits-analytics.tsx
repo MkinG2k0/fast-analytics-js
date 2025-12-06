@@ -344,8 +344,8 @@ export function PageVisitsAnalytics({projectId}: PageVisitsAnalyticsProps) {
 				<Table
 					columns={analyticsColumns}
 					dataSource={analytics?.analytics || []}
-					rowKey={(record, index) =>
-						record.url || record.date || record.hour || String(index)
+					rowKey={(record) =>
+						record.url || record.date || record.hour || `${record.visits}-${record.uniqueSessions}`
 					}
 					pagination={{pageSize: 20}}
 				/>

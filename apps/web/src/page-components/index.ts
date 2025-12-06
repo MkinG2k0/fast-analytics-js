@@ -6,4 +6,5 @@ export * from "./project-logs";
 export * from "./project-settings";
 export * from "./projects";
 export * from "./register";
+export { IndexPage } from "./index/ui";
 
