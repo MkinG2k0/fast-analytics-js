@@ -3,28 +3,74 @@
   "ui": "tui",
   "tasks": {
     "build": {
-      "dependsOn": ["^build"],
-      "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "outputs": [".next/**", "!.next/cache/**"],
-      "env": ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "NEXTAUTH_SECRET", "NODE_ENV"]
+      "dependsOn": [
+        "^build"
+      ],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        ".env*"
+      ],
+      "outputs": [
+        ".next/**",
+        "!.next/cache/**"
+      ],
+      "env": [
+        "GOOGLE_CLIENT_ID",
+        "GOOGLE_CLIENT_SECRET",
+        "NEXTAUTH_SECRET",
+        "NODE_ENV",
+        "NEXT_PUBLIC_FAST_ANALYTICS_KEY"
+      ]
     },
     "lint": {
-      "dependsOn": ["^lint"],
-      "env": ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "NEXTAUTH_SECRET", "NODE_ENV"]
+      "dependsOn": [
+        "^lint"
+      ],
+      "env": [
+        "GOOGLE_CLIENT_ID",
+        "GOOGLE_CLIENT_SECRET",
+        "NEXTAUTH_SECRET",
+        "NODE_ENV",
+        "NEXT_PUBLIC_FAST_ANALYTICS_KEY"
+      ]
     },
     "check-types": {
-      "dependsOn": ["^check-types"],
-      "env": ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "NEXTAUTH_SECRET", "NODE_ENV"]
+      "dependsOn": [
+        "^check-types"
+      ],
+      "env": [
+        "GOOGLE_CLIENT_ID",
+        "GOOGLE_CLIENT_SECRET",
+        "NEXTAUTH_SECRET",
+        "NODE_ENV",
+        "NEXT_PUBLIC_FAST_ANALYTICS_KEY"
+      ]
     },
     "test": {
-      "dependsOn": ["^build"],
-      "outputs": ["coverage/**"],
-      "env": ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "NEXTAUTH_SECRET", "NODE_ENV"]
+      "dependsOn": [
+        "^build"
+      ],
+      "outputs": [
+        "coverage/**"
+      ],
+      "env": [
+        "GOOGLE_CLIENT_ID",
+        "GOOGLE_CLIENT_SECRET",
+        "NEXTAUTH_SECRET",
+        "NODE_ENV",
+        "NEXT_PUBLIC_FAST_ANALYTICS_KEY"
+      ]
     },
     "dev": {
       "cache": false,
       "persistent": true,
-      "env": ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "NEXTAUTH_SECRET", "NODE_ENV"]
+      "env": [
+        "GOOGLE_CLIENT_ID",
+        "GOOGLE_CLIENT_SECRET",
+        "NEXTAUTH_SECRET",
+        "NODE_ENV",
+        "NEXT_PUBLIC_FAST_ANALYTICS_KEY"
+      ]
     }
   }
 }
