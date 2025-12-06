@@ -1,10 +1,12 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { App, Button, Spin, Table } from "antd";
+import { App, Button, Table } from "antd";
 import { DeleteOutlined } from "@ant-design/icons";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { useEventsQuery } from "@/features/view-project-logs/lib";
+import { deleteEvent } from "@/shared/api/events";
 import { createColumns } from "../lib";
 import { useLogsTableStore } from "../model";
 import type { LogsTableProps } from "../model";
@@ -13,7 +15,9 @@ export function LogsTable({ projectId }: LogsTableProps) {
   const { message } = App.useApp();
   const { filters, pagination, setFilter, setPagination } = useLogsTableStore();
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+  const [isDeleting, setIsDeleting] = useState(false);
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   const { data, isLoading, error } = useEventsQuery({
     projectId,
@@ -31,13 +35,42 @@ export function LogsTable({ projectId }: LogsTableProps) {
     setPagination({ current: page, pageSize });
   };
 
-  const handleDelete = () => {};
+  const handleDelete = async () => {
+    if (selectedRowKeys.length === 0) {
+      return;
+    }
+
+    try {
+      setIsDeleting(true);
+      const deletePromises = selectedRowKeys.map((id) =>
+        deleteEvent(id as string)
+      );
+      await Promise.all(deletePromises);
+
+      message.success(`Успешно удалено событий: ${selectedRowKeys.length}`);
+      setSelectedRowKeys([]);
+
+      await queryClient.invalidateQueries({
+        queryKey: ["events", projectId],
+      });
+    } catch (error) {
+      message.error(
+        error instanceof Error ? error.message : "Ошибка при удалении событий"
+      );
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   useEffect(() => {
     if (error) {
       message.error("Ошибка при загрузке событий");
     }
   }, [error, message]);
+
+  useEffect(() => {
+    setSelectedRowKeys([]);
+  }, [pagination, filters]);
 
   return (
     <div className="relative h-full">
@@ -72,7 +105,13 @@ export function LogsTable({ projectId }: LogsTableProps) {
               Выбрано событий: {selectedRowKeys.length}
             </span>
 
-            <Button danger icon={<DeleteOutlined />} onClick={handleDelete}>
+            <Button
+              danger
+              icon={<DeleteOutlined />}
+              onClick={handleDelete}
+              loading={isDeleting}
+              disabled={isDeleting}
+            >
               Удалить выбранные
             </Button>
           </div>
