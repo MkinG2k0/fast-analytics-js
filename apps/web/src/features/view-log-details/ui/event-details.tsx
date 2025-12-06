@@ -131,14 +131,16 @@ export function EventDetails({ event }: EventDetailsProps) {
 
       {event.screenshotUrl && (
         <Card title={<span className="font-semibold">Скриншот экрана</span>}>
-          <Image
-            src={event.screenshotUrl}
-            alt="Скриншот ошибки"
-            className="w-full max-w-4xl"
-            preview={{
-              mask: "Увеличить",
-            }}
-          />
+          <div className="w-full flex justify-center">
+            <Image
+              src={event.screenshotUrl}
+              alt="Скриншот ошибки"
+              className="w-full max-w-4xl"
+              preview={{
+                mask: "Увеличить",
+              }}
+            />
+          </div>
         </Card>
       )}
 

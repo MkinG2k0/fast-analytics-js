@@ -1,6 +1,6 @@
 {
   "name": "fast-analytics-js",
-  "version": "0.5.2",
+  "version": "0.6.0",
   "description": "SDK для отправки логов и ошибок в Fast Analytics",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
@@ -40,9 +40,6 @@
   "license": "MIT",
   "engines": {
     "node": ">=18"
-  },
-  "dependencies": {
-    "@repo/database": "workspace:*"
   },
   "peerDependencies": {
     "html2canvas-pro": "^1.4.1"
