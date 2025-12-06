@@ -1,7 +1,7 @@
 import type { EventContext, EventPayload } from "../model";
 import { Transport } from "../transport";
 import { SessionManager } from "../session";
-import { createEventPayload } from "../lib/create-event-payload";
+import { createEventPayload, createScreenshot } from "../lib";
 import { setupFetchInterceptor } from "./fetch-interceptor";
 import { setupXHRInterceptor } from "./xhr-interceptor";
 
@@ -10,6 +10,7 @@ export class Interceptors {
   private sessionManager: SessionManager;
   private getUserId: () => string | undefined;
   private sdkEndpoint: string;
+  private enableScreenshotOnError: boolean;
   private originalErrorHandler: typeof window.onerror | null = null;
   private unhandledRejectionHandler:
     | ((event: PromiseRejectionEvent) => void)
@@ -22,12 +23,14 @@ export class Interceptors {
     transport: Transport,
     sessionManager: SessionManager,
     getUserId: () => string | undefined,
-    sdkEndpoint: string
+    sdkEndpoint: string,
+    enableScreenshotOnError: boolean = false
   ) {
     this.transport = transport;
     this.sessionManager = sessionManager;
     this.getUserId = getUserId;
     this.sdkEndpoint = sdkEndpoint;
+    this.enableScreenshotOnError = enableScreenshotOnError;
   }
 
   private isSDKRequest(url: string): boolean {
@@ -47,19 +50,24 @@ export class Interceptors {
     }
   }
 
-  private createErrorPayload(
+  private async createErrorPayload(
     message: string,
     source?: string,
     lineno?: number,
     colno?: number,
     error?: Error,
     context?: EventContext
-  ): EventPayload {
+  ): Promise<EventPayload> {
     let stack: string | undefined;
     if (error?.stack) {
       stack = error.stack;
     } else if (source && lineno !== undefined && colno !== undefined) {
       stack = `${source}:${lineno}:${colno}`;
+    }
+
+    let screenshotUrl: string | undefined;
+    if (this.enableScreenshotOnError) {
+      screenshotUrl = await createScreenshot() ?? undefined;
     }
 
     return createEventPayload({
@@ -69,6 +77,7 @@ export class Interceptors {
       sessionId: this.sessionManager.getSessionId(),
       stack,
       userId: context?.userId ?? this.getUserId(),
+      screenshotUrl,
     });
   }
 
@@ -85,18 +94,22 @@ export class Interceptors {
       colno,
       error
     ): boolean => {
-      const payload = this.createErrorPayload(
+      this.createErrorPayload(
         String(message),
         source?.toString(),
         lineno,
         colno,
         error ?? undefined,
         undefined
-      );
-
-      this.transport.send(payload).catch(() => {
-        // Игнорируем ошибки отправки, чтобы не создавать бесконечный цикл
-      });
+      )
+        .then((payload) => {
+          this.transport.send(payload).catch(() => {
+            // Игнорируем ошибки отправки, чтобы не создавать бесконечный цикл
+          });
+        })
+        .catch(() => {
+          // Игнорируем ошибки создания payload
+        });
 
       if (this.originalErrorHandler) {
         return this.originalErrorHandler(message, source, lineno, colno, error);
@@ -111,18 +124,22 @@ export class Interceptors {
           ? event.reason
           : new Error(String(event.reason));
 
-      const payload = this.createErrorPayload(
+      this.createErrorPayload(
         error.message,
         undefined,
         undefined,
         undefined,
         error,
         undefined
-      );
-
-      this.transport.send(payload).catch(() => {
-        // Игнорируем ошибки отправки, чтобы не создавать бесконечный цикл
-      });
+      )
+        .then((payload) => {
+          this.transport.send(payload).catch(() => {
+            // Игнорируем ошибки отправки, чтобы не создавать бесконечный цикл
+          });
+        })
+        .catch(() => {
+          // Игнорируем ошибки создания payload
+        });
     };
 
     window.addEventListener("unhandledrejection", this.unhandledRejectionHandler);
@@ -147,7 +164,7 @@ export class Interceptors {
 
       const message = `Ошибка загрузки ресурса: ${resourceType} - ${resourceUrl}`;
 
-      const payload = this.createErrorPayload(
+      this.createErrorPayload(
         message,
         resourceUrl,
         undefined,
@@ -160,17 +177,37 @@ export class Interceptors {
             resourceUrl,
           },
         }
-      );
-
-      this.transport.send(payload).catch(() => {
-        // Игнорируем ошибки отправки, чтобы не создавать бесконечный цикл
-      });
+      )
+        .then((payload) => {
+          this.transport.send(payload).catch(() => {
+            // Игнорируем ошибки отправки, чтобы не создавать бесконечный цикл
+          });
+        })
+        .catch(() => {
+          // Игнорируем ошибки создания payload
+        });
     };
 
     window.addEventListener("error", this.resourceErrorHandler, true);
 
     this.teardownFetch = setupFetchInterceptor({
-      createErrorPayload: this.createErrorPayload.bind(this),
+      createErrorPayload: async (
+        message: string,
+        source?: string,
+        lineno?: number,
+        colno?: number,
+        error?: Error,
+        context?: EventContext
+      ) => {
+        return this.createErrorPayload(
+          message,
+          source,
+          lineno,
+          colno,
+          error,
+          context
+        );
+      },
       getUserId: this.getUserId,
       isSDKRequest: this.isSDKRequest.bind(this),
       sessionManager: this.sessionManager,
@@ -178,7 +215,23 @@ export class Interceptors {
     });
 
     this.teardownXHR = setupXHRInterceptor({
-      createErrorPayload: this.createErrorPayload.bind(this),
+      createErrorPayload: async (
+        message: string,
+        source?: string,
+        lineno?: number,
+        colno?: number,
+        error?: Error,
+        context?: EventContext
+      ) => {
+        return this.createErrorPayload(
+          message,
+          source,
+          lineno,
+          colno,
+          error,
+          context
+        );
+      },
       getUserId: this.getUserId,
       isSDKRequest: this.isSDKRequest.bind(this),
       sessionManager: this.sessionManager,

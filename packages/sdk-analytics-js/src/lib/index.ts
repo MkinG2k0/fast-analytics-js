@@ -1,4 +1,5 @@
 export { createEventPayload } from "./create-event-payload";
+export { createScreenshot } from "./create-screenshot";
 export { getBrowserUrl, getBrowserUserAgent } from "./get-browser-info";
 export { PageVisitTracker } from "./page-visit-tracker";
 export {

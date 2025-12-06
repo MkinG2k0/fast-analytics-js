@@ -17,6 +17,16 @@ npm install fast-analytics-js
 
 **Requirements:** Node.js >= 18
 
+#### Optional: Screenshot Support
+
+For full screenshot functionality when errors occur, install `html2canvas-pro`:
+
+```bash
+npm install html2canvas-pro
+```
+
+**Note:** Screenshots will work without `html2canvas-pro`, but with limited functionality. For full page screenshots with support for modern CSS colors (oklch, lab, lch, etc.), `html2canvas-pro` is recommended.
+
 ### Quick Start
 
 ```typescript
@@ -33,11 +43,12 @@ init({
 ### Features
 
 - ✅ **Automatic error capture** - No code changes needed
+- ✅ **Error screenshots** - Automatic screenshots when errors occur (optional)
 - ✅ **Page visit tracking** - Automatic SPA route tracking
 - ✅ **Session management** - Automatic session tracking
 - ✅ **Batch processing** - Efficient event batching
 - ✅ **TypeScript support** - Full type definitions included
-- ✅ **Zero dependencies** - Lightweight and fast
+- ✅ **Zero dependencies** - Lightweight and fast (html2canvas-pro is optional)
 - ✅ **Framework agnostic** - Works with React, Vue, Angular, or vanilla JS
 
 ### View Logs in Dashboard
@@ -173,6 +184,7 @@ init({
   userId: "optional-user-id", // Optional: set user ID globally for all events
   enableAutoCapture: true, // Optional: Enable automatic error capture (default: true)
   enablePageTracking: true, // Optional: Enable automatic page visit tracking (default: true)
+  enableScreenshotOnError: true, // Optional: Enable automatic screenshots on errors (default: false)
   batchSize: 10, // Optional: Batch size for sending events (default: 10)
   batchTimeout: 5000, // Optional: Batch timeout in ms (default: 5000)
 });
@@ -208,6 +220,33 @@ init({
   enableAutoCapture: false, // Disable automatic capture
 });
 ```
+
+### Error Screenshots
+
+The SDK can automatically capture screenshots when errors occur. This helps you see exactly what the user saw when the error happened.
+
+#### Enable Screenshots
+
+```typescript
+init({
+  projectKey: "your-project-api-key",
+  enableScreenshotOnError: true, // Enable automatic screenshots on errors
+});
+```
+
+#### Install html2canvas-pro (Recommended)
+
+For full screenshot functionality, install `html2canvas-pro`:
+
+```bash
+npm install html2canvas-pro
+```
+
+**Without `html2canvas-pro`:** The SDK will use a fallback method that creates a basic screenshot with limited functionality.
+
+**With `html2canvas-pro`:** The SDK will capture full page screenshots with all styles and content rendered correctly, including support for modern CSS colors (oklch, lab, lch, etc.).
+
+Screenshots are automatically attached to error events and can be viewed in the Fast Analytics dashboard.
 
 ### Force Flush Events
 
@@ -382,6 +421,16 @@ npm install fast-analytics-js
 
 **Требования:** Node.js >= 18
 
+#### Опционально: Поддержка скриншотов
+
+Для полноценной функциональности скриншотов при возникновении ошибок установите `html2canvas-pro`:
+
+```bash
+npm install html2canvas-pro
+```
+
+**Примечание:** Скриншоты будут работать и без `html2canvas-pro`, но с ограниченной функциональностью. Для полноценных скриншотов страниц с поддержкой современных CSS цветов (oklch, lab, lch и др.) рекомендуется установить `html2canvas-pro`.
+
 ### Быстрый старт
 
 ```typescript
@@ -398,11 +447,12 @@ init({
 ### Возможности
 
 - ✅ **Автоматический перехват ошибок** - Не требует изменений в коде
+- ✅ **Скриншоты ошибок** - Автоматические скриншоты при возникновении ошибок (опционально)
 - ✅ **Отслеживание посещений страниц** - Автоматическое отслеживание маршрутов в SPA
 - ✅ **Управление сессиями** - Автоматическое отслеживание сессий
 - ✅ **Батчинг событий** - Эффективная пакетная обработка событий
 - ✅ **Поддержка TypeScript** - Полные определения типов включены
-- ✅ **Нулевые зависимости** - Легковесный и быстрый
+- ✅ **Нулевые зависимости** - Легковесный и быстрый (html2canvas-pro опционален)
 - ✅ **Независим от фреймворка** - Работает с React, Vue, Angular или vanilla JS
 
 ### Просмотр логов в панели управления
@@ -538,6 +588,7 @@ init({
   userId: "optional-user-id", // Опционально: установить ID пользователя глобально для всех событий
   enableAutoCapture: true, // Опционально: Включить автоматический перехват (по умолчанию: true)
   enablePageTracking: true, // Опционально: Включить автоматическое отслеживание посещений страниц (по умолчанию: true)
+  enableScreenshotOnError: true, // Опционально: Включить автоматические скриншоты при ошибках (по умолчанию: false)
   batchSize: 10, // Опционально: Размер батча для отправки событий (по умолчанию: 10)
   batchTimeout: 5000, // Опционально: Таймаут отправки батча в мс (по умолчанию: 5000)
 });
@@ -573,6 +624,33 @@ init({
   enableAutoCapture: false, // Отключить автоматический перехват
 });
 ```
+
+### Скриншоты ошибок
+
+SDK может автоматически создавать скриншоты при возникновении ошибок. Это помогает увидеть точно то, что видел пользователь, когда произошла ошибка.
+
+#### Включение скриншотов
+
+```typescript
+init({
+  projectKey: "your-project-api-key",
+  enableScreenshotOnError: true, // Включить автоматические скриншоты при ошибках
+});
+```
+
+#### Установка html2canvas-pro (Рекомендуется)
+
+Для полноценной функциональности скриншотов установите `html2canvas-pro`:
+
+```bash
+npm install html2canvas-pro
+```
+
+**Без `html2canvas-pro`:** SDK будет использовать упрощённый метод, который создаёт базовый скриншот с ограниченной функциональностью.
+
+**С `html2canvas-pro`:** SDK будет создавать полноценные скриншоты страниц со всеми стилями и контентом, отрендеренными корректно, включая поддержку современных CSS цветов (oklch, lab, lch и др.).
+
+Скриншоты автоматически прикрепляются к событиям ошибок и могут быть просмотрены в панели управления Fast Analytics.
 
 ### Принудительная отправка событий
 

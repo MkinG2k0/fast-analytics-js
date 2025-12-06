@@ -20,7 +20,7 @@ interface FetchInterceptorOptions {
     colno?: number,
     error?: Error,
     context?: EventContext
-  ) => EventPayload;
+  ) => Promise<EventPayload>;
 }
 
 export const setupFetchInterceptor = (
@@ -68,7 +68,7 @@ export const setupFetchInterceptor = (
           await parseResponseBody(response);
         const contentType = response.headers.get("content-type") ?? "";
 
-        const payload = createErrorPayload(
+        const payload = await createErrorPayload(
           `HTTP ошибка: ${response.status} ${response.statusText}`,
           url,
           undefined,
@@ -116,7 +116,7 @@ export const setupFetchInterceptor = (
           ? error.message
           : `Сетевая ошибка при запросе: ${url}`;
 
-      const payload = createErrorPayload(
+      const payload = await createErrorPayload(
         errorMessage,
         url,
         undefined,

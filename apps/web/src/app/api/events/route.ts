@@ -26,6 +26,7 @@ const createEventSchema = z.object({
     })
     .passthrough()
     .optional(),
+  screenshotUrl: z.string().optional(),
 });
 
 const createEventsSchema = z.array(createEventSchema);
@@ -122,6 +123,7 @@ export async function POST(request: Request) {
           sessionId: event.sessionId || null,
           userId: event.userId || userIdFromContext || null,
           performance: performanceToSave,
+          screenshotUrl: event.screenshotUrl || null,
         };
 
         return eventData;

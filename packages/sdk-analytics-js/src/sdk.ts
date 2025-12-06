@@ -34,7 +34,8 @@ export class FastAnalyticsSDK {
       this.transport,
       this.sessionManager,
       () => this.userId,
-      options.endpoint ?? getDefaultEndpoint()
+      options.endpoint ?? getDefaultEndpoint(),
+      options.enableScreenshotOnError ?? false
     );
 
     if (options.enableAutoCapture !== false) {

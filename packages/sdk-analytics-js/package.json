@@ -44,12 +44,21 @@
   "dependencies": {
     "@repo/database": "workspace:*"
   },
+  "peerDependencies": {
+    "html2canvas-pro": "^1.4.1"
+  },
+  "peerDependenciesMeta": {
+    "html2canvas-pro": {
+      "optional": true
+    }
+  },
   "devDependencies": {
     "@types/node": "^22.15.3",
     "@vitest/coverage-v8": "^2.1.8",
     "@vitest/ui": "^2.1.8",
     "eslint": "^9.39.1",
     "happy-dom": "^15.11.6",
+    "html2canvas-pro": "^1.4.1",
     "tsup": "^8.3.5",
     "typescript": "^5.9.2",
     "vitest": "^2.1.8"

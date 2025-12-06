@@ -14,6 +14,7 @@ export interface InitOptions {
   endpoint?: string;
   enableAutoCapture?: boolean;
   enablePageTracking?: boolean;
+  enableScreenshotOnError?: boolean;
   batchSize?: number;
   batchTimeout?: number;
   userId?: string;
@@ -35,6 +36,7 @@ export interface EventPayload {
   sessionId?: string;
   userId?: string;
   performance?: EventPerformance;
+  screenshotUrl?: string;
 }
 
 export interface PageVisitPayload {

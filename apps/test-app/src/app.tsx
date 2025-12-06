@@ -53,8 +53,9 @@ export const App = () => {
       endpoint,
       enableAutoCapture: true,
       enablePageTracking: true,
+      enableScreenshotOnError: true,
       batchSize: 10,
-      batchTimeout: 5000,
+      batchTimeout: 1000,
       userId: userId || undefined,
     });
 

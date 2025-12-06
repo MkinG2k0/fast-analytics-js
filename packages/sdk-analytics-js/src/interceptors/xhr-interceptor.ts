@@ -15,7 +15,7 @@ interface XHRInterceptorOptions {
     colno?: number,
     error?: Error,
     context?: EventContext
-  ) => EventPayload;
+  ) => Promise<EventPayload>;
 }
 
 interface ExtendedXHR extends XMLHttpRequest {
@@ -116,7 +116,7 @@ export const setupXHRInterceptor = (
         ? performance.now() - xhr._fastAnalyticsRequestStartTime
         : undefined;
 
-      const payload = createErrorPayload(
+      createErrorPayload(
         `XMLHttpRequest ошибка: ${xhr.status} ${xhr.statusText ?? "Network Error"}`,
         xhr._fastAnalyticsUrl,
         undefined,
@@ -131,21 +131,25 @@ export const setupXHRInterceptor = (
             url: xhr._fastAnalyticsUrl,
           },
         }
-      );
+      )
+        .then((payload) => {
+          if (
+            requestDuration !== undefined &&
+            xhr._fastAnalyticsRequestStartTimestamp
+          ) {
+            payload.performance = {
+              requestDuration,
+              timestamp: xhr._fastAnalyticsRequestStartTimestamp,
+            };
+          }
 
-      if (
-        requestDuration !== undefined &&
-        xhr._fastAnalyticsRequestStartTimestamp
-      ) {
-        payload.performance = {
-          requestDuration,
-          timestamp: xhr._fastAnalyticsRequestStartTimestamp,
-        };
-      }
-
-      transport.send(payload).catch(() => {
-        // Игнорируем ошибки отправки, чтобы не создавать бесконечный цикл
-      });
+          transport.send(payload).catch(() => {
+            // Игнорируем ошибки отправки, чтобы не создавать бесконечный цикл
+          });
+        })
+        .catch(() => {
+          // Игнорируем ошибки создания payload
+        });
 
       if (originalOnError) {
         originalOnError.call(this, event);
@@ -163,7 +167,7 @@ export const setupXHRInterceptor = (
         const contentType = xhr.getResponseHeader("content-type") ?? "";
         const requestContentType = xhr._fastAnalyticsRequestContentType ?? "";
 
-        const payload = createErrorPayload(
+        createErrorPayload(
           `HTTP ошибка: ${xhr.status} ${xhr.statusText}`,
           xhr._fastAnalyticsUrl,
           undefined,
@@ -196,21 +200,25 @@ export const setupXHRInterceptor = (
               ? { responseData: responseBodyJson }
               : {}),
           }
-        );
+        )
+          .then((payload) => {
+            if (
+              requestDuration !== undefined &&
+              xhr._fastAnalyticsRequestStartTimestamp
+            ) {
+              payload.performance = {
+                requestDuration,
+                timestamp: xhr._fastAnalyticsRequestStartTimestamp,
+              };
+            }
 
-        if (
-          requestDuration !== undefined &&
-          xhr._fastAnalyticsRequestStartTimestamp
-        ) {
-          payload.performance = {
-            requestDuration,
-            timestamp: xhr._fastAnalyticsRequestStartTimestamp,
-          };
-        }
-
-        transport.send(payload).catch(() => {
-          // Игнорируем ошибки отправки, чтобы не создавать бесконечный цикл
-        });
+            transport.send(payload).catch(() => {
+              // Игнорируем ошибки отправки, чтобы не создавать бесконечный цикл
+            });
+          })
+          .catch(() => {
+            // Игнорируем ошибки создания payload
+          });
       }
 
       if (originalOnLoad) {

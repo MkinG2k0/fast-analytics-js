@@ -25,17 +25,6 @@ export class Transport {
       return;
     }
 
-    console.log("[Fast Analytics SDK] Отправка событий:", {
-      count: events.length,
-      events: events.map((event) => ({
-        context: event.context,
-        contextKeys: event.context ? Object.keys(event.context) : [],
-        hasContext: !!event.context,
-        level: event.level,
-        message: event.message,
-      })),
-    });
-
     try {
       const response = await fetch(this.endpoint, {
         body: JSON.stringify(events),
@@ -101,4 +90,3 @@ export class Transport {
     }
   }
 }
-

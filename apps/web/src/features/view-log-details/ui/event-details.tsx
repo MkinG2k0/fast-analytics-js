@@ -2,7 +2,17 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Card, Descriptions, Tag, Typography, Button, Popconfirm, message, Space } from "antd";
+import {
+  Card,
+  Descriptions,
+  Tag,
+  Typography,
+  Button,
+  Popconfirm,
+  message,
+  Space,
+  Image,
+} from "antd";
 import { ArrowLeftOutlined, DeleteOutlined } from "@ant-design/icons";
 import type { Event } from "@/entities/event";
 
@@ -116,6 +126,19 @@ export function EventDetails({ event }: EventDetailsProps) {
           <pre className="json-viewer overflow-auto max-h-96 whitespace-pre-wrap text-xs">
             {event.stack}
           </pre>
+        </Card>
+      )}
+
+      {event.screenshotUrl && (
+        <Card title={<span className="font-semibold">Скриншот экрана</span>}>
+          <Image
+            src={event.screenshotUrl}
+            alt="Скриншот ошибки"
+            className="w-full max-w-4xl"
+            preview={{
+              mask: "Увеличить",
+            }}
+          />
         </Card>
       )}
 

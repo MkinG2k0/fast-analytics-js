@@ -10,12 +10,21 @@ interface CreateEventPayloadOptions {
   userId?: string;
   url?: string;
   userAgent?: string;
+  screenshotUrl?: string;
 }
 
 export const createEventPayload = (
   options: CreateEventPayloadOptions
 ): EventPayload => {
-  const { level, message, stack, context, sessionId, userId } = options;
+  const {
+    level,
+    message,
+    stack,
+    context,
+    sessionId,
+    userId,
+    screenshotUrl,
+  } = options;
 
   const url = options.url ?? getBrowserUrl();
   const userAgent = options.userAgent ?? getBrowserUserAgent();
@@ -29,6 +38,7 @@ export const createEventPayload = (
     userId: context?.userId || userId,
     url,
     userAgent,
+    screenshotUrl,
   };
 };
 
