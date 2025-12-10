@@ -1,5 +1,6 @@
 'use client'
 
+import * as React from 'react'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
@@ -87,29 +88,15 @@ export function PageVisitsAnalytics({projectId}: PageVisitsAnalyticsProps) {
 			width: '100%',
 			ellipsis: groupBy === 'url' ? {showTitle: false} : false,
 			render: (text: string, record) => {
+				if (!text) {
+					return <Text className="text-gray-400">—</Text>
+				}
 				if (groupBy === 'url') {
-					if (!text) {
-						return <Text className="text-gray-400">—</Text>
-					}
 
-					const shortUrl =
-						text.startsWith('http://') || text.startsWith('https://')
-							? text.replace(/^https?:\/\//, '')
-							: text
-
-					// Формируем читаемую строку для отображения
-					let displayText = record.pathname || shortUrl
-					try {
-						const urlObj = new URL(
-							text.startsWith('http') ? text : `http://${text}`,
-						)
-						displayText =
-							record.pathname ||
-							`${urlObj.host}${urlObj.pathname}${urlObj.hash || ''}`
-					} catch {
-						// Если не удалось распарсить, используем pathname или исходный URL без протокола
-						displayText = record.pathname || shortUrl
-					}
+					const url = decodeURIComponent(text)
+					const shortUrl = url.slice(8)
+					const urlObj = new URL(url)
+					const displayText = `${urlObj.pathname}${urlObj.hash || ''}`
 
 					return (
 						<Tooltip
@@ -124,29 +111,24 @@ export function PageVisitsAnalytics({projectId}: PageVisitsAnalyticsProps) {
 							}}
 							placement="topLeft"
 						>
-							<div>
-								<Text
-									className="text-sm font-medium text-blue-600 hover:text-blue-800 cursor-pointer"
-									ellipsis={{tooltip: false}}
-									style={{display: 'block'}}
-									onClick={(e) => {
-										e.stopPropagation()
-										const fullUrl =
-											text.startsWith('http://') || text.startsWith('https://')
-												? text
-												: `http://${text}`
-										window.open(fullUrl, '_blank', 'noopener,noreferrer')
-									}}
-								>
-									{displayText}
-								</Text>
-							</div>
+							<Text
+								className="text-sm font-mono text-blue-600 hover:text-blue-800 cursor-pointer "
+								ellipsis={{tooltip: false}}
+								style={{display: 'block', maxWidth: '100%'}}
+								onClick={() => {
+									window.open(url, '_blank', 'noopener,noreferrer')
+								}}
+							>
+								{displayText}
+							</Text>
 						</Tooltip>
 					)
 				}
+
 				return text
 			},
 		},
+
 		{
 			title: 'Посещений',
 			dataIndex: 'visits',
@@ -226,16 +208,43 @@ export function PageVisitsAnalytics({projectId}: PageVisitsAnalyticsProps) {
 			title: 'URL',
 			dataIndex: 'url',
 			key: 'url',
-			render: (text: string, record) => (
-				<div>
-					<div className="font-medium">{record.pathname || text}</div>
-					{record.pathname && text !== record.pathname && (
-						<div className="text-xs text-gray-500 truncate max-w-md">
-							{text}
-						</div>
-					)}
-				</div>
-			),
+			render: (text: string, record) => {
+
+				if (!text) {
+					return <Text className="text-gray-400">—</Text>
+				}
+
+				const url = decodeURIComponent(text)
+				const shortUrl = url.slice(8)
+				const urlObj = new URL(url)
+				const displayText = `${urlObj.pathname}${urlObj.hash || ''}`
+
+				return (
+					<Tooltip
+						title={<EventUrlDisplay url={shortUrl}/>}
+						styles={{
+							body: {
+								maxWidth: '900px',
+								minWidth: '300px',
+								width: '500px',
+								backgroundColor: 'white',
+							},
+						}}
+						placement="topLeft"
+					>
+						<Text
+							className="text-sm font-mono text-blue-600 hover:text-blue-800 cursor-pointer "
+							ellipsis={{tooltip: false}}
+							style={{display: 'block', maxWidth: '100%'}}
+							onClick={() => {
+								window.open(url, '_blank', 'noopener,noreferrer')
+							}}
+						>
+							{displayText}
+						</Text>
+					</Tooltip>
+				)
+			},
 		},
 		{
 			title: 'Время',
