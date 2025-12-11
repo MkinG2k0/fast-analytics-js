@@ -20,7 +20,7 @@ import {
 import { ReloadOutlined, BarChartOutlined } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import dayjs from '@/shared/config/dayjs'
-import { getPageVisitsAnalytics } from '@/shared/api/page-visits'
+import { getPageVisitsAnalytics, getOnlineUsersCount } from '@/shared/api/page-visits'
 import type { PageVisitsAnalytics, PageVisit } from '@/shared/api/page-visits'
 import { EventUrlDisplay } from '@/entities/event'
 
@@ -38,6 +38,7 @@ export function PageVisitsAnalytics({projectId}: PageVisitsAnalyticsProps) {
 	const router = useRouter()
 	const [loading, setLoading] = useState(false)
 	const [analytics, setAnalytics] = useState<PageVisitsAnalytics | null>(null)
+	const [onlineUsersCount, setOnlineUsersCount] = useState<number>(0)
 	const [groupBy, setGroupBy] = useState<GroupBy>('url')
 	const [dateRange, setDateRange] = useState<[dayjs.Dayjs, dayjs.Dayjs] | null>(
 		[dayjs().subtract(1, 'month'), dayjs()],
@@ -60,9 +61,26 @@ export function PageVisitsAnalytics({projectId}: PageVisitsAnalyticsProps) {
 		}
 	}
 
+	const loadOnlineUsersCount = async () => {
+		try {
+			const { count } = await getOnlineUsersCount(projectId)
+			setOnlineUsersCount(count)
+		} catch {
+			// Игнорируем ошибки загрузки онлайн пользователей
+		}
+	}
+
 	useEffect(() => {
 		if (projectId) {
 			loadAnalytics()
+			loadOnlineUsersCount()
+			
+			// Обновляем количество онлайн пользователей каждые 10 секунд
+			const interval = setInterval(() => {
+				loadOnlineUsersCount()
+			}, 10000)
+			
+			return () => clearInterval(interval)
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [projectId, groupBy, dateRange])
@@ -347,6 +365,17 @@ export function PageVisitsAnalytics({projectId}: PageVisitsAnalyticsProps) {
 						</Col>
 					</Row>
 				)}
+				<Row gutter={[16, 16]} className="mb-6">
+					<Col xs={24} sm={6}>
+						<Card>
+							<Statistic
+								title="Онлайн пользователей"
+								value={onlineUsersCount}
+								valueStyle={{color: '#52c41a'}}
+							/>
+						</Card>
+					</Col>
+				</Row>
 			</Card>
 
 			<Card title="Статистика по страницам" loading={loading}>

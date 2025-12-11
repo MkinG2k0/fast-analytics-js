@@ -4,16 +4,19 @@ import { createEventPayload, PageVisitTracker } from "./lib";
 import { Interceptors } from "./interceptors";
 import { SessionManager } from "./session";
 import { PageVisitTransport, Transport } from "./transport";
+import { HeartbeatTransport } from "./transport/heartbeat-transport";
 
 export class FastAnalyticsSDK {
   private transport: Transport | null = null;
   private pageVisitTransport: PageVisitTransport | null = null;
+  private heartbeatTransport: HeartbeatTransport | null = null;
   private sessionManager: SessionManager;
   private interceptors: Interceptors | null = null;
   private pageVisitTracker: PageVisitTracker;
   private initialized = false;
   private userId: string | undefined;
   private enablePageTracking: boolean = false;
+  private enableOnlineTracking: boolean = false;
   private pageTrackingCleanup: (() => void) | null = null;
 
   constructor() {
@@ -49,6 +52,16 @@ export class FastAnalyticsSDK {
     if (options.enablePageTracking !== false) {
       this.enablePageTracking = true;
       this.setupPageTracking();
+    }
+
+    // Автоматическое отслеживание онлайн статуса
+    if (options.enableOnlineTracking !== false) {
+      this.enableOnlineTracking = true;
+      this.heartbeatTransport = new HeartbeatTransport(
+        options,
+        this.sessionManager.getSessionId()
+      );
+      this.heartbeatTransport.start();
     }
   }
 
@@ -114,6 +127,11 @@ export class FastAnalyticsSDK {
 
   resetSession(): void {
     this.sessionManager.resetSession();
+    if (this.heartbeatTransport) {
+      this.heartbeatTransport.updateSessionId(
+        this.sessionManager.getSessionId()
+      );
+    }
   }
 
   private setupPageTracking(): void {
@@ -196,6 +214,10 @@ export class FastAnalyticsSDK {
     if (this.pageTrackingCleanup) {
       this.pageTrackingCleanup();
       this.pageTrackingCleanup = null;
+    }
+    if (this.heartbeatTransport) {
+      this.heartbeatTransport.stop();
+      this.heartbeatTransport = null;
     }
     this.initialized = false;
     this.userId = undefined;

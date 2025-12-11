@@ -15,8 +15,10 @@ export interface InitOptions {
   enableAutoCapture?: boolean;
   enablePageTracking?: boolean;
   enableScreenshotOnError?: boolean;
+  enableOnlineTracking?: boolean;
   batchSize?: number;
   batchTimeout?: number;
+  heartbeatInterval?: number;
   userId?: string;
 }
 

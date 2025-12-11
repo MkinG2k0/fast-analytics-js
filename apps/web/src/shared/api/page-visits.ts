@@ -43,6 +43,18 @@ export interface PageVisitsAnalytics {
   visits: PageVisit[];
 }
 
+export async function getOnlineUsersCount(
+  projectId: string
+): Promise<{ count: number }> {
+  const { data } = await apiClient.get<{ count: number }>(
+    "/api/online-users",
+    {
+      params: { projectId },
+    }
+  );
+  return data;
+}
+
 export async function getPageVisitsAnalytics(
   params: GetPageVisitsParams
 ): Promise<PageVisitsAnalytics> {
