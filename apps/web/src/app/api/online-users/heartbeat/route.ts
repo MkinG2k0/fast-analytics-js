@@ -48,10 +48,7 @@ export async function POST(request: Request) {
     // Отмечаем пользователя как онлайн
     await markUserOnline(project.id, sessionId);
 
-    return NextResponse.json(
-      { success: true },
-      { headers: corsHeaders }
-    );
+    return NextResponse.json({ success: true }, { headers: corsHeaders });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -67,4 +64,3 @@ export async function POST(request: Request) {
     );
   }
 }
-

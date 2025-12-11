@@ -45,6 +45,7 @@ init({
 - ✅ **Automatic error capture** - No code changes needed
 - ✅ **Error screenshots** - Automatic screenshots when errors occur (optional)
 - ✅ **Page visit tracking** - Automatic SPA route tracking
+- ✅ **Online user tracking** - Real-time online user count tracking
 - ✅ **Session management** - Automatic session tracking
 - ✅ **Batch processing** - Efficient event batching
 - ✅ **TypeScript support** - Full type definitions included
@@ -65,6 +66,7 @@ The dashboard provides:
 - Session tracking
 - Custom tags and metadata
 - Page visit analytics
+- Real-time online user count
 
 ### Automatic Error Capture
 
@@ -173,6 +175,41 @@ init({
 });
 ```
 
+### Online User Tracking
+
+By default, the SDK automatically tracks online users in real-time:
+
+- ✅ **Automatic heartbeat** - Sends periodic heartbeat signals to track active users
+- ✅ **Real-time count** - View current online user count in the dashboard
+- ✅ **Session-based tracking** - Each session is tracked independently
+- ✅ **Automatic cleanup** - Inactive users are automatically removed after 60 seconds
+
+**You don't need to manually track online users** - the SDK handles everything automatically!
+
+The SDK sends heartbeat signals every 30 seconds (configurable via `heartbeatInterval`) to indicate that a user is active. Users are considered online if they've sent a heartbeat within the last 60 seconds.
+
+#### Disable Online Tracking
+
+If you want to disable online user tracking:
+
+```typescript
+init({
+  projectKey: "your-project-api-key",
+  enableOnlineTracking: false, // Disable online user tracking
+});
+```
+
+#### Customize Heartbeat Interval
+
+You can customize how often heartbeat signals are sent:
+
+```typescript
+init({
+  projectKey: "your-project-api-key",
+  heartbeatInterval: 15000, // Send heartbeat every 15 seconds
+});
+```
+
 ### Initialization Options
 
 ```typescript
@@ -184,9 +221,11 @@ init({
   userId: "optional-user-id", // Optional: set user ID globally for all events
   enableAutoCapture: true, // Optional: Enable automatic error capture (default: true)
   enablePageTracking: true, // Optional: Enable automatic page visit tracking (default: true)
+  enableOnlineTracking: true, // Optional: Enable online user tracking (default: true)
   enableScreenshotOnError: true, // Optional: Enable automatic screenshots on errors (default: false)
   batchSize: 10, // Optional: Batch size for sending events (default: 10)
   batchTimeout: 5000, // Optional: Batch timeout in ms (default: 5000)
+  heartbeatInterval: 30000, // Optional: Heartbeat interval for online tracking in ms (default: 30000)
 });
 ```
 
@@ -449,6 +488,7 @@ init({
 - ✅ **Автоматический перехват ошибок** - Не требует изменений в коде
 - ✅ **Скриншоты ошибок** - Автоматические скриншоты при возникновении ошибок (опционально)
 - ✅ **Отслеживание посещений страниц** - Автоматическое отслеживание маршрутов в SPA
+- ✅ **Отслеживание онлайн пользователей** - Отслеживание количества пользователей онлайн в реальном времени
 - ✅ **Управление сессиями** - Автоматическое отслеживание сессий
 - ✅ **Батчинг событий** - Эффективная пакетная обработка событий
 - ✅ **Поддержка TypeScript** - Полные определения типов включены
@@ -469,6 +509,7 @@ init({
 - Отслеживание сессий
 - Пользовательские теги и метаданные
 - Аналитика посещений страниц
+- Счетчик онлайн пользователей в реальном времени
 
 ### Автоматический перехват ошибок
 
@@ -577,6 +618,41 @@ init({
 });
 ```
 
+### Отслеживание онлайн пользователей
+
+По умолчанию SDK автоматически отслеживает онлайн пользователей в реальном времени:
+
+- ✅ **Автоматический heartbeat** - Отправляет периодические сигналы heartbeat для отслеживания активных пользователей
+- ✅ **Счетчик в реальном времени** - Просматривайте текущее количество онлайн пользователей в панели управления
+- ✅ **Отслеживание по сессиям** - Каждая сессия отслеживается независимо
+- ✅ **Автоматическая очистка** - Неактивные пользователи автоматически удаляются через 60 секунд
+
+**Вам не нужно вручную отслеживать онлайн пользователей** - SDK делает всё автоматически!
+
+SDK отправляет сигналы heartbeat каждые 30 секунд (настраивается через `heartbeatInterval`), чтобы указать, что пользователь активен. Пользователи считаются онлайн, если они отправили heartbeat в течение последних 60 секунд.
+
+#### Отключение отслеживания онлайн пользователей
+
+Если вы хотите отключить отслеживание онлайн пользователей:
+
+```typescript
+init({
+  projectKey: "your-project-api-key",
+  enableOnlineTracking: false, // Отключить отслеживание онлайн пользователей
+});
+```
+
+#### Настройка интервала heartbeat
+
+Вы можете настроить частоту отправки сигналов heartbeat:
+
+```typescript
+init({
+  projectKey: "your-project-api-key",
+  heartbeatInterval: 15000, // Отправлять heartbeat каждые 15 секунд
+});
+```
+
 ### Опции инициализации
 
 ```typescript
@@ -588,9 +664,11 @@ init({
   userId: "optional-user-id", // Опционально: установить ID пользователя глобально для всех событий
   enableAutoCapture: true, // Опционально: Включить автоматический перехват (по умолчанию: true)
   enablePageTracking: true, // Опционально: Включить автоматическое отслеживание посещений страниц (по умолчанию: true)
+  enableOnlineTracking: true, // Опционально: Включить отслеживание онлайн пользователей (по умолчанию: true)
   enableScreenshotOnError: true, // Опционально: Включить автоматические скриншоты при ошибках (по умолчанию: false)
   batchSize: 10, // Опционально: Размер батча для отправки событий (по умолчанию: 10)
   batchTimeout: 5000, // Опционально: Таймаут отправки батча в мс (по умолчанию: 5000)
+  heartbeatInterval: 30000, // Опционально: Интервал heartbeat для отслеживания онлайн в мс (по умолчанию: 30000)
 });
 ```
 
