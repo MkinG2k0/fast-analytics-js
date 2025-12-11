@@ -103,8 +103,8 @@ importers:
         specifier: ^1.11.13
         version: 1.11.19
       fast-analytics-js:
-        specifier: workspace:*
-        version: link:../../packages/sdk-analytics-js
+        specifier: ^0.6.0
+        version: 0.6.0(html2canvas-pro@1.5.13)
       jsonwebtoken:
         specifier: ^9.0.2
         version: 9.0.2
@@ -2082,6 +2082,15 @@ packages:
 
   exsolve@1.0.8:
     resolution: {integrity: sha512-LmDxfWXwcTArk8fUEnOfSZpHOJ6zOMUJKOtFLFqJLoKJetuQG874Uc7/Kki7zFLzYybmZhp1M7+98pfMqeX8yA==}
+
+  fast-analytics-js@0.6.0:
+    resolution: {integrity: sha512-fw4OmHJ8wk1WL2eByQx7XrBhfPKrPLKpik4LqOA3c+bUFKAM4pZfuVSe3DdAXxxbjsivQVpTKUtyvq9s18C7xA==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      html2canvas-pro: ^1.4.1
+    peerDependenciesMeta:
+      html2canvas-pro:
+        optional: true
 
   fast-check@3.23.2:
     resolution: {integrity: sha512-h5+1OzzfCC3Ef7VbtKdcv7zsstUQwUDlYpUTvjeUsJAssPgLn7QzbboPtL5ro04Mq0rPOsMzl7q5hIbRs2wD1A==}
@@ -5686,6 +5695,10 @@ snapshots:
   expect-type@1.2.2: {}
 
   exsolve@1.0.8: {}
+
+  fast-analytics-js@0.6.0(html2canvas-pro@1.5.13):
+    optionalDependencies:
+      html2canvas-pro: 1.5.13
 
   fast-check@3.23.2:
     dependencies:
