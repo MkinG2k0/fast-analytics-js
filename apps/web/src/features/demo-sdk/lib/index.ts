@@ -1,3 +1,2 @@
-export * from "./mock-events";
-export * from "./use-demo-sdk";
+export * from './mock-events'
 
