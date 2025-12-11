@@ -1,7 +1,7 @@
 'use client'
 
 import { init } from 'fast-analytics-js'
-import { ReactNode, useEffect } from 'react'
+import { ReactNode } from 'react'
 import { useMount } from 'react-use'
 
 interface AnalyticsProviderWrapperProps {
