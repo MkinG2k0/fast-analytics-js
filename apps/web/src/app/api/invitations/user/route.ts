@@ -10,13 +10,18 @@ export async function GET() {
       return NextResponse.json({ message: "Не авторизован" }, { status: 401 });
     }
 
+    // Ищем пользователя по id из валидной сессии (безопасно)
+    // После применения миграции можно будет искать по providerAccountId
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
       select: { email: true },
     });
 
     if (!user) {
-      return NextResponse.json({ message: "Пользователь не найден" }, { status: 404 });
+      return NextResponse.json(
+        { message: "Пользователь не найден" },
+        { status: 404 }
+      );
     }
 
     // Получаем активные приглашения для email пользователя
@@ -54,4 +59,3 @@ export async function GET() {
     );
   }
 }
-

@@ -1,12 +1,9 @@
 export type {
-  Account,
   Event,
   Project,
   ProjectInvitation,
   ProjectMember,
-  Session,
   User,
-  VerificationToken,
 } from "@prisma/client";
 
 export type EventLevel = "error" | "warn" | "info" | "debug";

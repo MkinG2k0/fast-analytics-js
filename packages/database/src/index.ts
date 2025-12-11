@@ -1,6 +1,5 @@
 export { PrismaClient, Prisma } from "@prisma/client";
 export type {
-  Account,
   CreateEventDto,
   CreateProjectDto,
   Event,
@@ -14,7 +13,5 @@ export type {
   ProjectMember,
   ProjectRole,
   RegisterDto,
-  Session,
   User,
-  VerificationToken,
 } from "./model";

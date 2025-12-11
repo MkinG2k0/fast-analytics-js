@@ -1,7 +1,6 @@
 import { compare, hash } from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { getServerSession } from "next-auth";
-import { authConfig } from "@/shared/config/auth";
+import { auth } from "@/shared/config/auth";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-in-production";
 
@@ -39,6 +38,6 @@ export function getTokenFromRequest(request: Request): string | null {
 }
 
 export async function getSessionFromRequest() {
-  return getServerSession(authConfig);
+  return auth();
 }
 

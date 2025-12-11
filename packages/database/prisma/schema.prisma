@@ -11,21 +11,21 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  emailVerified DateTime?
-  password      String?
-  name          String?
-  image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id                String    @id @default(cuid())
+  email             String    @unique
+  providerAccountId String?   @unique // Google ID или другой OAuth провайдер
+  emailVerified     DateTime?
+  password          String?
+  name              String?
+  image             String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
-  accounts         Account[]
-  sessions         Session[]
-  projects         Project[]
-  projectMembers   ProjectMember[]
-  sentInvitations  ProjectInvitation[] @relation("Inviter")
+  projects        Project[]
+  projectMembers  ProjectMember[]
+  sentInvitations ProjectInvitation[] @relation("Inviter")
 
+  @@index([providerAccountId])
   @@map("users")
 }
 
@@ -50,24 +50,24 @@ model Project {
 }
 
 model Event {
-  id          String   @id @default(cuid())
-  projectId   String
-  timestamp   DateTime @default(now())
-  level       String   // error | warn | info | debug
-  message     String
-  stack       String?
-  context     Json?    // JSONB для расширенного контекста
-  userAgent   String?
-  url         String?
-  sessionId   String?
-  userId      String?
-  createdAt   DateTime @default(now())
+  id        String   @id @default(cuid())
+  projectId String
+  timestamp DateTime @default(now())
+  level     String // error | warn | info | debug
+  message   String
+  stack     String?
+  context   Json? // JSONB для расширенного контекста
+  userAgent String?
+  url       String?
+  sessionId String?
+  userId    String?
+  createdAt DateTime @default(now())
 
   // Поля для будущих фич
   screenshotUrl String?
-  clickTrace    Json?    // массив кликов до ошибки
-  performance   Json?    // метрики производительности
-  metadata      Json?    // дополнительные метаданные
+  clickTrace    Json? // массив кликов до ошибки
+  performance   Json? // метрики производительности
+  metadata      Json? // дополнительные метаданные
 
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
@@ -78,52 +78,11 @@ model Event {
   @@map("events")
 }
 
-model Account {
-  id                String  @id @default(cuid())
-  userId            String
-  type              String
-  provider          String
-  providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String? @db.Text
-  session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([provider, providerAccountId])
-  @@index([userId])
-  @@map("accounts")
-}
-
-model Session {
-  id           String   @id @default(cuid())
-  sessionToken String   @unique
-  userId       String
-  expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@map("sessions")
-}
-
-model VerificationToken {
-  identifier String
-  token      String   @unique
-  expires    DateTime
-
-  @@unique([identifier, token])
-  @@map("verification_tokens")
-}
-
 model ProjectMember {
   id        String   @id @default(cuid())
   projectId String
   userId    String
-  role      String   // "owner" | "admin" | "member" | "viewer"
+  role      String // "owner" | "admin" | "member" | "viewer"
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -140,9 +99,9 @@ model ProjectInvitation {
   id        String   @id @default(cuid())
   projectId String
   email     String
-  role      String   // "admin" | "member" | "viewer"
+  role      String // "admin" | "member" | "viewer"
   token     String   @unique
-  invitedBy String   // userId того, кто отправил приглашение
+  invitedBy String // userId того, кто отправил приглашение
   status    String   @default("pending") // "pending" | "accepted" | "expired" | "cancelled"
   expiresAt DateTime
   createdAt DateTime @default(now())
@@ -158,17 +117,17 @@ model ProjectInvitation {
 }
 
 model PageVisit {
-  id          String   @id @default(cuid())
-  projectId   String
-  url         String
-  pathname    String?  // путь без домена
-  referrer    String?  // откуда пришел пользователь
-  userAgent   String?
-  sessionId   String?
-  userId      String?
-  duration    Int?     // время на странице в миллисекундах
-  timestamp   DateTime @default(now())
-  createdAt   DateTime @default(now())
+  id        String   @id @default(cuid())
+  projectId String
+  url       String
+  pathname  String? // путь без домена
+  referrer  String? // откуда пришел пользователь
+  userAgent String?
+  sessionId String?
+  userId    String?
+  duration  Int? // время на странице в миллисекундах
+  timestamp DateTime @default(now())
+  createdAt DateTime @default(now())
 
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
@@ -180,4 +139,3 @@ model PageVisit {
   @@index([projectId, url])
   @@map("page_visits")
 }
-
