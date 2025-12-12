@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/shared/lib/prisma";
+
 import { getSessionFromRequest } from "@/shared/lib/auth";
-import { checkProjectAccess, ProjectPermission, getUserProjectRole } from "@/shared/lib/project-access";
+import {
+  checkProjectAccess,
+  getUserProjectRole,
+  ProjectPermission,
+} from "@/shared/lib/project-access";
+import { prisma } from "@/shared/lib/prisma";
 
 // DELETE - удалить участника из проекта
 export async function DELETE(
@@ -42,7 +47,10 @@ export async function DELETE(
 
     // Нельзя удалить самого себя (если не owner)
     if (targetUserId === session.user.id) {
-      const currentUserRole = await getUserProjectRole(projectId, session.user.id);
+      const currentUserRole = await getUserProjectRole(
+        projectId,
+        session.user.id
+      );
       if (currentUserRole !== "owner") {
         return NextResponse.json(
           { message: "Нельзя удалить самого себя" },
@@ -61,10 +69,10 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
+    console.error("Ошибка удаления участника:", error);
     return NextResponse.json(
       { message: "Внутренняя ошибка сервера" },
       { status: 500 }
     );
   }
 }
-

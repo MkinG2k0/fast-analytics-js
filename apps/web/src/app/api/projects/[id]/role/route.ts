@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+
 import { getSessionFromRequest } from "@/shared/lib/auth";
 import { getUserProjectRole } from "@/shared/lib/project-access";
 
@@ -23,4 +24,3 @@ export async function GET(
     );
   }
 }
-

@@ -1,7 +1,12 @@
+import { Prisma } from "@repo/database";
 import { NextResponse } from "next/server";
-import { prisma } from "@/shared/lib/prisma";
+
 import { getSessionFromRequest } from "@/shared/lib/auth";
-import { checkProjectAccess, ProjectPermission } from "@/shared/lib/project-access";
+import {
+  checkProjectAccess,
+  ProjectPermission,
+} from "@/shared/lib/project-access";
+import { prisma } from "@/shared/lib/prisma";
 import { generateApiKey } from "@/shared/lib/utils";
 
 export async function POST(
@@ -32,7 +37,10 @@ export async function POST(
     });
 
     if (!project) {
-      return NextResponse.json({ message: "Проект не найден" }, { status: 404 });
+      return NextResponse.json(
+        { message: "Проект не найден" },
+        { status: 404 }
+      );
     }
 
     const newApiKey = generateApiKey();
@@ -44,10 +52,19 @@ export async function POST(
 
     return NextResponse.json({ apiKey: updatedProject.apiKey });
   } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === "P2025") {
+        return NextResponse.json(
+          { message: "Проект не найден" },
+          { status: 404 }
+        );
+      }
+    }
+
+    console.error("Ошибка регенерации API ключа:", error);
     return NextResponse.json(
       { message: "Внутренняя ошибка сервера" },
       { status: 500 }
     );
   }
 }
-

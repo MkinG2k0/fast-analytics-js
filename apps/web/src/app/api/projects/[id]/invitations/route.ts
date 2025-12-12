@@ -1,9 +1,14 @@
+import { Prisma } from "@repo/database";
 import { NextResponse } from "next/server";
-import { prisma } from "@/shared/lib/prisma";
-import { getSessionFromRequest } from "@/shared/lib/auth";
-import { checkProjectAccess, ProjectPermission } from "@/shared/lib/project-access";
-import { z } from "zod";
 import { randomBytes } from "node:crypto";
+import { z } from "zod";
+
+import { getSessionFromRequest } from "@/shared/lib/auth";
+import {
+  checkProjectAccess,
+  ProjectPermission,
+} from "@/shared/lib/project-access";
+import { prisma } from "@/shared/lib/prisma";
 
 const createInvitationSchema = z.object({
   email: z.string().email("Некорректный email"),
@@ -51,6 +56,7 @@ export async function GET(
 
     return NextResponse.json(invitations);
   } catch (error) {
+    console.error("Ошибка получения приглашений:", error);
     return NextResponse.json(
       { message: "Внутренняя ошибка сервера" },
       { status: 500 }
@@ -151,15 +157,25 @@ export async function POST(
       );
     }
 
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === "P2003") {
+        return NextResponse.json(
+          { message: "Пользователь не найден в базе данных" },
+          { status: 404 }
+        );
+      }
+      if (error.code === "P2002") {
+        return NextResponse.json(
+          { message: "Приглашение с таким токеном уже существует" },
+          { status: 400 }
+        );
+      }
+    }
+
     console.error("Ошибка создания приглашения:", error);
-    
     return NextResponse.json(
-      { 
-        message: "Внутренняя ошибка сервера",
-        error: error instanceof Error ? error.message : String(error)
-      },
+      { message: "Внутренняя ошибка сервера" },
       { status: 500 }
     );
   }
 }
-

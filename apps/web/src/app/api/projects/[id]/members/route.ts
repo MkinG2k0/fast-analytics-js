@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/shared/lib/prisma";
+
 import { getSessionFromRequest } from "@/shared/lib/auth";
-import { checkProjectAccess, ProjectPermission } from "@/shared/lib/project-access";
+import {
+  checkProjectAccess,
+  ProjectPermission,
+} from "@/shared/lib/project-access";
+import { prisma } from "@/shared/lib/prisma";
 
 // GET - список участников проекта
 export async function GET(
@@ -83,10 +87,10 @@ export async function GET(
 
     return NextResponse.json(allMembers);
   } catch (error) {
+    console.error("Ошибка получения участников проекта:", error);
     return NextResponse.json(
       { message: "Внутренняя ошибка сервера" },
       { status: 500 }
     );
   }
 }
-

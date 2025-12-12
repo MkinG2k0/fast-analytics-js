@@ -1,8 +1,10 @@
+import { Prisma } from "@repo/database";
 import { NextResponse } from "next/server";
-import { prisma } from "@/shared/lib/prisma";
-import { getSessionFromRequest } from "@/shared/lib/auth";
-import { generateApiKey } from "@/shared/lib/utils";
 import { z } from "zod";
+
+import { getSessionFromRequest } from "@/shared/lib/auth";
+import { prisma } from "@/shared/lib/prisma";
+import { generateApiKey } from "@/shared/lib/utils";
 
 const createProjectSchema = z.object({
   name: z.string().min(1, "Название проекта обязательно"),
@@ -32,24 +34,25 @@ export async function GET() {
     });
 
     // Объединяем и убираем дубликаты
-    const projectsMap = new Map<string, typeof ownedProjects[0]>();
-    
+    const projectsMap = new Map<string, (typeof ownedProjects)[0]>();
+
     // Добавляем проекты, где пользователь owner
     ownedProjects.forEach((project) => {
       projectsMap.set(project.id, project);
     });
-    
+
     // Добавляем проекты, где пользователь member (если еще не добавлены)
     memberProjects.forEach((member) => {
       if (!projectsMap.has(member.project.id)) {
         projectsMap.set(member.project.id, member.project);
       }
     });
-    
+
     const allProjects = Array.from(projectsMap.values());
 
     return NextResponse.json(allProjects);
   } catch (error) {
+    console.error("Ошибка получения проектов:", error);
     return NextResponse.json(
       { message: "Внутренняя ошибка сервера" },
       { status: 500 }
@@ -96,11 +99,19 @@ export async function POST(request: Request) {
       );
     }
 
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === "P2003") {
+        return NextResponse.json(
+          { message: "Пользователь не найден в базе данных" },
+          { status: 404 }
+        );
+      }
+    }
+
+    console.error("Ошибка создания проекта:", error);
     return NextResponse.json(
       { message: "Внутренняя ошибка сервера" },
       { status: 500 }
     );
   }
 }
-
-

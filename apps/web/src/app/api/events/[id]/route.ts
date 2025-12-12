@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/shared/lib/prisma";
 import { getSessionFromRequest } from "@/shared/lib/auth";
-import { checkProjectAccess, ProjectPermission } from "@/shared/lib/project-access";
+import {
+  checkProjectAccess,
+  ProjectPermission,
+} from "@/shared/lib/project-access";
 
 export async function GET(
   _request: Request,
@@ -38,7 +41,10 @@ export async function GET(
     });
 
     if (!event) {
-      return NextResponse.json({ message: "Событие не найдено" }, { status: 404 });
+      return NextResponse.json(
+        { message: "Событие не найдено" },
+        { status: 404 }
+      );
     }
 
     // Проверяем доступ к проекту
@@ -82,7 +88,10 @@ export async function DELETE(
     });
 
     if (!event) {
-      return NextResponse.json({ message: "Событие не найдено" }, { status: 404 });
+      return NextResponse.json(
+        { message: "Событие не найдено" },
+        { status: 404 }
+      );
     }
 
     // Проверяем доступ на удаление (только для участников с правом EDIT)
@@ -108,4 +117,3 @@ export async function DELETE(
     );
   }
 }
-

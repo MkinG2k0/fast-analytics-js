@@ -1,8 +1,13 @@
+import { Prisma } from "@repo/database";
 import { NextResponse } from "next/server";
-import { prisma } from "@/shared/lib/prisma";
-import { getSessionFromRequest } from "@/shared/lib/auth";
-import { checkProjectAccess, ProjectPermission } from "@/shared/lib/project-access";
 import { z } from "zod";
+
+import { getSessionFromRequest } from "@/shared/lib/auth";
+import {
+  checkProjectAccess,
+  ProjectPermission,
+} from "@/shared/lib/project-access";
+import { prisma } from "@/shared/lib/prisma";
 
 const updateProjectSchema = z.object({
   name: z.string().min(1, "Название проекта обязательно").optional(),
@@ -36,11 +41,15 @@ export async function GET(
     });
 
     if (!project) {
-      return NextResponse.json({ message: "Проект не найден" }, { status: 404 });
+      return NextResponse.json(
+        { message: "Проект не найден" },
+        { status: 404 }
+      );
     }
 
     return NextResponse.json(project);
   } catch (error) {
+    console.error("Ошибка получения проекта:", error);
     return NextResponse.json(
       { message: "Внутренняя ошибка сервера" },
       { status: 500 }
@@ -65,7 +74,10 @@ export async function PATCH(
     });
 
     if (!project) {
-      return NextResponse.json({ message: "Проект не найден" }, { status: 404 });
+      return NextResponse.json(
+        { message: "Проект не найден" },
+        { status: 404 }
+      );
     }
 
     // Проверяем доступ на управление настройками (только owner и admin)
@@ -101,6 +113,16 @@ export async function PATCH(
       );
     }
 
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === "P2025") {
+        return NextResponse.json(
+          { message: "Проект не найден" },
+          { status: 404 }
+        );
+      }
+    }
+
+    console.error("Ошибка обновления проекта:", error);
     return NextResponse.json(
       { message: "Внутренняя ошибка сервера" },
       { status: 500 }
@@ -125,7 +147,10 @@ export async function DELETE(
     });
 
     if (!project) {
-      return NextResponse.json({ message: "Проект не найден" }, { status: 404 });
+      return NextResponse.json(
+        { message: "Проект не найден" },
+        { status: 404 }
+      );
     }
 
     // Проверяем доступ на удаление (только для owner)
@@ -146,10 +171,19 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === "P2025") {
+        return NextResponse.json(
+          { message: "Проект не найден" },
+          { status: 404 }
+        );
+      }
+    }
+
+    console.error("Ошибка удаления проекта:", error);
     return NextResponse.json(
       { message: "Внутренняя ошибка сервера" },
       { status: 500 }
     );
   }
 }
-

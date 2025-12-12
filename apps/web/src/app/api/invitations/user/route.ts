@@ -6,28 +6,14 @@ import { getSessionFromRequest } from "@/shared/lib/auth";
 export async function GET() {
   try {
     const session = await getSessionFromRequest();
-    if (!session?.user?.id) {
+    if (!session?.user?.id || !session?.user?.email) {
       return NextResponse.json({ message: "Не авторизован" }, { status: 401 });
-    }
-
-    // Ищем пользователя по id из валидной сессии (безопасно)
-    // После применения миграции можно будет искать по providerAccountId
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { email: true },
-    });
-
-    if (!user) {
-      return NextResponse.json(
-        { message: "Пользователь не найден" },
-        { status: 404 }
-      );
     }
 
     // Получаем активные приглашения для email пользователя
     const invitations = await prisma.projectInvitation.findMany({
       where: {
-        email: user.email,
+        email: session.user.email,
         status: "pending",
         expiresAt: { gt: new Date() },
       },

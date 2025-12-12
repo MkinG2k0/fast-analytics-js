@@ -20,9 +20,7 @@ export async function OPTIONS() {
 // Публичный endpoint для SDK
 export async function POST(request: Request) {
   try {
-    const apiKey =
-      request.headers.get("x-api-key") ||
-      request.headers.get("authorization")?.replace("Bearer ", "");
+    const apiKey = request.headers.get("x-api-key");
 
     if (!apiKey) {
       return NextResponse.json(

@@ -28,23 +28,22 @@ export const authConfig: NextAuthOptions = {
             | { name?: string; picture?: string; email_verified?: boolean }
             | undefined;
 
-          // Используем upsert для атомарного updateOrCreate
-          // После миграции можно будет использовать where: { providerAccountId: account.providerAccountId }
+          // Используем upsert для атомарного updateOrCreate по providerAccountId
           await prisma.user.upsert({
-            where: { email: user.email! },
+            where: { providerAccountId: account.providerAccountId },
             update: {
               name: user.name || googleProfile?.name || null,
               image: user.image || googleProfile?.picture || null,
               emailVerified: googleProfile?.email_verified ? new Date() : null,
-              // После миграции добавить: providerAccountId: account.providerAccountId
+              email: user.email!, // Обновляем email на случай если изменился
             },
             create: {
               id: user.id,
               email: user.email!,
+              providerAccountId: account.providerAccountId,
               name: user.name || googleProfile?.name || null,
               image: user.image || googleProfile?.picture || null,
               emailVerified: googleProfile?.email_verified ? new Date() : null,
-              // После миграции добавить: providerAccountId: account.providerAccountId
             },
           });
         } catch (error) {
@@ -56,13 +55,38 @@ export const authConfig: NextAuthOptions = {
       return true;
     },
     async jwt({ token, user, account }) {
-      if (user) {
-        token.id = user.id;
-        // Сохраняем providerAccountId в токене для использования в сессии
-        if (account?.providerAccountId) {
-          token.providerAccountId = account.providerAccountId;
+      // При первом входе или обновлении токена получаем ID пользователя из PostgreSQL
+      const email = user?.email || token.email;
+      if (email) {
+        try {
+          const dbUser = await prisma.user.findUnique({
+            where: { email },
+            select: { id: true },
+          });
+          if (dbUser) {
+            token.id = dbUser.id;
+          } else if (user) {
+            // Fallback на ID из NextAuth, если пользователь еще не синхронизирован
+            token.id = user.id;
+          }
+        } catch (error) {
+          console.error("Ошибка получения пользователя из БД:", error);
+          if (user) {
+            token.id = user.id;
+          }
         }
       }
+
+      // Сохраняем providerAccountId в токене для использования в сессии
+      if (account?.providerAccountId) {
+        token.providerAccountId = account.providerAccountId;
+      }
+
+      // Сохраняем email в токене для последующих обновлений
+      if (user?.email) {
+        token.email = user.email;
+      }
+
       return token;
     },
     async session({ session, token }) {

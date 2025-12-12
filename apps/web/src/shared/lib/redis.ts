@@ -5,9 +5,9 @@ const getRedisClient = () => {
   const token = process.env.UPSTASH_REDIS_REST_TOKEN;
 
   if (!url || !token) {
-    throw new Error(
-      "UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN must be set"
-    );
+    // throw new Error(
+    //   "UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN must be set"
+    // );
   }
 
   return new Redis({
@@ -16,7 +16,7 @@ const getRedisClient = () => {
   });
 };
 
-const redis = getRedisClient();
+export const redis = getRedisClient();
 
 const ONLINE_USERS_KEY_PREFIX = "online_users:";
 const ONLINE_USER_TTL = 60; // 60 секунд - пользователь считается онлайн если был активен в последние 60 секунд

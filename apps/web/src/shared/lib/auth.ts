@@ -2,7 +2,8 @@ import { compare, hash } from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { auth } from "@/shared/config/auth";
 
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-in-production";
+const JWT_SECRET =
+  process.env.JWT_SECRET || "your-secret-key-change-in-production";
 
 export interface JWTPayload {
   userId: string;
@@ -13,7 +14,10 @@ export async function hashPassword(password: string): Promise<string> {
   return hash(password, 10);
 }
 
-export async function verifyPassword(password: string, hashedPassword: string): Promise<boolean> {
+export async function verifyPassword(
+  password: string,
+  hashedPassword: string
+): Promise<boolean> {
   return compare(password, hashedPassword);
 }
 
@@ -40,4 +44,3 @@ export function getTokenFromRequest(request: Request): string | null {
 export async function getSessionFromRequest() {
   return auth();
 }
-
