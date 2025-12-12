@@ -105,6 +105,16 @@ export function EventDetails({ event }: EventDetailsProps) {
               {dayjs(event.timestamp).format("YYYY-MM-DD HH:mm:ss")}
             </Text>
           </Descriptions.Item>
+          <Descriptions.Item label="Повторений">
+            <Tag
+              color={(event.occurrenceCount ?? 1) > 1 ? "orange" : "default"}
+              style={{
+                fontWeight: (event.occurrenceCount ?? 1) > 1 ? 600 : 400,
+              }}
+            >
+              {event.occurrenceCount ?? 1}
+            </Tag>
+          </Descriptions.Item>
           <Descriptions.Item label="Сообщение" span={2}>
             <Text className="text-sm">{event.message}</Text>
           </Descriptions.Item>

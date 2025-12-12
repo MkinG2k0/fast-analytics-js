@@ -7,7 +7,7 @@ import {
   checkProjectAccess,
   ProjectPermission,
 } from "@/shared/lib/project-access";
-import { checkEventDuplicate } from "@/shared/lib/check-event-duplicate";
+import { findEventDuplicate } from "@/shared/lib/check-event-duplicate";
 import { z } from "zod";
 import type { EventLevel } from "@repo/database";
 
@@ -117,13 +117,20 @@ export async function POST(request: Request) {
       const eventUrl = event.url || url || null;
 
       // Проверяем дубликат
-      const isDuplicate = await checkEventDuplicate(
+      const duplicateEvent = await findEventDuplicate(
         project.id,
         eventUrl,
         contextToSave
       );
 
-      if (isDuplicate) {
+      if (duplicateEvent) {
+        // Увеличиваем счетчик повторений
+        await prisma.event.update({
+          where: { id: duplicateEvent.id },
+          data: {
+            occurrenceCount: duplicateEvent.occurrenceCount + 1,
+          },
+        });
         duplicatesCount++;
         continue;
       }
@@ -140,6 +147,7 @@ export async function POST(request: Request) {
         userId: event.userId || userIdFromContext || null,
         performance: performanceToSave,
         screenshotUrl: event.screenshotUrl || null,
+        occurrenceCount: 1,
       };
 
       eventsToCreate.push(eventData);

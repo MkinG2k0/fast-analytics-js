@@ -62,6 +62,7 @@ model Event {
   sessionId String?
   userId    String?
   createdAt DateTime @default(now())
+  occurrenceCount Int @default(1) // Количество повторений ошибки
 
   // Поля для будущих фич
   screenshotUrl String?

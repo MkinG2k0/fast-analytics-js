@@ -207,6 +207,26 @@ export function createColumns({
       filteredValue: userId ? [userId] : null,
     },
     {
+      title: "Повторений",
+      dataIndex: "occurrenceCount",
+      key: "occurrenceCount",
+      width: 120,
+      align: "center",
+      render: (count: number | null | undefined) => {
+        const occurrenceCount = count ?? 1;
+        return (
+          <Tag
+            color={occurrenceCount > 1 ? "orange" : "default"}
+            style={{
+              fontWeight: occurrenceCount > 1 ? 600 : 400,
+            }}
+          >
+            {occurrenceCount}
+          </Tag>
+        );
+      },
+    },
+    {
       title: "Действия",
       key: "actions",
       width: 120,

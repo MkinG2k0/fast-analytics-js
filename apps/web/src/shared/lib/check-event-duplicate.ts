@@ -3,7 +3,7 @@ import { Prisma } from "@repo/database";
 import { prisma } from "./prisma";
 import { compareJson } from "./compare-json";
 
-export async function checkEventDuplicate(
+export async function findEventDuplicate(
   projectId: string,
   url: string | null,
   context:
@@ -11,7 +11,7 @@ export async function checkEventDuplicate(
     | Prisma.NullableJsonNullValueInput
     | null
     | undefined
-): Promise<boolean> {
+): Promise<{ id: string; occurrenceCount: number } | null> {
   const where: {
     projectId: string;
     url: string | null;
@@ -23,15 +23,20 @@ export async function checkEventDuplicate(
   const existingEvents = await prisma.event.findMany({
     where,
     select: {
+      id: true,
       context: true,
+      occurrenceCount: true,
     },
   });
 
   for (const event of existingEvents) {
     if (compareJson(event.context, context)) {
-      return true;
+      return {
+        id: event.id,
+        occurrenceCount: event.occurrenceCount,
+      };
     }
   }
 
-  return false;
+  return null;
 }

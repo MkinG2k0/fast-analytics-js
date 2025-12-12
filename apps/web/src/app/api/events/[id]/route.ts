@@ -37,6 +37,7 @@ export async function GET(
         clickTrace: true,
         performance: true,
         metadata: true,
+        occurrenceCount: true,
       },
     });
 
