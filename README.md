@@ -13,6 +13,7 @@ Fast Analytics — это полнофункциональный сервис д
 - ✅ Многопроектность (каждый пользователь может создавать несколько проектов)
 - ✅ Фильтрация и поиск по событиям
 - ✅ Детальный просмотр событий с stack trace и контекстом
+- ✅ Предотвращение дубликатов логов с автоматическим подсчетом повторений
 
 ### Планируемые функции
 
@@ -140,11 +141,11 @@ npm install fast-analytics-js
 2. Инициализируйте в вашем приложении:
 
 ```typescript
-import { init, logError, logWarning } from 'fast-analytics-js';
+import { init, logError, logWarning } from "fast-analytics-js";
 
 init({
-  projectKey: 'your-project-api-key',
-  endpoint: 'http://localhost:3000/api/events'
+  projectKey: "your-project-api-key",
+  endpoint: "http://localhost:3000/api/events",
 });
 
 // Автоматический перехват ошибок уже работает!
@@ -154,13 +155,13 @@ try {
   // ваш код
 } catch (error) {
   logError(error, {
-    customTags: { section: 'checkout' }
+    customTags: { section: "checkout" },
   });
 }
 
 // Отправка предупреждения
-logWarning('Пользователь выполнил необычное действие', {
-  userId: 'user123'
+logWarning("Пользователь выполнил необычное действие", {
+  userId: "user123",
 });
 ```
 
@@ -251,6 +252,8 @@ pnpm db:studio   # Открыть Prisma Studio
 
 - `POST /api/events` — создание события (публичный endpoint для SDK)
   - Требует заголовок `x-api-key` с API ключом проекта
+  - Автоматически предотвращает дубликаты по комбинации `url` и `context`
+  - При обнаружении дубликата увеличивает счетчик `occurrenceCount` существующего события
 - `GET /api/events?projectId=...` — получение событий (требует аутентификации)
 - `GET /api/events/:id` — получение конкретного события
 

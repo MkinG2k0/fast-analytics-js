@@ -48,6 +48,7 @@ init({
 - ✅ **Online user tracking** - Real-time online user count tracking
 - ✅ **Session management** - Automatic session tracking
 - ✅ **Batch processing** - Efficient event batching
+- ✅ **Duplicate prevention** - Automatic duplicate detection and occurrence counting
 - ✅ **TypeScript support** - Full type definitions included
 - ✅ **Zero dependencies** - Lightweight and fast (html2canvas-pro is optional)
 - ✅ **Framework agnostic** - Works with React, Vue, Angular, or vanilla JS
@@ -67,6 +68,7 @@ The dashboard provides:
 - Custom tags and metadata
 - Page visit analytics
 - Real-time online user count
+- Duplicate error detection and occurrence counting
 
 ### Automatic Error Capture
 
@@ -81,6 +83,22 @@ By default, the SDK automatically captures **all errors** without requiring you 
 **You don't need to manually wrap your code in try-catch blocks or add error handlers** - the SDK handles everything automatically!
 
 **Note:** The SDK automatically excludes its own API requests from error tracking to prevent infinite loops.
+
+### Duplicate Error Prevention
+
+The Fast Analytics backend automatically prevents duplicate logs:
+
+- **Automatic detection** - When an event is created, the system checks if an event with the same `url` and `context` already exists in the project
+- **Occurrence counting** - If a duplicate is found, instead of creating a new event, the system increments the `occurrenceCount` of the existing event
+- **Visibility** - The occurrence count is displayed in the logs table and event details, making it easy to see which errors happen most frequently
+
+This helps:
+
+- Prevent database bloat from repeated errors
+- Quickly identify the most common issues
+- Reduce storage requirements
+
+**You don't need to do anything** - duplicate prevention works automatically!
 
 ### Manual Logging (Optional)
 
@@ -491,6 +509,7 @@ init({
 - ✅ **Отслеживание онлайн пользователей** - Отслеживание количества пользователей онлайн в реальном времени
 - ✅ **Управление сессиями** - Автоматическое отслеживание сессий
 - ✅ **Батчинг событий** - Эффективная пакетная обработка событий
+- ✅ **Предотвращение дубликатов** - Автоматическое обнаружение дубликатов и подсчет повторений
 - ✅ **Поддержка TypeScript** - Полные определения типов включены
 - ✅ **Нулевые зависимости** - Легковесный и быстрый (html2canvas-pro опционален)
 - ✅ **Независим от фреймворка** - Работает с React, Vue, Angular или vanilla JS
@@ -510,6 +529,7 @@ init({
 - Пользовательские теги и метаданные
 - Аналитика посещений страниц
 - Счетчик онлайн пользователей в реальном времени
+- Обнаружение дубликатов ошибок и подсчет повторений
 
 ### Автоматический перехват ошибок
 
@@ -524,6 +544,22 @@ init({
 **Вам не нужно вручную оборачивать код в try-catch блоки или добавлять обработчики ошибок** - SDK делает всё автоматически!
 
 **Примечание:** SDK автоматически исключает свои собственные API-запросы из отслеживания ошибок, чтобы предотвратить бесконечные циклы.
+
+### Предотвращение дубликатов ошибок
+
+Бэкенд Fast Analytics автоматически предотвращает создание дублирующихся логов:
+
+- **Автоматическое обнаружение** - При создании события система проверяет, существует ли уже событие с такими же `url` и `context` в рамках проекта
+- **Подсчет повторений** - Если дубликат найден, вместо создания нового события система увеличивает счетчик `occurrenceCount` существующего события
+- **Видимость** - Количество повторений отображается в таблице логов и детальном просмотре, что позволяет легко видеть, какие ошибки происходят чаще всего
+
+Это помогает:
+
+- Предотвратить переполнение базы данных повторяющимися ошибками
+- Быстро выявлять наиболее частые проблемы
+- Сократить требования к хранилищу
+
+**Вам не нужно ничего делать** - предотвращение дубликатов работает автоматически!
 
 ### Ручное логирование (опционально)
 
