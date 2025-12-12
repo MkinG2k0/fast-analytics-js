@@ -9,7 +9,8 @@
   --hover-bg: #f9fafb;
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-lg:
+    0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -30,7 +31,9 @@ body {
 body {
   color: var(--foreground);
   background: var(--background);
-  font-feature-settings: "rlig" 1, "calt" 1;
+  font-feature-settings:
+    "rlig" 1,
+    "calt" 1;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -56,10 +59,28 @@ a {
   background: transparent;
 }
 
+.ant-layout-sider {
+  overflow: visible !important;
+}
+
+.ant-layout-sider-children {
+  overflow: visible !important;
+}
+
+.ant-menu {
+  overflow: visible !important;
+}
+
+.ant-menu-root {
+  overflow: visible !important;
+}
+
 /* Улучшенные стили для карточек */
 .ant-card {
   border-radius: 12px;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
+  box-shadow:
+    0 1px 3px 0 rgba(0, 0, 0, 0.05),
+    0 1px 2px -1px rgba(0, 0, 0, 0.05);
   border: 1px solid var(--border-color);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   background: #ffffff;
@@ -74,7 +95,9 @@ a {
 }
 
 .ant-card:hover {
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -2px rgba(0, 0, 0, 0.1);
   border-color: #d1d5db;
 }
 
@@ -267,7 +290,8 @@ textarea.ant-input::placeholder {
 }
 
 .json-viewer-wrapper {
-  font-family: 'Consolas', 'Monaco', 'Menlo', 'Ubuntu Mono', 'Courier New', monospace;
+  font-family:
+    "Consolas", "Monaco", "Menlo", "Ubuntu Mono", "Courier New", monospace;
   font-size: 13px;
   line-height: 1.5;
   background-color: #ffffff;
@@ -489,7 +513,9 @@ textarea.ant-input::placeholder {
 
 /* Плавные переходы для всех интерактивных элементов */
 * {
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform;
+  transition-property:
+    color, background-color, border-color, text-decoration-color, fill, stroke,
+    opacity, box-shadow, transform;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 150ms;
 }
@@ -536,7 +562,9 @@ textarea.ant-input::placeholder {
 
 /* Стили для dropdown уведомлений */
 .notification-dropdown .ant-dropdown {
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  box-shadow:
+    0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -4px rgba(0, 0, 0, 0.1);
   border-radius: 12px;
   border: 1px solid var(--border-color);
   overflow: hidden;
@@ -546,6 +574,12 @@ textarea.ant-input::placeholder {
   padding: 0;
   box-shadow: none;
   background: white;
+}
+
+/* Стили для центрирования меню аватара */
+.ant-layout-header .ant-space .ant-space-item:nth-child(3) {
+  display: flex;
+  flex-wrap: wrap;
 }
 
 /* Кастомный скроллбар для истории событий */

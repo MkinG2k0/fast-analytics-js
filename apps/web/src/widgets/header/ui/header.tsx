@@ -195,6 +195,7 @@ export function Header({ sidebarCollapsed, onSidebarToggle }: HeaderProps) {
             >
               <Avatar
                 size="small"
+                src={session?.user?.image || undefined}
                 style={{
                   backgroundColor: "#1890ff",
                   fontSize: "12px",

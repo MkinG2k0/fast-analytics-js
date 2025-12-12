@@ -1,7 +1,7 @@
 "use client";
 
 import { Layout, Menu } from "antd";
-import { usePathname, useRouter } from "next/navigation";
+import { useParams, usePathname, useRouter } from "next/navigation";
 import {
   BarChartOutlined,
   FileTextOutlined,
@@ -19,12 +19,8 @@ interface SidebarProps {
 export function Sidebar({ collapsed }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
-
-  const projectId = useMemo(() => {
-    const match = pathname?.match(/^\/project\/([^/]+)/);
-    return match ? match[1] : null;
-  }, [pathname]);
-
+  const params = useParams();
+  const projectId = params.id as string | undefined;
   const menuItems: MenuProps["items"] = useMemo(() => {
     if (!projectId) {
       return [];
@@ -58,6 +54,19 @@ export function Sidebar({ collapsed }: SidebarProps) {
     ];
   }, [projectId, router]);
 
+  if (!projectId || menuItems.length === 0) {
+    return (
+      <Sider
+        collapsible
+        collapsed={collapsed}
+        width={240}
+        className=" !bg-white !border-r !border-gray-200"
+        theme="light"
+        trigger={null}
+      />
+    );
+  }
+
   return (
     <Sider
       collapsible
@@ -67,17 +76,16 @@ export function Sidebar({ collapsed }: SidebarProps) {
       theme="light"
       trigger={null}
     >
-      <div className="h-full flex flex-col">
-        <Menu
-          mode="inline"
-          selectedKeys={[pathname]}
-          items={menuItems}
-          className="h-full border-r-0 pt-4"
-          style={{
-            backgroundColor: "transparent",
-          }}
-        />
-      </div>
+      <Menu
+        mode="inline"
+        inlineCollapsed={collapsed}
+        selectedKeys={[pathname]}
+        items={menuItems}
+        className="border-r-0 pt-4"
+        style={{
+          backgroundColor: "transparent",
+        }}
+      />
     </Sider>
   );
 }

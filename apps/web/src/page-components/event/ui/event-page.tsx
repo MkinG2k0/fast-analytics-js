@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { Spin, message } from "antd";
 
 import { EventDetails } from "@/features/view-log-details";
@@ -10,7 +10,8 @@ import type { Event } from "@/entities/event";
 
 export function EventPage() {
   const params = useParams();
-  const eventId = params.id as string;
+  const searchParams = useSearchParams();
+  const eventId = searchParams.get("eventId") as string;
   const [event, setEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -50,4 +51,3 @@ export function EventPage() {
     </div>
   );
 }
-
