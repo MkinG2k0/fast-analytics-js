@@ -75,6 +75,7 @@ model Event {
   @@index([timestamp])
   @@index([level])
   @@index([projectId, timestamp])
+  @@index([projectId, url])
   @@map("events")
 }
 

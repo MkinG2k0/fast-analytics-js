@@ -7,6 +7,7 @@ import {
   checkProjectAccess,
   ProjectPermission,
 } from "@/shared/lib/project-access";
+import { checkEventDuplicate } from "@/shared/lib/check-event-duplicate";
 import { z } from "zod";
 import type { EventLevel } from "@repo/database";
 
@@ -82,54 +83,83 @@ export async function POST(request: Request) {
     const userAgent = request.headers.get("user-agent") || undefined;
     const url = request.headers.get("referer") || undefined;
 
-    const events = await prisma.event.createMany({
-      data: validatedData.map((event) => {
-        // Извлекаем userId из context, если он не передан напрямую
-        const userIdFromContext =
-          event.context &&
-          typeof event.context === "object" &&
-          "userId" in event.context
-            ? (event.context.userId as string | undefined)
-            : undefined;
+    // Подготавливаем данные событий и проверяем дубликаты
+    const eventsToCreate: Prisma.EventCreateManyInput[] = [];
+    let duplicatesCount = 0;
 
-        // Сохраняем context как есть, если он есть, иначе используем Prisma.JsonNull
-        const contextToSave:
-          | Prisma.InputJsonValue
-          | Prisma.NullableJsonNullValueInput
-          | undefined =
-          event.context && typeof event.context === "object"
-            ? (event.context as Prisma.InputJsonValue)
-            : Prisma.JsonNull;
+    for (const event of validatedData) {
+      // Извлекаем userId из context, если он не передан напрямую
+      const userIdFromContext =
+        event.context &&
+        typeof event.context === "object" &&
+        "userId" in event.context
+          ? (event.context.userId as string | undefined)
+          : undefined;
 
-        // Сохраняем performance как есть, если он есть
-        const performanceToSave:
-          | Prisma.InputJsonValue
-          | Prisma.NullableJsonNullValueInput
-          | undefined =
-          event.performance && typeof event.performance === "object"
-            ? (event.performance as Prisma.InputJsonValue)
-            : Prisma.JsonNull;
+      // Сохраняем context как есть, если он есть, иначе используем Prisma.JsonNull
+      const contextToSave:
+        | Prisma.InputJsonValue
+        | Prisma.NullableJsonNullValueInput
+        | undefined =
+        event.context && typeof event.context === "object"
+          ? (event.context as Prisma.InputJsonValue)
+          : Prisma.JsonNull;
 
-        const eventData = {
-          projectId: project.id,
-          level: event.level as EventLevel,
-          message: event.message,
-          stack: event.stack || null,
-          context: contextToSave,
-          userAgent: event.userAgent || userAgent || null,
-          url: event.url || url || null,
-          sessionId: event.sessionId || null,
-          userId: event.userId || userIdFromContext || null,
-          performance: performanceToSave,
-          screenshotUrl: event.screenshotUrl || null,
-        };
+      // Сохраняем performance как есть, если он есть
+      const performanceToSave:
+        | Prisma.InputJsonValue
+        | Prisma.NullableJsonNullValueInput
+        | undefined =
+        event.performance && typeof event.performance === "object"
+          ? (event.performance as Prisma.InputJsonValue)
+          : Prisma.JsonNull;
 
-        return eventData;
-      }),
-    });
+      const eventUrl = event.url || url || null;
+
+      // Проверяем дубликат
+      const isDuplicate = await checkEventDuplicate(
+        project.id,
+        eventUrl,
+        contextToSave
+      );
+
+      if (isDuplicate) {
+        duplicatesCount++;
+        continue;
+      }
+
+      const eventData = {
+        projectId: project.id,
+        level: event.level as EventLevel,
+        message: event.message,
+        stack: event.stack || null,
+        context: contextToSave,
+        userAgent: event.userAgent || userAgent || null,
+        url: eventUrl,
+        sessionId: event.sessionId || null,
+        userId: event.userId || userIdFromContext || null,
+        performance: performanceToSave,
+        screenshotUrl: event.screenshotUrl || null,
+      };
+
+      eventsToCreate.push(eventData);
+    }
+
+    let createdCount = 0;
+
+    if (eventsToCreate.length > 0) {
+      const result = await prisma.event.createMany({
+        data: eventsToCreate,
+      });
+      createdCount = result.count;
+    }
 
     return NextResponse.json(
-      { success: true, count: events.count },
+      {
+        success: true,
+        count: createdCount,
+        duplicates: duplicatesCount,
+      },
       { headers: corsHeaders }
     );
   } catch (error) {
