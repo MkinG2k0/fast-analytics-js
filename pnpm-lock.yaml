@@ -111,6 +111,9 @@ importers:
       fast-analytics-js:
         specifier: workspace:*
         version: link:../../packages/sdk-analytics-js
+      html2canvas-pro:
+        specifier: ^1.4.1
+        version: 1.5.13
       jsonwebtoken:
         specifier: ^9.0.2
         version: 9.0.2
