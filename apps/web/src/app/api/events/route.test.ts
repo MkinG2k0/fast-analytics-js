@@ -5,6 +5,7 @@ import { prisma } from "@/shared/lib/prisma";
 import { findEventDuplicate } from "@/shared/lib/check-event-duplicate";
 import {
   createApiRequest,
+  createApiUrl,
   expectResponse,
   mockAuthenticatedSession,
   mockInvalidProject,
@@ -181,14 +182,14 @@ describe("GET /api/events", () => {
     mockUnauthenticatedSession();
 
     const request = new Request(
-      "https://example.com/api/events?projectId=project-1"
+      `${createApiUrl("/events")}?projectId=project-1`
     );
 
     await expectResponse(await GET(request), 401, "Не авторизован");
   });
 
   it("должен возвращать 400 если projectId не предоставлен", async () => {
-    const request = new Request("https://example.com/api/events");
+    const request = new Request(createApiUrl("/events"));
 
     await expectResponse(await GET(request), 400, "projectId обязателен");
   });
@@ -197,7 +198,7 @@ describe("GET /api/events", () => {
     mockProjectAccess(false);
 
     const request = new Request(
-      "https://example.com/api/events?projectId=project-1"
+      `${createApiUrl("/events")}?projectId=project-1`
     );
 
     await expectResponse(await GET(request), 403, "Доступ запрещен");
@@ -221,7 +222,7 @@ describe("GET /api/events", () => {
     vi.mocked(prisma.event.count).mockResolvedValue(1);
 
     const request = new Request(
-      "https://example.com/api/events?projectId=project-1&level=error&page=1&limit=50"
+      `${createApiUrl("/events")}?projectId=project-1&level=error&page=1&limit=50`
     );
 
     const response = await GET(request);
@@ -241,7 +242,7 @@ describe("GET /api/events", () => {
     vi.mocked(prisma.event.count).mockResolvedValue(0);
 
     const request = new Request(
-      "https://example.com/api/events?projectId=project-1&startDate=2024-01-01&endDate=2024-12-31&search=test&url=example.com&userId=user-123"
+      `${createApiUrl("/events")}?projectId=project-1&startDate=2024-01-01&endDate=2024-12-31&search=test&url=example.com&userId=user-123`
     );
 
     await GET(request);

@@ -8,6 +8,7 @@ import {
 } from "@/shared/lib/project-access";
 import {
   createApiRequest,
+  createApiUrl,
   expectResponse,
   mockAuthenticatedSession,
   mockInvalidProject,
@@ -165,14 +166,14 @@ describe("GET /api/page-visits", () => {
     mockUnauthenticatedSession();
 
     const request = new Request(
-      "https://example.com/api/page-visits?projectId=project-1"
+      `${createApiUrl("/page-visits")}?projectId=project-1`
     );
 
     await expectResponse(await GET(request), 401, "Не авторизован");
   });
 
   it("должен возвращать 400 если projectId не предоставлен", async () => {
-    const request = new Request("https://example.com/api/page-visits");
+    const request = new Request(createApiUrl("/page-visits"));
 
     await expectResponse(await GET(request), 400, "projectId обязателен");
   });
@@ -181,7 +182,7 @@ describe("GET /api/page-visits", () => {
     mockProjectAccess(false);
 
     const request = new Request(
-      "https://example.com/api/page-visits?projectId=project-1"
+      `${createApiUrl("/page-visits")}?projectId=project-1`
     );
 
     await expectResponse(await GET(request), 403, "Доступ запрещен");
@@ -233,7 +234,7 @@ describe("GET /api/page-visits", () => {
     );
 
     const request = new Request(
-      "https://example.com/api/page-visits?projectId=project-1&groupBy=url"
+      `${createApiUrl("/page-visits")}?projectId=project-1&groupBy=url`
     );
 
     const response = await GET(request);
@@ -270,7 +271,7 @@ describe("GET /api/page-visits", () => {
     vi.mocked(prisma.event.findMany).mockResolvedValue([] as never);
 
     const request = new Request(
-      "https://example.com/api/page-visits?projectId=project-1&groupBy=date"
+      `${createApiUrl("/page-visits")}?projectId=project-1&groupBy=date`
     );
 
     const response = await GET(request);
@@ -286,7 +287,7 @@ describe("GET /api/page-visits", () => {
     vi.mocked(prisma.event.findMany).mockResolvedValue([] as never);
 
     const request = new Request(
-      "https://example.com/api/page-visits?projectId=project-1&startDate=2024-01-01&endDate=2024-12-31"
+      `${createApiUrl("/page-visits")}?projectId=project-1&startDate=2024-01-01&endDate=2024-12-31`
     );
 
     await GET(request);

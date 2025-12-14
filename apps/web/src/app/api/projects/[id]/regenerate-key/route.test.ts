@@ -8,6 +8,7 @@ import {
 } from "@/shared/lib/project-access";
 import { generateApiKey } from "@/shared/lib/utils";
 import {
+  createApiUrl,
   expectResponse,
   mockAuthenticatedSession,
   mockInvalidProject,
@@ -50,13 +51,13 @@ describe("POST /api/projects/[id]/regenerate-key", () => {
   it("должен возвращать 401 если пользователь не авторизован", async () => {
     mockUnauthenticatedSession();
 
+    const params = Promise.resolve({ id: "project-1" });
     const request = new Request(
-      "https://example.com/api/projects/project-1/regenerate-key",
+      createApiUrl("/projects/[id]/regenerate-key", { id: "project-1" }),
       {
         method: "POST",
       }
     );
-    const params = Promise.resolve({ id: "project-1" });
 
     await expectResponse(
       await POST(request, { params }),
@@ -68,13 +69,13 @@ describe("POST /api/projects/[id]/regenerate-key", () => {
   it("должен возвращать 403 если нет доступа на управление настройками", async () => {
     mockProjectAccess(false, "viewer");
 
+    const params = Promise.resolve({ id: "project-1" });
     const request = new Request(
-      "https://example.com/api/projects/project-1/regenerate-key",
+      createApiUrl("/projects/[id]/regenerate-key", { id: "project-1" }),
       {
         method: "POST",
       }
     );
-    const params = Promise.resolve({ id: "project-1" });
 
     await expectResponse(
       await POST(request, { params }),
@@ -87,13 +88,13 @@ describe("POST /api/projects/[id]/regenerate-key", () => {
     mockProjectAccess(true, "owner");
     mockInvalidProject();
 
+    const params = Promise.resolve({ id: "project-1" });
     const request = new Request(
-      "https://example.com/api/projects/project-1/regenerate-key",
+      createApiUrl("/projects/[id]/regenerate-key", { id: "project-1" }),
       {
         method: "POST",
       }
     );
-    const params = Promise.resolve({ id: "project-1" });
 
     await expectResponse(
       await POST(request, { params }),
@@ -112,13 +113,13 @@ describe("POST /api/projects/[id]/regenerate-key", () => {
     vi.mocked(generateApiKey).mockReturnValue(newApiKey);
     vi.mocked(prisma.project.update).mockResolvedValue(updatedProject as never);
 
+    const params = Promise.resolve({ id: "project-1" });
     const request = new Request(
-      "https://example.com/api/projects/project-1/regenerate-key",
+      createApiUrl("/projects/[id]/regenerate-key", { id: "project-1" }),
       {
         method: "POST",
       }
     );
-    const params = Promise.resolve({ id: "project-1" });
 
     const response = await POST(request, { params });
     const data = await response.json();

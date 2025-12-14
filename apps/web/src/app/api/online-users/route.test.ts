@@ -7,6 +7,7 @@ import {
 } from "@/shared/lib/project-access";
 import { getOnlineUsersCount } from "@/shared/lib/redis";
 import {
+  createApiUrl,
   expectResponse,
   mockAuthenticatedSession,
   mockProjectAccess,
@@ -38,14 +39,14 @@ describe("GET /api/online-users", () => {
     mockUnauthenticatedSession();
 
     const request = new Request(
-      "https://example.com/api/online-users?projectId=project-1"
+      `${createApiUrl("/online-users")}?projectId=project-1`
     );
 
     await expectResponse(await GET(request), 401, "Не авторизован");
   });
 
   it("должен возвращать 400 если projectId не предоставлен", async () => {
-    const request = new Request("https://example.com/api/online-users");
+    const request = new Request(createApiUrl("/online-users"));
 
     await expectResponse(await GET(request), 400, "projectId обязателен");
   });
@@ -54,7 +55,7 @@ describe("GET /api/online-users", () => {
     mockProjectAccess(false);
 
     const request = new Request(
-      "https://example.com/api/online-users?projectId=project-1"
+      `${createApiUrl("/online-users")}?projectId=project-1`
     );
 
     await expectResponse(await GET(request), 403, "Доступ запрещен");
@@ -65,7 +66,7 @@ describe("GET /api/online-users", () => {
     vi.mocked(getOnlineUsersCount).mockResolvedValue(5);
 
     const request = new Request(
-      "https://example.com/api/online-users?projectId=project-1"
+      `${createApiUrl("/online-users")}?projectId=project-1`
     );
 
     const response = await GET(request);
@@ -86,7 +87,7 @@ describe("GET /api/online-users", () => {
     vi.mocked(getOnlineUsersCount).mockRejectedValue(new Error("Redis error"));
 
     const request = new Request(
-      "https://example.com/api/online-users?projectId=project-1"
+      `${createApiUrl("/online-users")}?projectId=project-1`
     );
 
     await expectResponse(await GET(request), 500, "Внутренняя ошибка сервера");

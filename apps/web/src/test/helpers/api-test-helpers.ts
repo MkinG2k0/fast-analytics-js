@@ -43,6 +43,23 @@ export function createRequest(
   });
 }
 
+const API_BASE_URL = "https://example.com/api";
+
+export function createApiUrl(
+  path: string,
+  params?: Record<string, string>
+): string {
+  let url = `${API_BASE_URL}${path}`;
+
+  if (params) {
+    Object.entries(params).forEach(([key, value]) => {
+      url = url.replace(`[${key}]`, value);
+    });
+  }
+
+  return url;
+}
+
 export function createApiRequest(
   endpoint: string,
   options?: {
@@ -50,10 +67,14 @@ export function createApiRequest(
     apiKey?: string;
     body?: unknown;
     headers?: Record<string, string>;
+    params?: Record<string, string>;
   }
 ): Request {
-  const { method = "POST", apiKey, body, headers = {} } = options || {};
-  return createRequest(`https://example.com${endpoint}`, {
+  const { method = "POST", apiKey, body, headers = {}, params } = options || {};
+  const url = params
+    ? createApiUrl(endpoint.replace("/api", ""), params)
+    : `${API_BASE_URL}${endpoint.replace("/api", "")}`;
+  return createRequest(url, {
     method,
     headers: { ...(apiKey && { "x-api-key": apiKey }), ...headers },
     body,

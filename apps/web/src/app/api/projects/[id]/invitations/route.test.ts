@@ -8,6 +8,7 @@ import {
 } from "@/shared/lib/project-access";
 import {
   createApiRequest,
+  createApiUrl,
   expectResponse,
   mockAuthenticatedSession,
   mockProjectAccess,
@@ -50,10 +51,10 @@ describe("GET /api/projects/[id]/invitations", () => {
   it("должен возвращать 401 если пользователь не авторизован", async () => {
     mockUnauthenticatedSession();
 
-    const request = new Request(
-      "https://example.com/api/projects/project-1/invitations"
-    );
     const params = Promise.resolve({ id: "project-1" });
+    const request = new Request(
+      createApiUrl("/projects/[id]/invitations", { id: "project-1" })
+    );
 
     await expectResponse(await GET(request, { params }), 401, "Не авторизован");
   });
@@ -61,10 +62,10 @@ describe("GET /api/projects/[id]/invitations", () => {
   it("должен возвращать 403 если нет доступа на управление участниками", async () => {
     mockProjectAccess(false, "viewer");
 
-    const request = new Request(
-      "https://example.com/api/projects/project-1/invitations"
-    );
     const params = Promise.resolve({ id: "project-1" });
+    const request = new Request(
+      createApiUrl("/projects/[id]/invitations", { id: "project-1" })
+    );
 
     await expectResponse(
       await GET(request, { params }),
@@ -99,10 +100,10 @@ describe("GET /api/projects/[id]/invitations", () => {
       mockInvitations as never
     );
 
-    const request = new Request(
-      "https://example.com/api/projects/project-1/invitations"
-    );
     const params = Promise.resolve({ id: "project-1" });
+    const request = new Request(
+      createApiUrl("/projects/[id]/invitations", { id: "project-1" })
+    );
 
     const response = await GET(request, { params });
     const data = await response.json();

@@ -7,6 +7,7 @@ import {
   ProjectPermission,
 } from "@/shared/lib/project-access";
 import {
+  createApiUrl,
   expectResponse,
   mockAuthenticatedSession,
   mockProjectAccess,
@@ -43,8 +44,10 @@ describe("GET /api/events/[id]", () => {
   it("должен возвращать 401 если пользователь не авторизован", async () => {
     mockUnauthenticatedSession();
 
-    const request = new Request("https://example.com/api/events/event-1");
     const params = Promise.resolve({ id: "event-1" });
+    const request = new Request(
+      createApiUrl("/events/[id]", { id: "event-1" })
+    );
 
     await expectResponse(await GET(request, { params }), 401, "Не авторизован");
   });
@@ -52,8 +55,10 @@ describe("GET /api/events/[id]", () => {
   it("должен возвращать 404 если событие не найдено", async () => {
     vi.mocked(prisma.event.findUnique).mockResolvedValue(null);
 
-    const request = new Request("https://example.com/api/events/event-1");
     const params = Promise.resolve({ id: "event-1" });
+    const request = new Request(
+      createApiUrl("/events/[id]", { id: "event-1" })
+    );
 
     await expectResponse(
       await GET(request, { params }),
@@ -86,8 +91,10 @@ describe("GET /api/events/[id]", () => {
     vi.mocked(prisma.event.findUnique).mockResolvedValue(mockEvent as never);
     mockProjectAccess(false);
 
-    const request = new Request("https://example.com/api/events/event-1");
     const params = Promise.resolve({ id: "event-1" });
+    const request = new Request(
+      createApiUrl("/events/[id]", { id: "event-1" })
+    );
 
     const response = await GET(request, { params });
     const data = await response.json();
@@ -120,8 +127,10 @@ describe("GET /api/events/[id]", () => {
     vi.mocked(prisma.event.findUnique).mockResolvedValue(mockEvent as never);
     mockProjectAccess(true, "owner");
 
-    const request = new Request("https://example.com/api/events/event-1");
     const params = Promise.resolve({ id: "event-1" });
+    const request = new Request(
+      createApiUrl("/events/[id]", { id: "event-1" })
+    );
 
     const response = await GET(request, { params });
     const data = await response.json();
@@ -147,10 +156,13 @@ describe("DELETE /api/events/[id]", () => {
   it("должен возвращать 401 если пользователь не авторизован", async () => {
     mockUnauthenticatedSession();
 
-    const request = new Request("https://example.com/api/events/event-1", {
-      method: "DELETE",
-    });
     const params = Promise.resolve({ id: "event-1" });
+    const request = new Request(
+      createApiUrl("/events/[id]", { id: "event-1" }),
+      {
+        method: "DELETE",
+      }
+    );
 
     await expectResponse(
       await DELETE(request, { params }),
@@ -162,10 +174,13 @@ describe("DELETE /api/events/[id]", () => {
   it("должен возвращать 404 если событие не найдено", async () => {
     vi.mocked(prisma.event.findUnique).mockResolvedValue(null);
 
-    const request = new Request("https://example.com/api/events/event-1", {
-      method: "DELETE",
-    });
     const params = Promise.resolve({ id: "event-1" });
+    const request = new Request(
+      createApiUrl("/events/[id]", { id: "event-1" }),
+      {
+        method: "DELETE",
+      }
+    );
 
     await expectResponse(
       await DELETE(request, { params }),
@@ -183,10 +198,13 @@ describe("DELETE /api/events/[id]", () => {
     vi.mocked(prisma.event.findUnique).mockResolvedValue(mockEvent as never);
     mockProjectAccess(false, "viewer");
 
-    const request = new Request("https://example.com/api/events/event-1", {
-      method: "DELETE",
-    });
     const params = Promise.resolve({ id: "event-1" });
+    const request = new Request(
+      createApiUrl("/events/[id]", { id: "event-1" }),
+      {
+        method: "DELETE",
+      }
+    );
 
     await expectResponse(
       await DELETE(request, { params }),
@@ -205,10 +223,13 @@ describe("DELETE /api/events/[id]", () => {
     mockProjectAccess(true, "admin");
     vi.mocked(prisma.event.delete).mockResolvedValue({} as never);
 
-    const request = new Request("https://example.com/api/events/event-1", {
-      method: "DELETE",
-    });
     const params = Promise.resolve({ id: "event-1" });
+    const request = new Request(
+      createApiUrl("/events/[id]", { id: "event-1" }),
+      {
+        method: "DELETE",
+      }
+    );
 
     const response = await DELETE(request, { params });
     const data = await response.json();

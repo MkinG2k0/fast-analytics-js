@@ -8,6 +8,7 @@ import {
 } from "@/shared/lib/project-access";
 import {
   createApiRequest,
+  createApiUrl,
   expectResponse,
   mockAuthenticatedSession,
   mockInvalidProject,
@@ -49,8 +50,10 @@ describe("GET /api/projects/[id]", () => {
   it("должен возвращать 401 если пользователь не авторизован", async () => {
     mockUnauthenticatedSession();
 
-    const request = new Request("https://example.com/api/projects/project-1");
     const params = Promise.resolve({ id: "project-1" });
+    const request = new Request(
+      createApiUrl("/projects/[id]", { id: "project-1" })
+    );
 
     await expectResponse(await GET(request, { params }), 401, "Не авторизован");
   });
@@ -58,8 +61,10 @@ describe("GET /api/projects/[id]", () => {
   it("должен возвращать 403 если нет доступа к проекту", async () => {
     mockProjectAccess(false);
 
-    const request = new Request("https://example.com/api/projects/project-1");
     const params = Promise.resolve({ id: "project-1" });
+    const request = new Request(
+      createApiUrl("/projects/[id]", { id: "project-1" })
+    );
 
     await expectResponse(
       await GET(request, { params }),
@@ -72,8 +77,10 @@ describe("GET /api/projects/[id]", () => {
     mockProjectAccess(true, "owner");
     mockInvalidProject();
 
-    const request = new Request("https://example.com/api/projects/project-1");
     const params = Promise.resolve({ id: "project-1" });
+    const request = new Request(
+      createApiUrl("/projects/[id]", { id: "project-1" })
+    );
 
     await expectResponse(
       await GET(request, { params }),
@@ -92,8 +99,10 @@ describe("GET /api/projects/[id]", () => {
     mockProjectAccess(true, "owner");
     mockValidProject(testProject);
 
-    const request = new Request("https://example.com/api/projects/project-1");
     const params = Promise.resolve({ id: "project-1" });
+    const request = new Request(
+      createApiUrl("/projects/[id]", { id: "project-1" })
+    );
 
     const response = await GET(request, { params });
     const data = await response.json();
@@ -118,11 +127,12 @@ describe("PATCH /api/projects/[id]", () => {
   it("должен возвращать 401 если пользователь не авторизован", async () => {
     mockUnauthenticatedSession();
 
-    const request = createApiRequest("/api/projects/project-1", {
+    const params = Promise.resolve({ id: "project-1" });
+    const request = createApiRequest("/api/projects/[id]", {
       method: "PATCH",
       body: { name: "Updated Project" },
+      params: { id: "project-1" },
     });
-    const params = Promise.resolve({ id: "project-1" });
 
     await expectResponse(
       await PATCH(request, { params }),
@@ -135,11 +145,12 @@ describe("PATCH /api/projects/[id]", () => {
     mockAuthenticatedSession();
     mockInvalidProject();
 
-    const request = createApiRequest("/api/projects/project-1", {
+    const params = Promise.resolve({ id: "project-1" });
+    const request = createApiRequest("/api/projects/[id]", {
       method: "PATCH",
       body: { name: "Updated Project" },
+      params: { id: "project-1" },
     });
-    const params = Promise.resolve({ id: "project-1" });
 
     await expectResponse(
       await PATCH(request, { params }),
@@ -154,11 +165,12 @@ describe("PATCH /api/projects/[id]", () => {
     mockValidProject(testProject);
     mockProjectAccess(false, "viewer");
 
-    const request = createApiRequest("/api/projects/project-1", {
+    const params = Promise.resolve({ id: "project-1" });
+    const request = createApiRequest("/api/projects/[id]", {
       method: "PATCH",
       body: { name: "Updated Project" },
+      params: { id: "project-1" },
     });
-    const params = Promise.resolve({ id: "project-1" });
 
     await expectResponse(
       await PATCH(request, { params }),
@@ -183,11 +195,12 @@ describe("PATCH /api/projects/[id]", () => {
     mockProjectAccess(true, "owner");
     vi.mocked(prisma.project.update).mockResolvedValue(updatedProject as never);
 
-    const request = createApiRequest("/api/projects/project-1", {
+    const params = Promise.resolve({ id: "project-1" });
+    const request = createApiRequest("/api/projects/[id]", {
       method: "PATCH",
       body: { name: "Updated Project", description: "New description" },
+      params: { id: "project-1" },
     });
-    const params = Promise.resolve({ id: "project-1" });
 
     const response = await PATCH(request, { params });
     const data = await response.json();
@@ -217,11 +230,12 @@ describe("PATCH /api/projects/[id]", () => {
     mockProjectAccess(true, "owner");
     vi.mocked(prisma.project.update).mockResolvedValue(testProject as never);
 
-    const request = createApiRequest("/api/projects/project-1", {
+    const params = Promise.resolve({ id: "project-1" });
+    const request = createApiRequest("/api/projects/[id]", {
       method: "PATCH",
       body: { name: "Updated Project" },
+      params: { id: "project-1" },
     });
-    const params = Promise.resolve({ id: "project-1" });
 
     await PATCH(request, { params });
 
@@ -237,11 +251,12 @@ describe("PATCH /api/projects/[id]", () => {
     mockValidProject();
     mockProjectAccess(true, "owner");
 
-    const request = createApiRequest("/api/projects/project-1", {
+    const params = Promise.resolve({ id: "project-1" });
+    const request = createApiRequest("/api/projects/[id]", {
       method: "PATCH",
       body: { name: "" },
+      params: { id: "project-1" },
     });
-    const params = Promise.resolve({ id: "project-1" });
 
     const data = await expectResponse(await PATCH(request, { params }), 400);
     expect(data.message).toBeDefined();
@@ -257,10 +272,11 @@ describe("DELETE /api/projects/[id]", () => {
   it("должен возвращать 401 если пользователь не авторизован", async () => {
     mockUnauthenticatedSession();
 
-    const request = new Request("https://example.com/api/projects/project-1", {
-      method: "DELETE",
-    });
     const params = Promise.resolve({ id: "project-1" });
+    const request = new Request(
+      createApiUrl("/projects/[id]", { id: "project-1" }),
+      { method: "DELETE" }
+    );
 
     await expectResponse(
       await DELETE(request, { params }),
@@ -273,10 +289,11 @@ describe("DELETE /api/projects/[id]", () => {
     mockAuthenticatedSession();
     mockInvalidProject();
 
-    const request = new Request("https://example.com/api/projects/project-1", {
-      method: "DELETE",
-    });
     const params = Promise.resolve({ id: "project-1" });
+    const request = new Request(
+      createApiUrl("/projects/[id]", { id: "project-1" }),
+      { method: "DELETE" }
+    );
 
     await expectResponse(
       await DELETE(request, { params }),
@@ -291,10 +308,11 @@ describe("DELETE /api/projects/[id]", () => {
     mockValidProject(testProject);
     mockProjectAccess(false, "admin");
 
-    const request = new Request("https://example.com/api/projects/project-1", {
-      method: "DELETE",
-    });
     const params = Promise.resolve({ id: "project-1" });
+    const request = new Request(
+      createApiUrl("/projects/[id]", { id: "project-1" }),
+      { method: "DELETE" }
+    );
 
     await expectResponse(
       await DELETE(request, { params }),
@@ -308,10 +326,11 @@ describe("DELETE /api/projects/[id]", () => {
     mockProjectAccess(true, "owner");
     vi.mocked(prisma.project.delete).mockResolvedValue({} as never);
 
-    const request = new Request("https://example.com/api/projects/project-1", {
-      method: "DELETE",
-    });
     const params = Promise.resolve({ id: "project-1" });
+    const request = new Request(
+      createApiUrl("/projects/[id]", { id: "project-1" }),
+      { method: "DELETE" }
+    );
 
     const response = await DELETE(request, { params });
     const data = await response.json();
