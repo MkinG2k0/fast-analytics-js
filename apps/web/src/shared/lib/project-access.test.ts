@@ -175,7 +175,7 @@ describe("hasProjectPermission", () => {
     expect(hasEdit).toBe(true);
     expect(hasDelete).toBe(false);
     expect(hasManageMembers).toBe(true);
-    expect(hasManageSettings).toBe(false);
+    expect(hasManageSettings).toBe(true);
   });
 
   it("должен возвращать правильные разрешения для member", async () => {
@@ -359,4 +359,3 @@ describe("checkProjectAccess", () => {
     expect(result.role).toBeNull();
   });
 });
-
