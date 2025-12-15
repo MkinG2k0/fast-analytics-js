@@ -92,7 +92,7 @@ describe("GET /api/projects/[id]", () => {
   it("должен возвращать проект при успешном запросе", async () => {
     const testProject = {
       ...mockProject,
-      description: "Description",
+      description: null,
       apiKey: "api-key",
     };
 
@@ -182,7 +182,7 @@ describe("PATCH /api/projects/[id]", () => {
   it("должен обновлять проект", async () => {
     const testProject = {
       ...mockProject,
-      description: "Old description",
+      description: null,
       apiKey: "api-key",
     };
     const updatedProject = {
@@ -221,7 +221,7 @@ describe("PATCH /api/projects/[id]", () => {
   it("должен обновлять только переданные поля", async () => {
     const testProject = {
       ...mockProject,
-      description: "Old description",
+      description: null,
       apiKey: "api-key",
     };
 

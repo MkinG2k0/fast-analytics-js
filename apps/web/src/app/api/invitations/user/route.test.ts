@@ -69,12 +69,14 @@ describe("GET /api/invitations/user", () => {
 
     expect(response.status).toBe(200);
     expect(data).toHaveLength(1);
-    expect(data[0].id).toBe(mockInvitations[0].id);
-    expect(data[0].email).toBe(mockInvitations[0].email);
-    expect(data[0].role).toBe(mockInvitations[0].role);
-    expect(data[0].status).toBe(mockInvitations[0].status);
-    expect(data[0].project).toEqual(mockInvitations[0].project);
-    expect(data[0].inviter).toEqual(mockInvitations[0].inviter);
+    const invitation = mockInvitations[0];
+    if (!invitation) throw new Error("Invitation not found");
+    expect(data[0].id).toBe(invitation.id);
+    expect(data[0].email).toBe(invitation.email);
+    expect(data[0].role).toBe(invitation.role);
+    expect(data[0].status).toBe(invitation.status);
+    expect(data[0].project).toEqual(invitation.project);
+    expect(data[0].inviter).toEqual(invitation.inviter);
     expect(prisma.projectInvitation.findMany).toHaveBeenCalledWith({
       where: {
         email: "test@example.com",
@@ -108,13 +110,12 @@ describe("GET /api/invitations/user", () => {
   });
 
   it("должен возвращать 401 если нет email в сессии", async () => {
-    const mockSession = {
+    const { getSessionFromRequest } = await import("@/shared/lib/auth");
+    vi.mocked(getSessionFromRequest).mockResolvedValue({
       user: {
         id: "user-1",
       },
-    };
-
-    mockAuthenticatedSession(mockSession);
+    } as never);
 
     await expectResponse(await GET(), 401, "Не авторизован");
   });

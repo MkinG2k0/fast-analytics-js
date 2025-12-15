@@ -96,7 +96,8 @@ describe("POST /api/page-visits", () => {
     expect(data.success).toBe(true);
     expect(data.count).toBe(1);
     expect(prisma.pageVisit.createMany).toHaveBeenCalled();
-    const callArgs = vi.mocked(prisma.pageVisit.createMany).mock.calls[0][0];
+    const callArgs = vi.mocked(prisma.pageVisit.createMany).mock.calls[0]?.[0];
+    if (!callArgs) throw new Error("Call args not found");
     expect(callArgs.data[0].projectId).toBe("project-1");
     expect(callArgs.data[0].url).toBe("https://example.com/page");
     expect(callArgs.data[0].pathname).toBe("/page");

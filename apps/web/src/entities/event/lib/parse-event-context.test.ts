@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
+import { Prisma } from "@repo/database";
 import type { Event } from "@repo/database";
-import { parseEventContext, type ParsedEventContext } from "./parse-event-context";
+import {
+  parseEventContext,
+  type ParsedEventContext,
+} from "./parse-event-context";
 
 describe("parseEventContext", () => {
   it("должен возвращать пустой результат для события без context", () => {
@@ -15,8 +19,13 @@ describe("parseEventContext", () => {
       url: null,
       sessionId: null,
       userId: null,
+      timestamp: new Date(),
       createdAt: new Date(),
-      updatedAt: new Date(),
+      occurrenceCount: 1,
+      screenshotUrl: null,
+      clickTrace: null,
+      performance: null,
+      metadata: null,
     };
 
     const result = parseEventContext(event);
@@ -44,8 +53,13 @@ describe("parseEventContext", () => {
       url: null,
       sessionId: null,
       userId: null,
+      timestamp: new Date(),
       createdAt: new Date(),
-      updatedAt: new Date(),
+      occurrenceCount: 1,
+      screenshotUrl: null,
+      clickTrace: null,
+      performance: null,
+      metadata: null,
     };
 
     const result = parseEventContext(event);
@@ -78,8 +92,13 @@ describe("parseEventContext", () => {
       url: null,
       sessionId: null,
       userId: null,
+      timestamp: new Date(),
       createdAt: new Date(),
-      updatedAt: new Date(),
+      occurrenceCount: 1,
+      screenshotUrl: null,
+      clickTrace: null,
+      performance: null,
+      metadata: null,
     };
 
     const result = parseEventContext(event);
@@ -111,8 +130,13 @@ describe("parseEventContext", () => {
       url: null,
       sessionId: null,
       userId: null,
+      timestamp: new Date(),
       createdAt: new Date(),
-      updatedAt: new Date(),
+      occurrenceCount: 1,
+      screenshotUrl: null,
+      clickTrace: null,
+      performance: null,
+      metadata: null,
     };
 
     const result = parseEventContext(event);
@@ -144,8 +168,13 @@ describe("parseEventContext", () => {
       url: null,
       sessionId: null,
       userId: null,
+      timestamp: new Date(),
       createdAt: new Date(),
-      updatedAt: new Date(),
+      occurrenceCount: 1,
+      screenshotUrl: null,
+      clickTrace: null,
+      performance: null,
+      metadata: null,
     };
 
     const result = parseEventContext(event);
@@ -177,8 +206,13 @@ describe("parseEventContext", () => {
       url: null,
       sessionId: null,
       userId: null,
+      timestamp: new Date(),
       createdAt: new Date(),
-      updatedAt: new Date(),
+      occurrenceCount: 1,
+      screenshotUrl: null,
+      clickTrace: null,
+      performance: null,
+      metadata: null,
     };
 
     const result = parseEventContext(event);
@@ -205,8 +239,13 @@ describe("parseEventContext", () => {
       url: null,
       sessionId: null,
       userId: null,
+      timestamp: new Date(),
       createdAt: new Date(),
-      updatedAt: new Date(),
+      occurrenceCount: 1,
+      screenshotUrl: null,
+      clickTrace: null,
+      performance: null,
+      metadata: null,
     };
 
     const result = parseEventContext(event);
@@ -230,8 +269,13 @@ describe("parseEventContext", () => {
       url: null,
       sessionId: null,
       userId: null,
+      timestamp: new Date(),
       createdAt: new Date(),
-      updatedAt: new Date(),
+      occurrenceCount: 1,
+      screenshotUrl: null,
+      clickTrace: null,
+      performance: null,
+      metadata: null,
     };
 
     const result = parseEventContext(event);
@@ -254,8 +298,13 @@ describe("parseEventContext", () => {
       url: null,
       sessionId: null,
       userId: null,
+      timestamp: new Date(),
       createdAt: new Date(),
-      updatedAt: new Date(),
+      occurrenceCount: 1,
+      screenshotUrl: null,
+      clickTrace: null,
+      performance: null,
+      metadata: null,
     };
 
     const result1 = parseEventContext(event1);
@@ -276,8 +325,13 @@ describe("parseEventContext", () => {
       url: null,
       sessionId: null,
       userId: null,
+      timestamp: new Date(),
       createdAt: new Date(),
-      updatedAt: new Date(),
+      occurrenceCount: 1,
+      screenshotUrl: null,
+      clickTrace: null,
+      performance: null,
+      metadata: null,
     };
 
     const result2 = parseEventContext(event2);
@@ -290,14 +344,19 @@ describe("parseEventContext", () => {
       projectId: "project1",
       level: "error",
       message: "Test error",
-      context: ["not", "an", "object"] as unknown as Record<string, unknown>,
+      context: ["not", "an", "object"] as unknown as Prisma.JsonValue,
       stack: null,
       userAgent: null,
       url: null,
       sessionId: null,
       userId: null,
+      timestamp: new Date(),
       createdAt: new Date(),
-      updatedAt: new Date(),
+      occurrenceCount: 1,
+      screenshotUrl: null,
+      clickTrace: null,
+      performance: null,
+      metadata: null,
     };
 
     const result = parseEventContext(event);
@@ -308,4 +367,3 @@ describe("parseEventContext", () => {
     });
   });
 });
-

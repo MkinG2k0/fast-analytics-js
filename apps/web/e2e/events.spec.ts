@@ -24,7 +24,8 @@ test.describe("События / Логи", () => {
   });
 
   test("должна отображать страницу логов проекта", async ({ page }) => {
-    const projectId = mockProjects[0].id;
+    const projectId = mockProjects[0]?.id;
+    if (!projectId) throw new Error("Project not found");
     await page.goto(`/project/${projectId}/logs`);
 
     await expect(page.locator("text=Логи проекта")).toBeVisible();
@@ -32,7 +33,8 @@ test.describe("События / Логи", () => {
   });
 
   test("должна отображать список событий", async ({ page }) => {
-    const projectId = mockProjects[0].id;
+    const projectId = mockProjects[0]?.id;
+    if (!projectId) throw new Error("Project not found");
     await page.goto(`/project/${projectId}/logs`);
 
     // Ждем загрузки событий
@@ -41,13 +43,16 @@ test.describe("События / Логи", () => {
     // Проверяем наличие событий в таблице
     for (const event of mockEvents) {
       if (event.projectId === projectId) {
-        await expect(page.locator(`text=${event.message}`)).toBeVisible({ timeout: 5000 });
+        await expect(page.locator(`text=${event.message}`)).toBeVisible({
+          timeout: 5000,
+        });
       }
     }
   });
 
   test("должна фильтровать события по уровню", async ({ page }) => {
-    const projectId = mockProjects[0].id;
+    const projectId = mockProjects[0]?.id;
+    if (!projectId) throw new Error("Project not found");
     await page.goto(`/project/${projectId}/logs`);
 
     // Ждем загрузки таблицы
@@ -55,18 +60,27 @@ test.describe("События / Логи", () => {
 
     // Ищем фильтр по уровню (предполагаем, что есть селектор для фильтрации)
     // Это зависит от реализации виджета фильтрации
-    const filterButton = page.locator('button:has-text("Фильтр"), button:has-text("error"), button:has-text("warning")').first();
+    const filterButton = page
+      .locator(
+        'button:has-text("Фильтр"), button:has-text("error"), button:has-text("warning")'
+      )
+      .first();
 
     if (await filterButton.isVisible()) {
       await filterButton.click();
 
       // Проверяем, что отображаются только события с выбранным уровнем
-      await expect(page.locator("text=error").or(page.locator("text=warning"))).toBeVisible();
+      await expect(
+        page.locator("text=error").or(page.locator("text=warning"))
+      ).toBeVisible();
     }
   });
 
-  test("должна обновлять список событий при нажатии кнопки Обновить", async ({ page }) => {
-    const projectId = mockProjects[0].id;
+  test("должна обновлять список событий при нажатии кнопки Обновить", async ({
+    page,
+  }) => {
+    const projectId = mockProjects[0]?.id;
+    if (!projectId) throw new Error("Project not found");
     await page.goto(`/project/${projectId}/logs`);
 
     await page.waitForSelector("table", { timeout: 5000 });
@@ -88,19 +102,25 @@ test.describe("События / Логи", () => {
   });
 
   test("должна переключаться на вкладку настроек", async ({ page }) => {
-    const projectId = mockProjects[0].id;
+    const projectId = mockProjects[0]?.id;
+    if (!projectId) throw new Error("Project not found");
     await page.goto(`/project/${projectId}/logs`);
 
     const settingsTab = page.locator('div[role="tab"]:has-text("Настройки")');
 
     if (await settingsTab.isVisible()) {
       await settingsTab.click();
-      await expect(page).toHaveURL(new RegExp(`/project/${projectId}/settings`));
+      await expect(page).toHaveURL(
+        new RegExp(`/project/${projectId}/settings`)
+      );
     }
   });
 
-  test("должна отображать пагинацию при большом количестве событий", async ({ page }) => {
-    const projectId = mockProjects[0].id;
+  test("должна отображать пагинацию при большом количестве событий", async ({
+    page,
+  }) => {
+    const projectId = mockProjects[0]?.id;
+    if (!projectId) throw new Error("Project not found");
 
     // Мокируем много событий
     const manyEvents = Array.from({ length: 100 }, (_, i) => ({
@@ -174,28 +194,40 @@ test.describe("Детали события", () => {
   });
 
   test("должна отображать детали события", async ({ page }) => {
-    const eventId = mockEvents[0].id;
+    const eventId = mockEvents[0]?.id;
+    if (!eventId) throw new Error("Event not found");
+    const eventMessage = mockEvents[0]?.message;
+    if (!eventMessage) throw new Error("Event message not found");
     await page.goto(`/event/${eventId}`);
 
     // Проверяем наличие основных полей события
-    await expect(page.locator(`text=${mockEvents[0].message}`)).toBeVisible({ timeout: 5000 });
+    await expect(page.locator(`text=${eventMessage}`)).toBeVisible({
+      timeout: 5000,
+    });
     // Уровень может отображаться как ERROR, error или в другом формате
     await expect(
-      page.getByText("ERROR", { exact: true }).or(page.getByText("error", { exact: false }))
+      page
+        .getByText("ERROR", { exact: true })
+        .or(page.getByText("error", { exact: false }))
     ).toBeVisible();
   });
 
   test("должна показывать информацию о событии", async ({ page }) => {
-    const eventId = mockEvents[0].id;
+    const eventId = mockEvents[0]?.id;
     const event = mockEvents[0];
+    if (!eventId || !event) throw new Error("Event not found");
 
     await page.goto(`/event/${eventId}`);
 
     // Проверяем наличие основных данных события
-    await expect(page.locator(`text=${event.message}`)).toBeVisible({ timeout: 5000 });
+    await expect(page.locator(`text=${event.message}`)).toBeVisible({
+      timeout: 5000,
+    });
     // Уровень может отображаться как ERROR, error или в другом формате
     await expect(
-      page.getByText("ERROR", { exact: true }).or(page.getByText("error", { exact: false }))
+      page
+        .getByText("ERROR", { exact: true })
+        .or(page.getByText("error", { exact: false }))
     ).toBeVisible();
 
     // URL и user agent могут быть в разных форматах, проверяем более гибко
@@ -208,4 +240,3 @@ test.describe("Детали события", () => {
     }
   });
 });
-

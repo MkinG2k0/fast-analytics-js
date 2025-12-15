@@ -41,9 +41,7 @@ describe("GET /api/projects", () => {
   it("должен возвращать 401 если пользователь не авторизован", async () => {
     mockUnauthenticatedSession();
 
-    const request = new Request(createApiUrl("/projects"));
-
-    await expectResponse(await GET(request), 401, "Не авторизован");
+    await expectResponse(await GET(), 401, "Не авторизован");
   });
 
   it("должен возвращать список проектов пользователя", async () => {
@@ -85,9 +83,7 @@ describe("GET /api/projects", () => {
       mockMemberProjects as never
     );
 
-    const request = new Request(createApiUrl("/projects"));
-
-    const response = await GET(request);
+    const response = await GET();
     const data = await response.json();
 
     expect(response.status).toBe(200);
@@ -135,9 +131,7 @@ describe("GET /api/projects", () => {
       mockMemberProjects as never
     );
 
-    const request = new Request(createApiUrl("/projects"));
-
-    const response = await GET(request);
+    const response = await GET();
     const data = await response.json();
 
     expect(response.status).toBe(200);
@@ -149,9 +143,7 @@ describe("GET /api/projects", () => {
       new Error("Database error")
     );
 
-    const request = new Request(createApiUrl("/projects"));
-
-    const response = await GET(request);
+    const response = await GET();
     const data = await response.json();
 
     expect(response.status).toBe(500);
