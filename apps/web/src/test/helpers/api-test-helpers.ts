@@ -1,4 +1,4 @@
-import { vi } from "vitest";
+import { expect, vi } from "vitest";
 
 import { prisma } from "@/shared/lib/prisma";
 import { getSessionFromRequest } from "@/shared/lib/auth";
