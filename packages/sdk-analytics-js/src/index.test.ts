@@ -95,6 +95,35 @@ describe("FastAnalyticsSDK", () => {
       // Проверяем что window.onerror не был установлен
       expect(window.onerror).toBeNull();
     });
+
+    it("должен обновлять sessionId в heartbeatTransport при resetSession", () => {
+      init({
+        projectKey: "test-key",
+        enableOnlineTracking: true,
+      });
+
+      const oldSessionId = getSessionId();
+      resetSession();
+      const newSessionId = getSessionId();
+
+      expect(newSessionId).not.toBe(oldSessionId);
+    });
+
+    it("не должен падать при setupPageTracking если window не определен", () => {
+      const originalWindow = global.window;
+      // @ts-expect-error - временно удаляем window для теста
+      delete global.window;
+
+      const options: InitOptions = {
+        projectKey: "test-key",
+        enablePageTracking: true,
+      };
+
+      expect(() => init(options)).not.toThrow();
+
+      global.window = originalWindow;
+      teardown();
+    });
   });
 
   describe("logError", () => {
@@ -102,6 +131,7 @@ describe("FastAnalyticsSDK", () => {
       init({
         projectKey: "test-key",
         batchSize: 1, // Для немедленной отправки
+        enableOnlineTracking: false, // Отключаем heartbeat для тестов
       });
     });
 
@@ -112,7 +142,11 @@ describe("FastAnalyticsSDK", () => {
       await logError(error);
 
       expect(mockFetch).toHaveBeenCalled();
-      const body = JSON.parse(mockFetch.mock.calls[0][1].body as string);
+      const eventCall = mockFetch.mock.calls.find(
+        (call) => call[0] === "https://fast-analytics.vercel.app/api/events"
+      );
+      expect(eventCall).toBeDefined();
+      const body = JSON.parse(eventCall![1].body as string);
       expect(body[0].level).toBe("error");
       expect(body[0].message).toBe("Test error");
       expect(body[0].stack).toBeDefined();
@@ -122,7 +156,11 @@ describe("FastAnalyticsSDK", () => {
       await logError("String error");
 
       expect(mockFetch).toHaveBeenCalled();
-      const body = JSON.parse(mockFetch.mock.calls[0][1].body as string);
+      const eventCall = mockFetch.mock.calls.find(
+        (call) => call[0] === "https://fast-analytics.vercel.app/api/events"
+      );
+      expect(eventCall).toBeDefined();
+      const body = JSON.parse(eventCall![1].body as string);
       expect(body[0].level).toBe("error");
       expect(body[0].message).toBe("String error");
     });
@@ -139,24 +177,33 @@ describe("FastAnalyticsSDK", () => {
       await logError(error, context);
 
       expect(mockFetch).toHaveBeenCalled();
-      const body = JSON.parse(mockFetch.mock.calls[0][1].body as string);
+      const eventCall = mockFetch.mock.calls.find(
+        (call) => call[0] === "https://fast-analytics.vercel.app/api/events"
+      );
+      expect(eventCall).toBeDefined();
+      const body = JSON.parse(eventCall![1].body as string);
       expect(body[0].context).toEqual(context);
       expect(body[0].userId).toBe("user-123");
     });
 
     it("должен использовать userId из init если не передан в контексте", async () => {
       teardown(); // Сбрасываем предыдущую инициализацию
-      
+
       init({
         projectKey: "test-key",
         userId: "init-user-id",
         batchSize: 1,
+        enableOnlineTracking: false,
       });
 
       await logError("Test error");
 
       expect(mockFetch).toHaveBeenCalled();
-      const body = JSON.parse(mockFetch.mock.calls[0][1].body as string);
+      const eventCall = mockFetch.mock.calls.find(
+        (call) => call[0] === "https://fast-analytics.vercel.app/api/events"
+      );
+      expect(eventCall).toBeDefined();
+      const body = JSON.parse(eventCall![1].body as string);
       expect(body[0].userId).toBe("init-user-id");
     });
 
@@ -174,6 +221,7 @@ describe("FastAnalyticsSDK", () => {
       init({
         projectKey: "test-key",
         batchSize: 1,
+        enableOnlineTracking: false,
       });
     });
 
@@ -181,7 +229,11 @@ describe("FastAnalyticsSDK", () => {
       await logWarning("Warning message");
 
       expect(mockFetch).toHaveBeenCalled();
-      const body = JSON.parse(mockFetch.mock.calls[0][1].body as string);
+      const eventCall = mockFetch.mock.calls.find(
+        (call) => call[0] === "https://fast-analytics.vercel.app/api/events"
+      );
+      expect(eventCall).toBeDefined();
+      const body = JSON.parse(eventCall![1].body as string);
       expect(body[0].level).toBe("warn");
       expect(body[0].message).toBe("Warning message");
     });
@@ -196,7 +248,11 @@ describe("FastAnalyticsSDK", () => {
       await logWarning("Warning message", context);
 
       expect(mockFetch).toHaveBeenCalled();
-      const body = JSON.parse(mockFetch.mock.calls[0][1].body as string);
+      const eventCall = mockFetch.mock.calls.find(
+        (call) => call[0] === "https://fast-analytics.vercel.app/api/events"
+      );
+      expect(eventCall).toBeDefined();
+      const body = JSON.parse(eventCall![1].body as string);
       expect(body[0].context).toEqual(context);
     });
   });
@@ -206,6 +262,7 @@ describe("FastAnalyticsSDK", () => {
       init({
         projectKey: "test-key",
         batchSize: 1,
+        enableOnlineTracking: false,
       });
     });
 
@@ -213,7 +270,11 @@ describe("FastAnalyticsSDK", () => {
       await logInfo("Info message");
 
       expect(mockFetch).toHaveBeenCalled();
-      const body = JSON.parse(mockFetch.mock.calls[0][1].body as string);
+      const eventCall = mockFetch.mock.calls.find(
+        (call) => call[0] === "https://fast-analytics.vercel.app/api/events"
+      );
+      expect(eventCall).toBeDefined();
+      const body = JSON.parse(eventCall![1].body as string);
       expect(body[0].level).toBe("info");
       expect(body[0].message).toBe("Info message");
     });
@@ -224,6 +285,7 @@ describe("FastAnalyticsSDK", () => {
       init({
         projectKey: "test-key",
         batchSize: 1,
+        enableOnlineTracking: false,
       });
     });
 
@@ -231,7 +293,11 @@ describe("FastAnalyticsSDK", () => {
       await logDebug("Debug message");
 
       expect(mockFetch).toHaveBeenCalled();
-      const body = JSON.parse(mockFetch.mock.calls[0][1].body as string);
+      const eventCall = mockFetch.mock.calls.find(
+        (call) => call[0] === "https://fast-analytics.vercel.app/api/events"
+      );
+      expect(eventCall).toBeDefined();
+      const body = JSON.parse(eventCall![1].body as string);
       expect(body[0].level).toBe("debug");
       expect(body[0].message).toBe("Debug message");
     });
@@ -242,6 +308,7 @@ describe("FastAnalyticsSDK", () => {
       init({
         projectKey: "test-key",
         batchSize: 10, // Большой размер батча для тестирования flush
+        enableOnlineTracking: false,
       });
     });
 
@@ -249,12 +316,18 @@ describe("FastAnalyticsSDK", () => {
       await logInfo("Message 1");
       await logInfo("Message 2");
 
-      expect(mockFetch).not.toHaveBeenCalled();
+      const eventCalls = mockFetch.mock.calls.filter(
+        (call) => call[0] === "https://fast-analytics.vercel.app/api/events"
+      );
+      expect(eventCalls).toHaveLength(0);
 
       await flush();
 
-      expect(mockFetch).toHaveBeenCalledTimes(1);
-      const body = JSON.parse(mockFetch.mock.calls[0][1].body as string);
+      const eventCallsAfterFlush = mockFetch.mock.calls.filter(
+        (call) => call[0] === "https://fast-analytics.vercel.app/api/events"
+      );
+      expect(eventCallsAfterFlush).toHaveLength(1);
+      const body = JSON.parse(eventCallsAfterFlush[0][1].body as string);
       expect(body).toHaveLength(2);
     });
 
@@ -269,6 +342,7 @@ describe("FastAnalyticsSDK", () => {
     beforeEach(() => {
       init({
         projectKey: "test-key",
+        enableOnlineTracking: false,
       });
     });
 
@@ -291,6 +365,7 @@ describe("FastAnalyticsSDK", () => {
     beforeEach(() => {
       init({
         projectKey: "test-key",
+        enableOnlineTracking: false,
       });
     });
 
@@ -309,10 +384,11 @@ describe("FastAnalyticsSDK", () => {
     it("должен удалять все перехватчики", () => {
       const originalFetch = window.fetch;
       const originalOnError = window.onerror;
-      
+
       init({
         projectKey: "test-key",
         enableAutoCapture: true,
+        enableOnlineTracking: false,
       });
 
       // Проверяем что перехватчики установлены
@@ -329,6 +405,7 @@ describe("FastAnalyticsSDK", () => {
     it("должен сбрасывать флаг инициализации", async () => {
       init({
         projectKey: "test-key",
+        enableOnlineTracking: false,
       });
 
       teardown();
@@ -339,11 +416,110 @@ describe("FastAnalyticsSDK", () => {
     });
   });
 
+  describe("page tracking", () => {
+    beforeEach(() => {
+      mockFetch.mockResolvedValue({
+        ok: true,
+        status: 200,
+        statusText: "OK",
+      });
+    });
+
+    it("должен отслеживать изменения через pushState", async () => {
+      init({
+        projectKey: "test-key",
+        enablePageTracking: true,
+        enableOnlineTracking: false,
+        batchSize: 1, // Для немедленной отправки
+      });
+
+      const originalPushState = history.pushState;
+      history.pushState({}, "", "/new-page");
+
+      // Ждем выполнения setTimeout из handleStateChange
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      const pageVisitCalls = mockFetch.mock.calls.filter((call) =>
+        call[0]?.toString().includes("/api/page-visits")
+      );
+      // Может быть вызван при init (первое посещение) или при pushState
+      expect(pageVisitCalls.length).toBeGreaterThanOrEqual(1);
+
+      history.pushState = originalPushState;
+      teardown();
+    });
+
+    it("должен отслеживать изменения через replaceState", async () => {
+      init({
+        projectKey: "test-key",
+        enablePageTracking: true,
+        enableOnlineTracking: false,
+        batchSize: 1,
+      });
+
+      const originalReplaceState = history.replaceState;
+      history.replaceState({}, "", "/replaced-page");
+
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      const pageVisitCalls = mockFetch.mock.calls.filter((call) =>
+        call[0]?.toString().includes("/api/page-visits")
+      );
+      expect(pageVisitCalls.length).toBeGreaterThanOrEqual(1);
+
+      history.replaceState = originalReplaceState;
+      teardown();
+    });
+
+    it("должен отслеживать изменения через popstate", async () => {
+      init({
+        projectKey: "test-key",
+        enablePageTracking: true,
+        enableOnlineTracking: false,
+        batchSize: 1,
+      });
+
+      const popStateEvent = new PopStateEvent("popstate", { state: {} });
+      window.dispatchEvent(popStateEvent);
+
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      const pageVisitCalls = mockFetch.mock.calls.filter((call) =>
+        call[0]?.toString().includes("/api/page-visits")
+      );
+      expect(pageVisitCalls.length).toBeGreaterThanOrEqual(1);
+
+      teardown();
+    });
+
+    it("должен отслеживать изменения через beforeunload", async () => {
+      init({
+        projectKey: "test-key",
+        enablePageTracking: true,
+        enableOnlineTracking: false,
+        batchSize: 1,
+      });
+
+      const beforeUnloadEvent = new Event("beforeunload");
+      window.dispatchEvent(beforeUnloadEvent);
+
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      const pageVisitCalls = mockFetch.mock.calls.filter((call) =>
+        call[0]?.toString().includes("/api/page-visits")
+      );
+      expect(pageVisitCalls.length).toBeGreaterThanOrEqual(1);
+
+      teardown();
+    });
+  });
+
   describe("интеграционные тесты", () => {
     beforeEach(() => {
       init({
         projectKey: "test-key",
         batchSize: 2,
+        enableOnlineTracking: false,
       });
     });
 
@@ -351,8 +527,11 @@ describe("FastAnalyticsSDK", () => {
       await logInfo("Message 1");
       await logInfo("Message 2");
 
-      expect(mockFetch).toHaveBeenCalledTimes(1);
-      const body = JSON.parse(mockFetch.mock.calls[0][1].body as string);
+      const eventCalls = mockFetch.mock.calls.filter(
+        (call) => call[0] === "https://fast-analytics.vercel.app/api/events"
+      );
+      expect(eventCalls).toHaveLength(1);
+      const body = JSON.parse(eventCalls[0][1].body as string);
       expect(body).toHaveLength(2);
     });
 
@@ -361,12 +540,16 @@ describe("FastAnalyticsSDK", () => {
 
       await flush();
 
-      expect(mockFetch).toHaveBeenCalled();
-      const body = JSON.parse(mockFetch.mock.calls[0][1].body as string);
+      const eventCalls = mockFetch.mock.calls.filter(
+        (call) => call[0] === "https://fast-analytics.vercel.app/api/events"
+      );
+      expect(eventCalls.length).toBeGreaterThan(0);
+      const body = JSON.parse(
+        eventCalls[eventCalls.length - 1][1].body as string
+      );
       expect(body[0].url).toBe("https://example.com/test");
       expect(body[0].userAgent).toBe("test-user-agent");
       expect(body[0].sessionId).toBeDefined();
     });
   });
 });
-

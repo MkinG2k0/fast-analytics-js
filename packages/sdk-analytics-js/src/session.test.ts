@@ -83,5 +83,24 @@ describe("SessionManager", () => {
       expect(newSessionId).toBeDefined();
       expect(newSessionId).toMatch(/^session_\d+_[a-z0-9]+$/);
     });
+
+    it("должен работать без window (Node.js окружение)", () => {
+      const originalWindow = global.window;
+      // @ts-expect-error - временно удаляем window для теста
+      delete global.window;
+
+      const manager = new SessionManager();
+      const sessionId = manager.getSessionId();
+
+      expect(sessionId).toBeDefined();
+      expect(sessionId).toMatch(/^session_\d+_[a-z0-9]+$/);
+
+      manager.resetSession();
+      const newSessionId = manager.getSessionId();
+      expect(newSessionId).toBeDefined();
+      expect(newSessionId).not.toBe(sessionId);
+
+      global.window = originalWindow;
+    });
   });
 });

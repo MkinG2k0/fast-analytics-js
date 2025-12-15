@@ -22,7 +22,7 @@
     "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
     "lint": "eslint src",
     "check-types": "tsc --noEmit",
-    "test": "vitest",
+    "test": "vitest --silent --run",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
     "prepublishOnly": "pnpm run build"

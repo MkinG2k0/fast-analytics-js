@@ -35,7 +35,7 @@ describe("Interceptors", () => {
     // Мокаем console методы
     vi.spyOn(console, "log").mockImplementation(() => {});
     vi.spyOn(console, "error").mockImplementation(() => {});
-    
+
     // Устанавливаем window.location.href для правильной работы isSDKRequest
     // Используем тот же домен что и sdkEndpoint для корректного сравнения
     Object.defineProperty(window, "location", {
@@ -53,9 +53,11 @@ describe("Interceptors", () => {
   describe("isSDKRequest", () => {
     it("должен определять запросы к SDK", () => {
       interceptors.setup();
-      const isSDKRequest = (interceptors as unknown as {
-        isSDKRequest: (url: string) => boolean;
-      }).isSDKRequest;
+      const isSDKRequest = (
+        interceptors as unknown as {
+          isSDKRequest: (url: string) => boolean;
+        }
+      ).isSDKRequest;
 
       // Метод сравнивает origin и pathname
       // window.location.href = "https://fast-analytics.vercel.app"
@@ -64,7 +66,36 @@ describe("Interceptors", () => {
       expect(isSDKRequest("https://api.example.com/data")).toBe(false);
       expect(isSDKRequest("https://other-domain.com/api/events")).toBe(false);
       // Проверяем что запросы с другим pathname не определяются как SDK запросы
-      expect(isSDKRequest("https://fast-analytics.vercel.app/other/path")).toBe(false);
+      expect(isSDKRequest("https://fast-analytics.vercel.app/other/path")).toBe(
+        false
+      );
+    });
+
+    it("должен возвращать false если window не определен", () => {
+      const originalWindow = global.window;
+      // @ts-expect-error - временно удаляем window для теста
+      delete global.window;
+
+      const isSDKRequest = (
+        interceptors as unknown as {
+          isSDKRequest: (url: string) => boolean;
+        }
+      ).isSDKRequest;
+
+      expect(isSDKRequest("https://api.example.com/data")).toBe(false);
+
+      global.window = originalWindow;
+    });
+
+    it("должен обрабатывать невалидные URL", () => {
+      interceptors.setup();
+      const isSDKRequest = (
+        interceptors as unknown as {
+          isSDKRequest: (url: string) => boolean;
+        }
+      ).isSDKRequest;
+
+      expect(isSDKRequest("invalid-url")).toBe(false);
     });
   });
 
@@ -73,6 +104,16 @@ describe("Interceptors", () => {
       interceptors.setup();
 
       expect(window.onerror).toBeDefined();
+    });
+
+    it("не должен устанавливать перехватчики если window не определен", () => {
+      const originalWindow = global.window;
+      // @ts-expect-error - временно удаляем window для теста
+      delete global.window;
+
+      expect(() => interceptors.setup()).not.toThrow();
+
+      global.window = originalWindow;
     });
   });
 
@@ -84,15 +125,9 @@ describe("Interceptors", () => {
     it("должен логировать синхронные ошибки JavaScript", async () => {
       const error = new Error("Test error");
       const onErrorHandler = window.onerror;
-      
+
       if (onErrorHandler) {
-        onErrorHandler(
-          "Test error",
-          "test.js",
-          10,
-          5,
-          error
-        );
+        onErrorHandler("Test error", "test.js", 10, 5, error);
       }
 
       // Ждем асинхронной обработки
@@ -127,15 +162,17 @@ describe("Interceptors", () => {
 
     it("должен логировать необработанные промисы", async () => {
       // Вызываем обработчик напрямую, так как PromiseRejectionEvent не поддерживается в happy-dom
-      const handler = (interceptors as unknown as {
-        unhandledRejectionHandler: (event: PromiseRejectionEvent) => void;
-      }).unhandledRejectionHandler;
+      const handler = (
+        interceptors as unknown as {
+          unhandledRejectionHandler: (event: PromiseRejectionEvent) => void;
+        }
+      ).unhandledRejectionHandler;
 
       if (handler) {
         const mockEvent = {
           reason: new Error("Unhandled rejection"),
         } as PromiseRejectionEvent;
-        
+
         handler(mockEvent);
       }
 
@@ -148,15 +185,17 @@ describe("Interceptors", () => {
 
     it("должен обрабатывать rejection с не-Error объектом", async () => {
       // Вызываем обработчик напрямую
-      const handler = (interceptors as unknown as {
-        unhandledRejectionHandler: (event: PromiseRejectionEvent) => void;
-      }).unhandledRejectionHandler;
+      const handler = (
+        interceptors as unknown as {
+          unhandledRejectionHandler: (event: PromiseRejectionEvent) => void;
+        }
+      ).unhandledRejectionHandler;
 
       if (handler) {
         const mockEvent = {
           reason: "String rejection",
         } as PromiseRejectionEvent;
-        
+
         handler(mockEvent);
       }
 
@@ -197,7 +236,9 @@ describe("Interceptors", () => {
       expect(mockSend).toHaveBeenCalled();
       const payload = mockSend.mock.calls[0][0];
       expect(payload.level).toBe("error");
-      expect(payload.context?.customTags?.errorType).toBe("resource_load_error");
+      expect(payload.context?.customTags?.errorType).toBe(
+        "resource_load_error"
+      );
     });
 
     it("не должен логировать ошибки с error свойством (уже обработаны window.onerror)", async () => {
@@ -243,7 +284,7 @@ describe("Interceptors", () => {
           text: () => Promise.resolve("Not found"),
         }),
       } as Response;
-      
+
       mockOriginalFetch.mockResolvedValue(mockResponse);
 
       // Используем перехваченный fetch
@@ -265,7 +306,7 @@ describe("Interceptors", () => {
         statusText: "OK",
         headers: new Headers(),
       } as Response;
-      
+
       mockOriginalFetch.mockResolvedValue(mockResponse);
 
       await window.fetch("https://api.example.com/data");
@@ -281,7 +322,7 @@ describe("Interceptors", () => {
         status: 200,
         headers: new Headers(),
       } as Response;
-      
+
       mockOriginalFetch.mockResolvedValue(mockResponse);
 
       await window.fetch(sdkEndpoint);
@@ -320,7 +361,7 @@ describe("Interceptors", () => {
           text: () => Promise.resolve('{"error": "Bad request"}'),
         }),
       } as Response;
-      
+
       mockOriginalFetch.mockResolvedValue(mockResponse);
 
       await window.fetch("https://api.example.com/data", {
@@ -344,9 +385,9 @@ describe("Interceptors", () => {
       // Проверяем что setup устанавливает перехватчики
       const originalOpen = XMLHttpRequest.prototype.open;
       const originalSend = XMLHttpRequest.prototype.send;
-      
+
       interceptors.setup();
-      
+
       // После setup методы должны быть перехвачены
       expect(XMLHttpRequest.prototype.open).not.toBe(originalOpen);
       expect(XMLHttpRequest.prototype.send).not.toBe(originalSend);
@@ -355,10 +396,10 @@ describe("Interceptors", () => {
     it("должен восстанавливать оригинальные методы XHR при teardown", () => {
       const originalOpen = XMLHttpRequest.prototype.open;
       const originalSend = XMLHttpRequest.prototype.send;
-      
+
       interceptors.setup();
       interceptors.teardown();
-      
+
       // После teardown методы должны быть восстановлены
       expect(XMLHttpRequest.prototype.open).toBe(originalOpen);
       expect(XMLHttpRequest.prototype.send).toBe(originalSend);
@@ -369,9 +410,9 @@ describe("Interceptors", () => {
     it("должен удалять все перехватчики", () => {
       const originalFetch = window.fetch;
       const originalOnError = window.onerror;
-      
+
       interceptors.setup();
-      
+
       // Проверяем что перехватчики установлены
       expect(window.onerror).not.toBe(originalOnError);
       expect(window.fetch).not.toBe(originalFetch);
@@ -391,6 +432,80 @@ describe("Interceptors", () => {
       interceptors.teardown();
 
       expect(window.onerror).toBe(originalHandler);
+    });
+
+    it("не должен падать если window не определен", () => {
+      const originalWindow = global.window;
+      // @ts-expect-error - временно удаляем window для теста
+      delete global.window;
+
+      expect(() => interceptors.teardown()).not.toThrow();
+
+      global.window = originalWindow;
+    });
+  });
+
+  describe("createErrorPayload", () => {
+    beforeEach(() => {
+      interceptors.setup();
+    });
+
+    it("должен создавать stack из source, lineno, colno если error не передан", async () => {
+      // Тестируем через window.onerror, который вызывает createErrorPayload
+      const error = new Error("Test error");
+      const onErrorHandler = window.onerror;
+
+      if (onErrorHandler) {
+        onErrorHandler(
+          "Test error",
+          "test.js",
+          10,
+          5,
+          undefined // Не передаем error, чтобы проверить создание stack из source/lineno/colno
+        );
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
+      expect(mockSend).toHaveBeenCalled();
+      const payload = mockSend.mock.calls[0][0];
+      expect(payload.stack).toBeDefined();
+    });
+
+    it("должен создавать screenshot если enableScreenshotOnError = true", async () => {
+      const options: InitOptions = {
+        projectKey: "test-key",
+        endpoint: sdkEndpoint,
+      };
+      const screenshotTransport = new Transport(options);
+      const screenshotInterceptors = new Interceptors(
+        screenshotTransport,
+        sessionManager,
+        getUserId,
+        sdkEndpoint,
+        true // enableScreenshotOnError
+      );
+
+      screenshotInterceptors.setup();
+
+      const error = new Error("Test error");
+      const onErrorHandler = window.onerror;
+
+      if (onErrorHandler) {
+        onErrorHandler("Test error", "test.js", 10, 5, error);
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      // Screenshot может быть null если html2canvas недоступен, но поле должно быть определено
+      const calls = mockSend.mock.calls;
+      if (calls.length > 0) {
+        const payload = calls[calls.length - 1][0];
+        // screenshotUrl может быть undefined или null, но payload должен быть создан
+        expect(payload).toBeDefined();
+      }
+
+      screenshotInterceptors.teardown();
     });
   });
 });

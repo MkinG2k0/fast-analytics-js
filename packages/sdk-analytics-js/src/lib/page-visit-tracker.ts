@@ -23,20 +23,34 @@ export class PageVisitTracker {
     const now = Date.now();
     const duration = now - this.pageStartTime;
 
+    // Обновляем currentUrl и currentPathname если переданы параметры
+    if (url) {
+      this.currentUrl = url;
+    }
+    if (pathname) {
+      this.currentPathname = pathname;
+    }
+
     const visit: PageVisitPayload = {
       url: url || this.currentUrl,
       pathname: pathname || this.currentPathname,
-      referrer: referrer || (typeof document !== "undefined" ? document.referrer : undefined),
-      userAgent: userAgent || (typeof navigator !== "undefined" ? navigator.userAgent : undefined),
+      referrer:
+        referrer ||
+        (typeof document !== "undefined" ? document.referrer : undefined),
+      userAgent:
+        userAgent ||
+        (typeof navigator !== "undefined" ? navigator.userAgent : undefined),
       sessionId,
       userId,
-      duration: duration > 0 ? duration : undefined,
+      duration: duration >= 0 ? duration : undefined,
     };
 
     // Обновляем время начала для следующей страницы
     this.pageStartTime = now;
-    if (typeof window !== "undefined") {
+    if (typeof window !== "undefined" && !url) {
       this.currentUrl = window.location.href;
+    }
+    if (typeof window !== "undefined" && !pathname) {
       this.currentPathname = window.location.pathname;
     }
 
@@ -55,4 +69,3 @@ export class PageVisitTracker {
     return this.currentPathname;
   }
 }
-
