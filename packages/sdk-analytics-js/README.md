@@ -5,9 +5,27 @@ SDK для отправки логов и ошибок в Fast Analytics.
 [![npm version](https://img.shields.io/npm/v/fast-analytics-js)](https://www.npmjs.com/package/fast-analytics-js)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+**Languages:** [English](#english) | [Русский](#русский)
+
 ---
 
 ## English
+
+### Table of Contents
+
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+- [Features](#features)
+- [View Logs in Dashboard](#view-logs-in-dashboard)
+- [Automatic Error Capture](#automatic-error-capture)
+- [Manual Logging](#manual-logging-optional)
+- [Page Visit Tracking](#page-visit-tracking)
+- [Online User Tracking](#online-user-tracking)
+- [Configuration](#initialization-options)
+- [API Reference](#api-reference)
+- [Examples](#usage-examples)
+- [Browser Compatibility](#browser-compatibility)
+- [FAQ](#faq)
 
 ### Installation
 
@@ -39,6 +57,8 @@ init({
 ```
 
 **That's it!** The SDK automatically captures all errors without requiring manual logging.
+
+**Getting your API key:** Sign up at [https://fast-analytics.vercel.app/](https://fast-analytics.vercel.app/) to get your project API key.
 
 ### Features
 
@@ -193,6 +213,52 @@ init({
 });
 ```
 
+#### Group Page Visits
+
+You can group page visits by URL patterns to consolidate analytics data. This is useful for pages with dynamic IDs or parameters that you want to track as a single page.
+
+**Example 1: Group all pages under a path**
+
+```typescript
+init({
+  projectKey: "your-project-api-key",
+  groupPageVisitsGroup: ["/example/*"], // All visits to /example/* will be grouped as "/example"
+});
+```
+
+All visits to `/example/page1`, `/example/page2`, `/example/123` will be tracked as `/example`.
+
+**Example 2: Group pages with dynamic IDs**
+
+```typescript
+init({
+  projectKey: "your-project-api-key",
+  groupPageVisitsGroup: ["/example/*/some"], // Visits like /example/123/some, /example/456/some will be grouped as "/example/*/some"
+});
+```
+
+All visits to `/example/123/some`, `/example/456/some`, `/example/789/some` will be tracked as `/example/*/some`.
+
+**Example 3: Multiple patterns**
+
+```typescript
+init({
+  projectKey: "your-project-api-key",
+  groupPageVisitsGroup: [
+    "/example/*",
+    "/products/*/details",
+    "/users/*/profile",
+  ],
+});
+```
+
+**Pattern matching rules:**
+
+- `"/example/*"` - Groups all URLs starting with `/example/` into `/example`
+- `"/example/*/some"` - Groups URLs like `/example/123/some` into `/example/*/some`
+- Patterns are matched in order, and the first match is used
+- Use `*` as a wildcard to match any path segment
+
 ### Online User Tracking
 
 By default, the SDK automatically tracks online users in real-time:
@@ -244,6 +310,12 @@ init({
   batchSize: 10, // Optional: Batch size for sending events (default: 10)
   batchTimeout: 5000, // Optional: Batch timeout in ms (default: 5000)
   heartbeatInterval: 30000, // Optional: Heartbeat interval for online tracking in ms (default: 30000)
+  ignoreError: {
+    // Optional: Ignore specific errors
+    codes: [404, 500], // Ignore errors with these status codes
+    urls: ["/example/*"], // Ignore errors from these URL patterns
+  },
+  groupPageVisitsGroup: ["/example/*"], // Optional: Group page visits by URL patterns
 });
 ```
 
@@ -277,6 +349,62 @@ init({
   enableAutoCapture: false, // Disable automatic capture
 });
 ```
+
+### Ignore Errors
+
+You can configure the SDK to ignore specific errors based on error codes or URL patterns. This is useful for filtering out known errors that you don't want to track.
+
+#### Ignore by Error Code
+
+Ignore errors with specific HTTP status codes:
+
+```typescript
+init({
+  projectKey: "your-project-api-key",
+  ignoreError: {
+    codes: [404, 500, "403"], // Ignore errors with status codes 404, 500, and 403
+  },
+});
+```
+
+#### Ignore by URL Pattern
+
+Ignore errors from specific URLs using wildcard patterns:
+
+```typescript
+init({
+  projectKey: "your-project-api-key",
+  ignoreError: {
+    urls: [
+      "/example/*", // Ignore all errors on /example/* paths
+      "/api/health", // Exact match
+      "*.jpg", // All images
+      "/admin/*/test", // Pattern with * in the middle
+    ],
+  },
+});
+```
+
+#### Combined Ignore Rules
+
+You can combine both error codes and URL patterns. An error will be ignored if it matches either condition:
+
+```typescript
+init({
+  projectKey: "your-project-api-key",
+  ignoreError: {
+    codes: [404, 500],
+    urls: ["/example/*", "/api/health"],
+  },
+});
+```
+
+**Pattern Matching:**
+
+- `"/example/*"` - Matches all URLs starting with `/example/` (e.g., `/example/page`, `/example/123`)
+- `"*.jpg"` - Matches all URLs ending with `.jpg`
+- `"/admin/*/test"` - Matches URLs like `/admin/users/test`, `/admin/posts/test`
+- Exact match: `"/api/health"` - Matches only `/api/health`
 
 ### Error Screenshots
 
@@ -316,13 +444,7 @@ import { flush } from "fast-analytics-js";
 await flush();
 ```
 
-**Tip:** Call `flush()` before page unload to ensure all events are sent:
-
-```typescript
-window.addEventListener("beforeunload", () => {
-  flush();
-});
-```
+**Note:** The SDK automatically flushes events when the page is about to unload (`beforeunload`) or when the tab becomes hidden (`visibilitychange`). You don't need to manually set up these handlers.
 
 ### Session Management
 
@@ -354,6 +476,191 @@ teardown();
 
 After calling `teardown()`, you can re-initialize the SDK by calling `init()` again.
 
+### API Reference
+
+#### Functions
+
+##### `init(options: InitOptions): void`
+
+Initializes the SDK with the provided configuration options. Must be called before using any other SDK functions.
+
+```typescript
+init({
+  projectKey: "your-project-api-key",
+  // ... other options
+});
+```
+
+##### `logError(error: Error | string, context?: EventContext): Promise<void>`
+
+Manually log an error. Accepts either an Error object or a string message.
+
+```typescript
+await logError(new Error("Something went wrong"), {
+  userId: "user123",
+  customTags: { section: "checkout" },
+});
+```
+
+##### `logWarning(message: string, context?: EventContext): Promise<void>`
+
+Log a warning message.
+
+```typescript
+await logWarning("Unusual user behavior detected", {
+  userId: "user123",
+});
+```
+
+##### `logInfo(message: string, context?: EventContext): Promise<void>`
+
+Log an informational message.
+
+```typescript
+await logInfo("User completed checkout", {
+  userId: "user123",
+  orderId: "order-123",
+});
+```
+
+##### `logDebug(message: string, context?: EventContext): Promise<void>`
+
+Log a debug message.
+
+```typescript
+await logDebug("Debug information", {
+  data: someData,
+});
+```
+
+##### `trackPageVisit(url?: string, pathname?: string, referrer?: string): Promise<void>`
+
+Manually track a page visit. If called without arguments, uses current page information.
+
+```typescript
+await trackPageVisit(
+  "https://example.com/page",
+  "/page",
+  "https://example.com/referrer"
+);
+```
+
+##### `flush(): Promise<void>`
+
+Immediately send all accumulated events in the batch queue.
+
+```typescript
+await flush();
+```
+
+##### `getSessionId(): string`
+
+Get the current session ID.
+
+```typescript
+const sessionId = getSessionId();
+```
+
+##### `resetSession(): void`
+
+Create a new session (generates a new session ID).
+
+```typescript
+resetSession();
+```
+
+##### `teardown(): void`
+
+Clean up and disable the SDK. Removes all event listeners and stops tracking.
+
+```typescript
+teardown();
+```
+
+#### Types
+
+##### `InitOptions`
+
+Configuration options for SDK initialization.
+
+```typescript
+interface InitOptions {
+  projectKey: string; // Required: Your project API key
+  endpoint?: string; // Optional: API endpoint URL
+  userId?: string; // Optional: Global user ID for all events
+  enableAutoCapture?: boolean; // Optional: Enable automatic error capture (default: true)
+  enablePageTracking?: boolean; // Optional: Enable page visit tracking (default: true)
+  enableOnlineTracking?: boolean; // Optional: Enable online user tracking (default: true)
+  enableScreenshotOnError?: boolean; // Optional: Enable screenshots on errors (default: false)
+  batchSize?: number; // Optional: Batch size for events (default: 10)
+  batchTimeout?: number; // Optional: Batch timeout in ms (default: 5000)
+  heartbeatInterval?: number; // Optional: Heartbeat interval in ms (default: 30000)
+  ignoreError?: {
+    codes?: (string | number)[]; // HTTP status codes to ignore
+    urls?: string[]; // URL patterns to ignore
+  };
+  groupPageVisitsGroup?: string[]; // URL patterns for grouping page visits
+}
+```
+
+##### `EventContext`
+
+Additional context data for events.
+
+```typescript
+interface EventContext {
+  userAgent?: string;
+  url?: string;
+  userId?: string;
+  sessionId?: string;
+  customTags?: Record<string, string>;
+  [key: string]: unknown; // Any additional custom data
+}
+```
+
+##### `EventLevel`
+
+Log level for events.
+
+```typescript
+type EventLevel = "error" | "warn" | "info" | "debug";
+```
+
+##### `EventPayload`
+
+Complete event payload structure.
+
+```typescript
+interface EventPayload {
+  level: EventLevel;
+  message: string;
+  stack?: string;
+  context?: EventContext;
+  userAgent?: string;
+  url?: string;
+  sessionId?: string;
+  userId?: string;
+  performance?: EventPerformance;
+  screenshotUrl?: string;
+}
+```
+
+##### `PageVisitPayload`
+
+Page visit event payload.
+
+```typescript
+interface PageVisitPayload {
+  url: string;
+  pathname?: string;
+  referrer?: string;
+  userAgent?: string;
+  sessionId?: string;
+  userId?: string;
+  duration?: number; // Time spent on page in milliseconds
+}
+```
+
 ### TypeScript Support
 
 The SDK is written in TypeScript and includes full type definitions:
@@ -381,7 +688,7 @@ const context: EventContext = {
 
 ```typescript
 import { useEffect } from "react";
-import { init, flush } from "fast-analytics-js";
+import { init } from "fast-analytics-js";
 
 function App() {
   useEffect(() => {
@@ -389,17 +696,10 @@ function App() {
       projectKey: process.env.NEXT_PUBLIC_FAST_ANALYTICS_KEY!,
       // endpoint is optional - defaults to "https://fast-analytics.vercel.app/api/events"
       // endpoint: process.env.NEXT_PUBLIC_FAST_ANALYTICS_ENDPOINT
+      enableScreenshotOnError: true, // Optional: Enable error screenshots
+      batchSize: 10, // Optional: Customize batch size
     });
-
-    // Flush events before page unload
-    const handleBeforeUnload = () => {
-      flush();
-    };
-    window.addEventListener("beforeunload", handleBeforeUnload);
-
-    return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-    };
+    // Events are automatically flushed on page unload - no manual setup needed!
   }, []);
 
   return <div>...</div>;
@@ -428,17 +728,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
 ```typescript
 import { createApp } from "vue";
-import { init, flush } from "fast-analytics-js";
+import { init } from "fast-analytics-js";
 
 init({
   projectKey: import.meta.env.VITE_FAST_ANALYTICS_KEY,
   // endpoint is optional - defaults to "https://fast-analytics.vercel.app/api/events"
   // endpoint: import.meta.env.VITE_FAST_ANALYTICS_ENDPOINT
-});
-
-// Flush events before page unload
-window.addEventListener("beforeunload", () => {
-  flush();
 });
 
 const app = createApp(App);
@@ -450,25 +745,37 @@ app.mount("#app");
 
 ```html
 <script type="module">
-  import { init, flush } from "fast-analytics-js";
+  import { init } from "fast-analytics-js";
 
   init({
     projectKey: "your-project-api-key",
     // endpoint is optional - defaults to "https://fast-analytics.vercel.app/api/events"
   });
 
-  // Flush events before page unload
-  window.addEventListener("beforeunload", () => {
-    flush();
-  });
-
   // All errors are automatically captured!
+  // Events are automatically flushed on page unload - no manual setup needed!
 </script>
 ```
 
 ---
 
 ## Русский
+
+### Содержание
+
+- [Установка](#установка)
+- [Быстрый старт](#быстрый-старт)
+- [Возможности](#возможности)
+- [Просмотр логов в панели управления](#просмотр-логов-в-панели-управления)
+- [Автоматический перехват ошибок](#автоматический-перехват-ошибок)
+- [Ручное логирование](#ручное-логирование-опционально)
+- [Отслеживание посещений страниц](#отслеживание-посещений-страниц)
+- [Отслеживание онлайн пользователей](#отслеживание-онлайн-пользователей)
+- [Конфигурация](#опции-инициализации)
+- [Справочник API](#справочник-api)
+- [Примеры использования](#примеры-использования)
+- [Совместимость с браузерами](#совместимость-с-браузерами)
+- [Часто задаваемые вопросы](#часто-задаваемые-вопросы)
 
 ### Установка
 
@@ -500,6 +807,8 @@ init({
 ```
 
 **Всё!** SDK автоматически перехватывает все ошибки без необходимости писать код логирования вручную.
+
+**Получение API-ключа:** Зарегистрируйтесь на [https://fast-analytics.vercel.app/](https://fast-analytics.vercel.app/), чтобы получить API-ключ вашего проекта.
 
 ### Возможности
 
@@ -654,6 +963,52 @@ init({
 });
 ```
 
+#### Группировка посещений страниц
+
+Вы можете группировать посещения страниц по паттернам URL для консолидации данных аналитики. Это полезно для страниц с динамическими ID или параметрами, которые вы хотите отслеживать как одну страницу.
+
+**Пример 1: Группировка всех страниц под путём**
+
+```typescript
+init({
+  projectKey: "your-project-api-key",
+  groupPageVisitsGroup: ["/example/*"], // Все посещения /example/* будут сгруппированы как "/example"
+});
+```
+
+Все посещения `/example/page1`, `/example/page2`, `/example/123` будут отслеживаться как `/example`.
+
+**Пример 2: Группировка страниц с динамическими ID**
+
+```typescript
+init({
+  projectKey: "your-project-api-key",
+  groupPageVisitsGroup: ["/example/*/some"], // Посещения типа /example/123/some, /example/456/some будут сгруппированы как "/example/*/some"
+});
+```
+
+Все посещения `/example/123/some`, `/example/456/some`, `/example/789/some` будут отслеживаться как `/example/*/some`.
+
+**Пример 3: Несколько паттернов**
+
+```typescript
+init({
+  projectKey: "your-project-api-key",
+  groupPageVisitsGroup: [
+    "/example/*",
+    "/products/*/details",
+    "/users/*/profile",
+  ],
+});
+```
+
+**Правила сопоставления паттернов:**
+
+- `"/example/*"` - Группирует все URL, начинающиеся с `/example/`, в `/example`
+- `"/example/*/some"` - Группирует URL типа `/example/123/some` в `/example/*/some`
+- Паттерны проверяются по порядку, используется первое совпадение
+- Используйте `*` как подстановочный знак для соответствия любому сегменту пути
+
 ### Отслеживание онлайн пользователей
 
 По умолчанию SDK автоматически отслеживает онлайн пользователей в реальном времени:
@@ -705,6 +1060,12 @@ init({
   batchSize: 10, // Опционально: Размер батча для отправки событий (по умолчанию: 10)
   batchTimeout: 5000, // Опционально: Таймаут отправки батча в мс (по умолчанию: 5000)
   heartbeatInterval: 30000, // Опционально: Интервал heartbeat для отслеживания онлайн в мс (по умолчанию: 30000)
+  ignoreError: {
+    // Опционально: Игнорировать определённые ошибки
+    codes: [404, 500], // Игнорировать ошибки с этими статус-кодами
+    urls: ["/example/*"], // Игнорировать ошибки с этих паттернов URL
+  },
+  groupPageVisitsGroup: ["/example/*"], // Опционально: Группировать посещения страниц по паттернам URL
 });
 ```
 
@@ -738,6 +1099,62 @@ init({
   enableAutoCapture: false, // Отключить автоматический перехват
 });
 ```
+
+### Игнорирование ошибок
+
+Вы можете настроить SDK для игнорирования определённых ошибок на основе кодов ошибок или паттернов URL. Это полезно для фильтрации известных ошибок, которые вы не хотите отслеживать.
+
+#### Игнорирование по коду ошибки
+
+Игнорировать ошибки с определёнными HTTP статус-кодами:
+
+```typescript
+init({
+  projectKey: "your-project-api-key",
+  ignoreError: {
+    codes: [404, 500, "403"], // Игнорировать ошибки со статус-кодами 404, 500 и 403
+  },
+});
+```
+
+#### Игнорирование по паттерну URL
+
+Игнорировать ошибки с определённых URL используя паттерны с подстановочными знаками:
+
+```typescript
+init({
+  projectKey: "your-project-api-key",
+  ignoreError: {
+    urls: [
+      "/example/*", // Игнорировать все ошибки на путях /example/*
+      "/api/health", // Точное совпадение
+      "*.jpg", // Все изображения
+      "/admin/*/test", // Паттерн с * в середине
+    ],
+  },
+});
+```
+
+#### Комбинированные правила игнорирования
+
+Вы можете комбинировать коды ошибок и паттерны URL. Ошибка будет проигнорирована, если она соответствует любому из условий:
+
+```typescript
+init({
+  projectKey: "your-project-api-key",
+  ignoreError: {
+    codes: [404, 500],
+    urls: ["/example/*", "/api/health"],
+  },
+});
+```
+
+**Сопоставление паттернов:**
+
+- `"/example/*"` - Совпадает со всеми URL, начинающимися с `/example/` (например, `/example/page`, `/example/123`)
+- `"*.jpg"` - Совпадает со всеми URL, заканчивающимися на `.jpg`
+- `"/admin/*/test"` - Совпадает с URL типа `/admin/users/test`, `/admin/posts/test`
+- Точное совпадение: `"/api/health"` - Совпадает только с `/api/health`
 
 ### Скриншоты ошибок
 
@@ -777,13 +1194,7 @@ import { flush } from "fast-analytics-js";
 await flush();
 ```
 
-**Совет:** Вызовите `flush()` перед закрытием страницы, чтобы убедиться, что все события отправлены:
-
-```typescript
-window.addEventListener("beforeunload", () => {
-  flush();
-});
-```
+**Примечание:** SDK автоматически отправляет события при закрытии страницы (`beforeunload`) или когда вкладка становится скрытой (`visibilitychange`). Вам не нужно вручную настраивать эти обработчики.
 
 ### Управление сессией
 
@@ -815,6 +1226,191 @@ teardown();
 
 После вызова `teardown()` вы можете повторно инициализировать SDK, вызвав `init()` снова.
 
+### Справочник API
+
+#### Функции
+
+##### `init(options: InitOptions): void`
+
+Инициализирует SDK с предоставленными параметрами конфигурации. Должна быть вызвана перед использованием любых других функций SDK.
+
+```typescript
+init({
+  projectKey: "your-project-api-key",
+  // ... другие опции
+});
+```
+
+##### `logError(error: Error | string, context?: EventContext): Promise<void>`
+
+Вручную логировать ошибку. Принимает объект Error или строковое сообщение.
+
+```typescript
+await logError(new Error("Что-то пошло не так"), {
+  userId: "user123",
+  customTags: { section: "checkout" },
+});
+```
+
+##### `logWarning(message: string, context?: EventContext): Promise<void>`
+
+Логировать предупреждение.
+
+```typescript
+await logWarning("Обнаружено необычное поведение пользователя", {
+  userId: "user123",
+});
+```
+
+##### `logInfo(message: string, context?: EventContext): Promise<void>`
+
+Логировать информационное сообщение.
+
+```typescript
+await logInfo("Пользователь завершил оформление заказа", {
+  userId: "user123",
+  orderId: "order-123",
+});
+```
+
+##### `logDebug(message: string, context?: EventContext): Promise<void>`
+
+Логировать отладочное сообщение.
+
+```typescript
+await logDebug("Отладочная информация", {
+  data: someData,
+});
+```
+
+##### `trackPageVisit(url?: string, pathname?: string, referrer?: string): Promise<void>`
+
+Вручную отследить посещение страницы. При вызове без аргументов использует информацию о текущей странице.
+
+```typescript
+await trackPageVisit(
+  "https://example.com/page",
+  "/page",
+  "https://example.com/referrer"
+);
+```
+
+##### `flush(): Promise<void>`
+
+Немедленно отправить все накопленные события из очереди батчей.
+
+```typescript
+await flush();
+```
+
+##### `getSessionId(): string`
+
+Получить ID текущей сессии.
+
+```typescript
+const sessionId = getSessionId();
+```
+
+##### `resetSession(): void`
+
+Создать новую сессию (генерирует новый ID сессии).
+
+```typescript
+resetSession();
+```
+
+##### `teardown(): void`
+
+Очистить и отключить SDK. Удаляет все обработчики событий и останавливает отслеживание.
+
+```typescript
+teardown();
+```
+
+#### Типы
+
+##### `InitOptions`
+
+Параметры конфигурации для инициализации SDK.
+
+```typescript
+interface InitOptions {
+  projectKey: string; // Обязательно: API-ключ вашего проекта
+  endpoint?: string; // Опционально: URL API endpoint
+  userId?: string; // Опционально: Глобальный ID пользователя для всех событий
+  enableAutoCapture?: boolean; // Опционально: Включить автоматический перехват (по умолчанию: true)
+  enablePageTracking?: boolean; // Опционально: Включить отслеживание посещений (по умолчанию: true)
+  enableOnlineTracking?: boolean; // Опционально: Включить отслеживание онлайн пользователей (по умолчанию: true)
+  enableScreenshotOnError?: boolean; // Опционально: Включить скриншоты при ошибках (по умолчанию: false)
+  batchSize?: number; // Опционально: Размер батча для событий (по умолчанию: 10)
+  batchTimeout?: number; // Опционально: Таймаут батча в мс (по умолчанию: 5000)
+  heartbeatInterval?: number; // Опционально: Интервал heartbeat в мс (по умолчанию: 30000)
+  ignoreError?: {
+    codes?: (string | number)[]; // HTTP статус-коды для игнорирования
+    urls?: string[]; // Паттерны URL для игнорирования
+  };
+  groupPageVisitsGroup?: string[]; // Паттерны URL для группировки посещений страниц
+}
+```
+
+##### `EventContext`
+
+Дополнительные данные контекста для событий.
+
+```typescript
+interface EventContext {
+  userAgent?: string;
+  url?: string;
+  userId?: string;
+  sessionId?: string;
+  customTags?: Record<string, string>;
+  [key: string]: unknown; // Любые дополнительные пользовательские данные
+}
+```
+
+##### `EventLevel`
+
+Уровень логирования для событий.
+
+```typescript
+type EventLevel = "error" | "warn" | "info" | "debug";
+```
+
+##### `EventPayload`
+
+Полная структура полезной нагрузки события.
+
+```typescript
+interface EventPayload {
+  level: EventLevel;
+  message: string;
+  stack?: string;
+  context?: EventContext;
+  userAgent?: string;
+  url?: string;
+  sessionId?: string;
+  userId?: string;
+  performance?: EventPerformance;
+  screenshotUrl?: string;
+}
+```
+
+##### `PageVisitPayload`
+
+Полезная нагрузка события посещения страницы.
+
+```typescript
+interface PageVisitPayload {
+  url: string;
+  pathname?: string;
+  referrer?: string;
+  userAgent?: string;
+  sessionId?: string;
+  userId?: string;
+  duration?: number; // Время, проведенное на странице в миллисекундах
+}
+```
+
 ### Поддержка TypeScript
 
 SDK написан на TypeScript и включает полные определения типов:
@@ -842,7 +1438,7 @@ const context: EventContext = {
 
 ```typescript
 import { useEffect } from "react";
-import { init, flush } from "fast-analytics-js";
+import { init } from "fast-analytics-js";
 
 function App() {
   useEffect(() => {
@@ -850,17 +1446,10 @@ function App() {
       projectKey: process.env.NEXT_PUBLIC_FAST_ANALYTICS_KEY!,
       // endpoint опционально - по умолчанию "https://fast-analytics.vercel.app/api/events"
       // endpoint: process.env.NEXT_PUBLIC_FAST_ANALYTICS_ENDPOINT
+      enableScreenshotOnError: true, // Опционально: Включить скриншоты ошибок
+      batchSize: 10, // Опционально: Настроить размер батча
     });
-
-    // Отправить события перед закрытием страницы
-    const handleBeforeUnload = () => {
-      flush();
-    };
-    window.addEventListener("beforeunload", handleBeforeUnload);
-
-    return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-    };
+    // События автоматически отправляются при закрытии страницы - дополнительная настройка не требуется!
   }, []);
 
   return <div>...</div>;
@@ -889,17 +1478,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
 ```typescript
 import { createApp } from "vue";
-import { init, flush } from "fast-analytics-js";
+import { init } from "fast-analytics-js";
 
 init({
   projectKey: import.meta.env.VITE_FAST_ANALYTICS_KEY,
   // endpoint опционально - по умолчанию "https://fast-analytics.vercel.app/api/events"
   // endpoint: import.meta.env.VITE_FAST_ANALYTICS_ENDPOINT
-});
-
-// Отправить события перед закрытием страницы
-window.addEventListener("beforeunload", () => {
-  flush();
 });
 
 const app = createApp(App);
@@ -911,21 +1495,177 @@ app.mount("#app");
 
 ```html
 <script type="module">
-  import { init, flush } from "fast-analytics-js";
+  import { init } from "fast-analytics-js";
 
   init({
     projectKey: "your-project-api-key",
     // endpoint опционально - по умолчанию "https://fast-analytics.vercel.app/api/events"
   });
 
-  // Отправить события перед закрытием страницы
-  window.addEventListener("beforeunload", () => {
-    flush();
-  });
-
   // Все ошибки автоматически перехватываются!
+  // События автоматически отправляются при закрытии страницы - дополнительная настройка не требуется!
 </script>
 ```
+
+### Совместимость с браузерами
+
+SDK работает во всех современных браузерах, которые поддерживают:
+
+- Функции JavaScript ES6+
+- API `fetch` (или полифилл)
+- API `sessionStorage`
+- API `History` (для SPA маршрутизации)
+
+**Поддерживаемые браузеры:**
+
+- Chrome/Edge: Последние 2 версии
+- Firefox: Последние 2 версии
+- Safari: Последние 2 версии
+- Opera: Последние 2 версии
+- Мобильные браузеры: iOS Safari 12+, Chrome Mobile
+
+**Примечание:** Для старых браузеров может потребоваться включить полифиллы для `fetch` и `Promise`.
+
+### Часто задаваемые вопросы
+
+#### Как работает пакетная обработка?
+
+События собираются в батчи и отправляются когда:
+
+- Батч достигает `batchSize` событий (по умолчанию: 10), или
+- Прошло `batchTimeout` миллисекунд (по умолчанию: 5000мс)
+
+Это уменьшает количество сетевых запросов и улучшает производительность. Вы можете настроить эти значения в опциях `init()`.
+
+#### Повлияет ли SDK на производительность моего приложения?
+
+SDK разработан для того, чтобы быть легковесным и ненавязчивым:
+
+- События отправляются асинхронно
+- Пакетная обработка уменьшает сетевую нагрузку
+- Скриншоты создаются только при возникновении ошибок (если включено)
+- Все операции неблокирующие
+
+#### Как отслеживаются сессии?
+
+Сессии автоматически отслеживаются с использованием `sessionStorage`. Каждая сессия имеет уникальный ID, который сохраняется при перезагрузке страницы в той же вкладке браузера. Сессии сбрасываются когда:
+
+- Вкладка браузера закрывается
+- `resetSession()` вызывается вручную
+- Пользователь очищает хранилище браузера
+
+#### Могу ли я использовать этот SDK в окружении Node.js?
+
+SDK разработан для браузерных окружений. Некоторые функции (например, отслеживание страниц, скриншоты) требуют браузерных API. Для отслеживания ошибок на стороне сервера рассмотрите использование другого SDK или API клиента.
+
+#### Как протестировать SDK в разработке?
+
+Вы можете использовать функцию `teardown()` для отключения SDK во время тестов:
+
+```typescript
+import { init, teardown } from "fast-analytics-js";
+
+beforeEach(() => {
+  init({ projectKey: "test-key" });
+});
+
+afterEach(() => {
+  teardown();
+});
+```
+
+#### Что происходит, если сеть недоступна?
+
+События ставятся в очередь в батчах и будут отправлены при восстановлении соединения. SDK не сохраняет события в локальное хранилище, поэтому события могут быть потеряны, если страница закрыта в офлайн режиме.
+
+#### Могу ли я настроить формат сообщения об ошибке?
+
+SDK автоматически форматирует сообщения об ошибках и трассировки стека. Вы можете добавить дополнительный контекст, используя параметр `context` в функциях логирования, который будет включен в полезную нагрузку события.
+
+#### Как обнаруживаются дубликаты ошибок?
+
+Бэкенд автоматически обнаруживает дубликаты, сравнивая поля `url` и `context`. Когда дубликат найден, счетчик `occurrenceCount` увеличивается вместо создания нового события.
+
+---
+
+### Browser Compatibility
+
+The SDK works in all modern browsers that support:
+
+- ES6+ JavaScript features
+- `fetch` API (or polyfill)
+- `sessionStorage` API
+- `History` API (for SPA routing)
+
+**Supported browsers:**
+
+- Chrome/Edge: Latest 2 versions
+- Firefox: Latest 2 versions
+- Safari: Latest 2 versions
+- Opera: Latest 2 versions
+- Mobile browsers: iOS Safari 12+, Chrome Mobile
+
+**Note:** For older browsers, you may need to include polyfills for `fetch` and `Promise`.
+
+### FAQ
+
+#### How does batch processing work?
+
+Events are collected in batches and sent when either:
+
+- The batch reaches `batchSize` events (default: 10), or
+- `batchTimeout` milliseconds have passed (default: 5000ms)
+
+This reduces network requests and improves performance. You can customize these values in `init()` options.
+
+#### Will the SDK affect my app's performance?
+
+The SDK is designed to be lightweight and non-intrusive:
+
+- Events are sent asynchronously
+- Batch processing reduces network overhead
+- Screenshots are only created when errors occur (if enabled)
+- All operations are non-blocking
+
+#### How are sessions tracked?
+
+Sessions are automatically tracked using `sessionStorage`. Each session has a unique ID that persists across page reloads within the same browser tab. Sessions are reset when:
+
+- The browser tab is closed
+- `resetSession()` is called manually
+- The user clears browser storage
+
+#### Can I use this SDK in a Node.js environment?
+
+The SDK is designed for browser environments. Some features (like page tracking, screenshots) require browser APIs. For server-side error tracking, consider using a different SDK or API client.
+
+#### How do I test the SDK in development?
+
+You can use the `teardown()` function to disable the SDK during tests:
+
+```typescript
+import { init, teardown } from "fast-analytics-js";
+
+beforeEach(() => {
+  init({ projectKey: "test-key" });
+});
+
+afterEach(() => {
+  teardown();
+});
+```
+
+#### What happens if the network is offline?
+
+Events are queued in batches and will be sent when the connection is restored. The SDK doesn't persist events to local storage, so events may be lost if the page is closed while offline.
+
+#### Can I customize the error message format?
+
+The SDK automatically formats error messages and stack traces. You can add additional context using the `context` parameter in logging functions, which will be included in the event payload.
+
+#### How are duplicate errors detected?
+
+The backend automatically detects duplicates by comparing `url` and `context` fields. When a duplicate is found, the `occurrenceCount` is incremented instead of creating a new event.
 
 ---
 

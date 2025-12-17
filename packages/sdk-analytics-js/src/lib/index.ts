@@ -8,9 +8,7 @@ export {
   truncateBody,
 } from "./parse-request-body";
 export type { ParsedRequestBody } from "./parse-request-body";
-export {
-  parseResponseBody,
-  parseXHRResponseBody,
-} from "./parse-response-body";
+export { parseResponseBody, parseXHRResponseBody } from "./parse-response-body";
 export type { ParsedResponseBody } from "./parse-response-body";
-
+export { shouldIgnoreError } from "./should-ignore-error";
+export { groupPageVisitPathname } from "./group-page-visit";

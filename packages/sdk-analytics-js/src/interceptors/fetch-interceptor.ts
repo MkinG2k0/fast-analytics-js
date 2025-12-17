@@ -1,6 +1,6 @@
 import type { EventContext, EventPayload } from "../model";
 import { Transport } from "../transport";
-import { createEventPayload } from "../lib/create-event-payload";
+import { createEventPayload, shouldIgnoreError } from "../lib";
 import {
   extractContentType,
   parseRequestBody,
@@ -21,13 +21,20 @@ interface FetchInterceptorOptions {
     error?: Error,
     context?: EventContext
   ) => Promise<EventPayload>;
+  ignoreError?: { codes?: (string | number)[]; urls?: string[] };
 }
 
 export const setupFetchInterceptor = (
   options: FetchInterceptorOptions
 ): (() => void) => {
-  const { transport, sessionManager, getUserId, isSDKRequest, createErrorPayload } =
-    options;
+  const {
+    transport,
+    sessionManager,
+    getUserId,
+    isSDKRequest,
+    createErrorPayload,
+    ignoreError,
+  } = options;
 
   if (typeof window === "undefined" || !window.fetch) {
     return () => {};
@@ -99,6 +106,10 @@ export const setupFetchInterceptor = (
           }
         );
 
+        if (shouldIgnoreError(payload, ignoreError)) {
+          return response;
+        }
+
         payload.performance = {
           requestDuration,
           timestamp: requestStartTimestamp,
@@ -131,14 +142,16 @@ export const setupFetchInterceptor = (
         }
       );
 
-      payload.performance = {
-        requestDuration: performance.now() - requestStartTime,
-        timestamp: requestStartTimestamp,
-      };
+      if (!shouldIgnoreError(payload, ignoreError)) {
+        payload.performance = {
+          requestDuration: performance.now() - requestStartTime,
+          timestamp: requestStartTimestamp,
+        };
 
-      transport.send(payload).catch(() => {
-        // Игнорируем ошибки отправки, чтобы не создавать бесконечный цикл
-      });
+        transport.send(payload).catch(() => {
+          // Игнорируем ошибки отправки, чтобы не создавать бесконечный цикл
+        });
+      }
 
       throw error;
     }
@@ -150,4 +163,3 @@ export const setupFetchInterceptor = (
     }
   };
 };
-

@@ -1,5 +1,6 @@
 import type { EventContext, EventPayload } from "../model";
 import { Transport } from "../transport";
+import { shouldIgnoreError } from "../lib";
 import { truncateBody } from "../lib/parse-request-body";
 import {
   parseXHRResponseBody,
@@ -19,6 +20,7 @@ interface XHRInterceptorOptions {
     error?: Error,
     context?: EventContext
   ) => Promise<EventPayload>;
+  ignoreError?: { codes?: (string | number)[]; urls?: string[] };
 }
 
 interface ExtendedXHR extends XMLHttpRequest {
@@ -35,7 +37,7 @@ interface ExtendedXHR extends XMLHttpRequest {
 export const setupXHRInterceptor = (
   options: XHRInterceptorOptions
 ): (() => void) => {
-  const { transport, isSDKRequest, createErrorPayload } = options;
+  const { transport, isSDKRequest, createErrorPayload, ignoreError } = options;
 
   if (typeof window === "undefined" || !window.XMLHttpRequest) {
     return () => {};
@@ -139,6 +141,10 @@ export const setupXHRInterceptor = (
       if (payloadPromise && typeof payloadPromise.then === "function") {
         payloadPromise
           .then((payload) => {
+            if (shouldIgnoreError(payload, ignoreError)) {
+              return;
+            }
+
             if (
               requestDuration !== undefined &&
               xhr._fastAnalyticsRequestStartTimestamp
@@ -212,6 +218,10 @@ export const setupXHRInterceptor = (
         if (payloadPromise && typeof payloadPromise.then === "function") {
           payloadPromise
             .then((payload) => {
+              if (shouldIgnoreError(payload, ignoreErrorCodes)) {
+                return;
+              }
+
               if (
                 requestDuration !== undefined &&
                 xhr._fastAnalyticsRequestStartTimestamp

@@ -1,7 +1,11 @@
 import type { EventContext, EventPayload } from "../model";
 import { Transport } from "../transport";
 import { SessionManager } from "../session";
-import { createEventPayload, createScreenshot } from "../lib";
+import {
+  createEventPayload,
+  createScreenshot,
+  shouldIgnoreError,
+} from "../lib";
 import { setupFetchInterceptor } from "./fetch-interceptor";
 import { setupXHRInterceptor } from "./xhr-interceptor";
 
@@ -11,6 +15,7 @@ export class Interceptors {
   private getUserId: () => string | undefined;
   private sdkEndpoint: string;
   private enableScreenshotOnError: boolean;
+  private ignoreError?: { codes?: (string | number)[]; urls?: string[] };
   private originalErrorHandler: typeof window.onerror | null = null;
   private unhandledRejectionHandler:
     | ((event: PromiseRejectionEvent) => void)
@@ -24,13 +29,15 @@ export class Interceptors {
     sessionManager: SessionManager,
     getUserId: () => string | undefined,
     sdkEndpoint: string,
-    enableScreenshotOnError: boolean = false
+    enableScreenshotOnError: boolean = false,
+    ignoreError?: { codes?: (string | number)[]; urls?: string[] }
   ) {
     this.transport = transport;
     this.sessionManager = sessionManager;
     this.getUserId = getUserId;
     this.sdkEndpoint = sdkEndpoint;
     this.enableScreenshotOnError = enableScreenshotOnError;
+    this.ignoreError = ignoreError;
   }
 
   private isSDKRequest(url: string): boolean {
@@ -67,7 +74,7 @@ export class Interceptors {
 
     let screenshotUrl: string | undefined;
     if (this.enableScreenshotOnError) {
-      screenshotUrl = await createScreenshot() ?? undefined;
+      screenshotUrl = (await createScreenshot()) ?? undefined;
     }
 
     return createEventPayload({
@@ -87,13 +94,7 @@ export class Interceptors {
     }
 
     this.originalErrorHandler = window.onerror;
-    window.onerror = (
-      message,
-      source,
-      lineno,
-      colno,
-      error
-    ): boolean => {
+    window.onerror = (message, source, lineno, colno, error): boolean => {
       this.createErrorPayload(
         String(message),
         source?.toString(),
@@ -103,6 +104,9 @@ export class Interceptors {
         undefined
       )
         .then((payload) => {
+          if (shouldIgnoreError(payload, this.ignoreError)) {
+            return;
+          }
           this.transport.send(payload).catch(() => {
             // Игнорируем ошибки отправки, чтобы не создавать бесконечный цикл
           });
@@ -133,6 +137,9 @@ export class Interceptors {
         undefined
       )
         .then((payload) => {
+          if (shouldIgnoreError(payload, this.ignoreError)) {
+            return;
+          }
           this.transport.send(payload).catch(() => {
             // Игнорируем ошибки отправки, чтобы не создавать бесконечный цикл
           });
@@ -142,7 +149,10 @@ export class Interceptors {
         });
     };
 
-    window.addEventListener("unhandledrejection", this.unhandledRejectionHandler);
+    window.addEventListener(
+      "unhandledrejection",
+      this.unhandledRejectionHandler
+    );
 
     this.resourceErrorHandler = (event: ErrorEvent) => {
       if (event.error) {
@@ -179,6 +189,9 @@ export class Interceptors {
         }
       )
         .then((payload) => {
+          if (shouldIgnoreError(payload, this.ignoreError)) {
+            return;
+          }
           this.transport.send(payload).catch(() => {
             // Игнорируем ошибки отправки, чтобы не создавать бесконечный цикл
           });
@@ -212,6 +225,7 @@ export class Interceptors {
       isSDKRequest: this.isSDKRequest.bind(this),
       sessionManager: this.sessionManager,
       transport: this.transport,
+      ignoreError: this.ignoreError,
     });
 
     this.teardownXHR = setupXHRInterceptor({
@@ -236,6 +250,7 @@ export class Interceptors {
       isSDKRequest: this.isSDKRequest.bind(this),
       sessionManager: this.sessionManager,
       transport: this.transport,
+      ignoreError: this.ignoreError,
     });
   }
 
@@ -274,4 +289,3 @@ export class Interceptors {
     }
   }
 }
-

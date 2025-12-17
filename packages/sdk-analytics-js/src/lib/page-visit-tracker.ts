@@ -1,11 +1,14 @@
 import type { PageVisitPayload } from "../model";
+import { groupPageVisitPathname } from "./group-page-visit";
 
 export class PageVisitTracker {
   private pageStartTime: number = Date.now();
   private currentUrl: string = "";
   private currentPathname: string = "";
+  private groupPageVisitsGroup?: string[];
 
-  constructor() {
+  constructor(groupPageVisitsGroup?: string[]) {
+    this.groupPageVisitsGroup = groupPageVisitsGroup;
     if (typeof window !== "undefined") {
       this.currentUrl = window.location.href;
       this.currentPathname = window.location.pathname;
@@ -31,9 +34,15 @@ export class PageVisitTracker {
       this.currentPathname = pathname;
     }
 
+    const rawPathname = pathname || this.currentPathname;
+    const groupedPathname = groupPageVisitPathname(
+      rawPathname,
+      this.groupPageVisitsGroup
+    );
+
     const visit: PageVisitPayload = {
       url: url || this.currentUrl,
-      pathname: pathname || this.currentPathname,
+      pathname: groupedPathname,
       referrer:
         referrer ||
         (typeof document !== "undefined" ? document.referrer : undefined),

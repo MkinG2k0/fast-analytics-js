@@ -20,6 +20,8 @@ export interface InitOptions {
   batchTimeout?: number;
   heartbeatInterval?: number;
   userId?: string;
+  ignoreError?: { codes?: (string | number)[]; urls?: string[] };
+  groupPageVisitsGroup?: string[];
 }
 
 export interface EventPerformance {
@@ -50,4 +52,3 @@ export interface PageVisitPayload {
   userId?: string;
   duration?: number;
 }
-

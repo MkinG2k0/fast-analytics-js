@@ -1,6 +1,11 @@
-import type { EventContext, EventLevel, InitOptions, PageVisitPayload } from "./model";
+import type {
+  EventContext,
+  EventLevel,
+  InitOptions,
+  PageVisitPayload,
+} from "./model";
 import { getDefaultEndpoint } from "./config";
-import { createEventPayload, PageVisitTracker } from "./lib";
+import { createEventPayload, PageVisitTracker, shouldIgnoreError } from "./lib";
 import { Interceptors } from "./interceptors";
 import { SessionManager } from "./session";
 import { PageVisitTransport, Transport } from "./transport";
@@ -18,10 +23,12 @@ export class FastAnalyticsSDK {
   private enablePageTracking: boolean = false;
   private enableOnlineTracking: boolean = false;
   private pageTrackingCleanup: (() => void) | null = null;
+  private flushCleanup: (() => void) | null = null;
+  private ignoreError?: { codes?: (string | number)[]; urls?: string[] };
 
   constructor() {
     this.sessionManager = new SessionManager();
-    this.pageVisitTracker = new PageVisitTracker();
+    this.pageVisitTracker = new PageVisitTracker([]);
   }
 
   init(options: InitOptions): void {
@@ -31,6 +38,8 @@ export class FastAnalyticsSDK {
     }
 
     this.userId = options.userId;
+    this.ignoreError = options.ignoreError;
+    this.pageVisitTracker = new PageVisitTracker(options.groupPageVisitsGroup);
     this.transport = new Transport(options);
     this.pageVisitTransport = new PageVisitTransport(options);
     this.interceptors = new Interceptors(
@@ -38,7 +47,8 @@ export class FastAnalyticsSDK {
       this.sessionManager,
       () => this.userId,
       options.endpoint ?? getDefaultEndpoint(),
-      options.enableScreenshotOnError ?? false
+      options.enableScreenshotOnError ?? false,
+      options.ignoreError
     );
 
     if (options.enableAutoCapture !== false) {
@@ -63,6 +73,9 @@ export class FastAnalyticsSDK {
       );
       this.heartbeatTransport.start();
     }
+
+    // Автоматическая отправка событий перед закрытием страницы
+    this.setupFlushOnUnload();
   }
 
   private ensureInitialized(): void {
@@ -89,6 +102,10 @@ export class FastAnalyticsSDK {
       stack,
       userId: context?.userId ?? this.userId,
     });
+
+    if (shouldIgnoreError(payload, this.ignoreError)) {
+      return;
+    }
 
     await this.transport!.send(payload);
   }
@@ -207,6 +224,33 @@ export class FastAnalyticsSDK {
     await this.pageVisitTransport.send(visit);
   }
 
+  private setupFlushOnUnload(): void {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const handleBeforeUnload = () => {
+      // Синхронный вызов flush для beforeunload
+      // Используем void для игнорирования Promise
+      void this.flush();
+    };
+
+    const handleVisibilityChange = () => {
+      // Отправляем события когда вкладка становится скрытой
+      if (document.visibilityState === "hidden") {
+        void this.flush();
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    this.flushCleanup = () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }
+
   teardown(): void {
     if (this.interceptors) {
       this.interceptors.teardown();
@@ -214,6 +258,10 @@ export class FastAnalyticsSDK {
     if (this.pageTrackingCleanup) {
       this.pageTrackingCleanup();
       this.pageTrackingCleanup = null;
+    }
+    if (this.flushCleanup) {
+      this.flushCleanup();
+      this.flushCleanup = null;
     }
     if (this.heartbeatTransport) {
       this.heartbeatTransport.stop();
@@ -226,4 +274,3 @@ export class FastAnalyticsSDK {
     this.interceptors = null;
   }
 }
-
