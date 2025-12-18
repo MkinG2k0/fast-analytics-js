@@ -35,7 +35,6 @@ model Project {
   description String?
   apiKey      String   @unique
   userId      String
-  maxErrors   Int      @default(100) // Максимальное количество ошибок для хранения (0 = без ограничений)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -44,10 +43,24 @@ model Project {
   members     ProjectMember[]
   invitations ProjectInvitation[]
   pageVisits  PageVisit[]
+  settings    ProjectSettings?
 
   @@index([userId])
   @@index([apiKey])
   @@map("projects")
+}
+
+model ProjectSettings {
+  id                  String   @id @default(cuid())
+  projectId           String   @unique
+  maxErrors           Int      @default(100) // Максимальное количество ошибок для хранения (0 = без ограничений)
+  visitsRetentionDays Int?     @default(7) // Период хранения посещений в днях (null = без ограничений)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("project_settings")
 }
 
 model Event {

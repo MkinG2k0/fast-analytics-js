@@ -12,7 +12,7 @@ import {
 } from "antd";
 import { EyeOutlined, SearchOutlined } from "@ant-design/icons";
 import type { Event, EventLevel } from "@/entities/event";
-import { EventUrlDisplay } from "@/entities/event";
+import { TableUrlCell } from "@/entities/event";
 import dayjs from "@/shared/config/dayjs";
 import { levelColors } from "../config";
 import type { LogsTableActions, LogsTableFilters } from "../model";
@@ -128,41 +128,9 @@ export function createColumns({
       key: "url",
       width: 200,
       ellipsis: { showTitle: false },
-      render: (url: string | null) => {
-        if (!url) {
-          return <Text className="text-gray-400">—</Text>;
-        }
-
-        const shortUrl = url.slice(8);
-        const urlObj = new URL(url);
-        const displayText = `${urlObj.host}${urlObj.pathname}${urlObj.hash || ""}`;
-
-        return (
-          <Tooltip
-            title={<EventUrlDisplay url={shortUrl} />}
-            styles={{
-              body: {
-                maxWidth: "900px",
-                minWidth: "300px",
-                width: "500px",
-                backgroundColor: "white",
-              },
-            }}
-            placement="topLeft"
-          >
-            <Text
-              className="text-sm font-mono text-blue-600 hover:text-blue-800 cursor-pointer w-60"
-              ellipsis={{ tooltip: false }}
-              style={{ display: "block", maxWidth: "100%" }}
-              onClick={() => {
-                window.open(url, "_blank", "noopener,noreferrer");
-              }}
-            >
-              {displayText}
-            </Text>
-          </Tooltip>
-        );
-      },
+      render: (url: string | null) => (
+        <TableUrlCell url={url} className="w-60" showHost />
+      ),
       filterDropdown: () => (
         <SearchFilterDropdown
           value={url}

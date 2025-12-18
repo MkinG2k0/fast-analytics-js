@@ -8,4 +8,4 @@ export * from "./event-request-headers";
 export * from "./event-response-general-info";
 export * from "./event-response-headers";
 export * from "./event-url-display";
-
+export * from "./table-url-cell";

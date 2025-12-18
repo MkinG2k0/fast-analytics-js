@@ -47,7 +47,11 @@ async function getProjectByApiKey(apiKey: string | null) {
       userId: true,
       createdAt: true,
       updatedAt: true,
-      maxErrors: true,
+      settings: {
+        select: {
+          maxErrors: true,
+        },
+      },
     },
   });
 }
@@ -176,7 +180,7 @@ export async function POST(request: Request) {
     const hasNewErrors = eventsToCreate.some(
       (event) => event.level === "error"
     );
-    const maxErrors = project.maxErrors ?? 100;
+    const maxErrors = project.settings?.maxErrors ?? 100;
     if (hasNewErrors && maxErrors > 0) {
       // Подсчитываем общее количество ошибок для проекта
       const totalErrors = await prisma.event.count({

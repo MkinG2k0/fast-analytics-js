@@ -1,35 +1,19 @@
 "use client";
 
 import * as React from "react";
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import {
-  Card,
-  Table,
-  Statistic,
-  Row,
-  Col,
-  Select,
-  DatePicker,
-  Button,
-  Space,
-  message,
-  Tooltip,
-  Typography,
-} from "antd";
-import { ReloadOutlined, BarChartOutlined } from "@ant-design/icons";
-import type { ColumnsType } from "antd/es/table";
+import { useCallback, useState } from "react";
+import { Card, Table } from "antd";
+import { BarChartOutlined } from "@ant-design/icons";
+import { message } from "antd";
 import dayjs from "@/shared/config/dayjs";
 import {
-  getPageVisitsAnalytics,
-  getOnlineUsersCount,
-} from "@/shared/api/page-visits";
-import type { PageVisitsAnalytics, PageVisit } from "@/shared/api/page-visits";
-import { EventUrlDisplay } from "@/entities/event";
-
-const { Text } = Typography;
-
-const { RangePicker } = DatePicker;
+  usePageVisitsAnalytics,
+  useOnlineUsersCount,
+  useAnalyticsTableColumns,
+  useVisitsTableColumns,
+} from "../lib";
+import { AnalyticsStatistics } from "./analytics-statistics";
+import { AnalyticsFilters } from "./analytics-filters";
 
 interface PageVisitsAnalyticsProps {
   projectId: string;
@@ -38,260 +22,61 @@ interface PageVisitsAnalyticsProps {
 type GroupBy = "url" | "date" | "hour";
 
 export function PageVisitsAnalytics({ projectId }: PageVisitsAnalyticsProps) {
-  const router = useRouter();
-  const [loading, setLoading] = useState(false);
-  const [analytics, setAnalytics] = useState<PageVisitsAnalytics | null>(null);
-  const [onlineUsersCount, setOnlineUsersCount] = useState<number>(0);
   const [groupBy, setGroupBy] = useState<GroupBy>("url");
   const [dateRange, setDateRange] = useState<[dayjs.Dayjs, dayjs.Dayjs] | null>(
     [dayjs().subtract(1, "month"), dayjs()]
   );
 
-  const loadAnalytics = async () => {
+  const {
+    data: analytics,
+    isLoading: isLoadingAnalytics,
+    refetch: refetchAnalytics,
+  } = usePageVisitsAnalytics({
+    projectId,
+    groupBy,
+    dateRange,
+  });
+
+  const onlineUsersCount = useOnlineUsersCount(projectId);
+
+  const analyticsColumns = useAnalyticsTableColumns({
+    groupBy,
+    projectId,
+    dateRange,
+  });
+
+  const visitsColumns = useVisitsTableColumns();
+
+  const handleGroupByChange = useCallback((value: GroupBy) => {
+    setGroupBy(value);
+  }, []);
+
+  const handleDateRangeChange = useCallback((dates: unknown) => {
+    setDateRange(dates as [dayjs.Dayjs, dayjs.Dayjs] | null);
+  }, []);
+
+  const handleRefresh = useCallback(async () => {
     try {
-      setLoading(true);
-      const data = await getPageVisitsAnalytics({
-        projectId,
-        startDate: dateRange?.[0]?.toISOString(),
-        endDate: dateRange?.[1]?.toISOString(),
-        groupBy,
-      });
-      setAnalytics(data);
+      await refetchAnalytics();
     } catch {
       message.error("Ошибка загрузки аналитики посещений");
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [refetchAnalytics]);
 
-  const loadOnlineUsersCount = async () => {
-    try {
-      const { count } = await getOnlineUsersCount(projectId);
-      setOnlineUsersCount(count);
-    } catch {
-      // Игнорируем ошибки загрузки онлайн пользователей
-    }
-  };
-
-  useEffect(() => {
-    if (projectId) {
-      loadAnalytics();
-      loadOnlineUsersCount();
-
-      // Обновляем количество онлайн пользователей каждые 10 секунд
-      const interval = setInterval(() => {
-        loadOnlineUsersCount();
-      }, 10000);
-
-      return () => clearInterval(interval);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [projectId, groupBy, dateRange]);
-
-  const handleGroupByChange = (value: GroupBy) => {
-    setGroupBy(value);
-  };
-
-  const handleDateRangeChange = (dates: unknown) => {
-    setDateRange(dates as [dayjs.Dayjs, dayjs.Dayjs] | null);
-  };
-
-  const handleRefresh = () => {
-    loadAnalytics();
-  };
-
-  const analyticsColumns: ColumnsType<PageVisitsAnalytics["analytics"][0]> = [
-    {
-      title: groupBy === "url" ? "URL" : groupBy === "date" ? "Дата" : "Час",
-      dataIndex:
-        groupBy === "url" ? "url" : groupBy === "date" ? "date" : "hour",
-      key: "key",
-      width: "100%",
-      ellipsis: groupBy === "url" ? { showTitle: false } : false,
-      render: (text: string, record) => {
-        if (!text) {
-          return <Text className="text-gray-400">—</Text>;
-        }
-        if (groupBy === "url") {
-          const url = decodeURIComponent(text);
-          const shortUrl = url.slice(8);
-          const urlObj = new URL(url);
-          const displayText = `${urlObj.pathname}${urlObj.hash || ""}`;
-
-          return (
-            <Tooltip
-              title={<EventUrlDisplay url={shortUrl} />}
-              styles={{
-                body: {
-                  maxWidth: "900px",
-                  minWidth: "300px",
-                  width: "500px",
-                  backgroundColor: "white",
-                },
-              }}
-              placement="topLeft"
-            >
-              <Text
-                className="text-sm font-mono text-blue-600 hover:text-blue-800 cursor-pointer "
-                ellipsis={{ tooltip: false }}
-                style={{ display: "block", maxWidth: "100%" }}
-                onClick={() => {
-                  window.open(url, "_blank", "noopener,noreferrer");
-                }}
-              >
-                {displayText}
-              </Text>
-            </Tooltip>
-          );
-        }
-
-        return text;
-      },
-    },
-
-    {
-      title: "Посещений",
-      dataIndex: "visits",
-      width: 150,
-      key: "visits",
-      sorter: (a, b) => a.visits - b.visits,
-      defaultSortOrder: "descend",
-    },
-    {
-      title: "Уникальных сессий",
-      dataIndex: "uniqueSessions",
-      key: "uniqueSessions",
-      width: 210,
-
-      sorter: (a, b) => a.uniqueSessions - b.uniqueSessions,
-    },
-    {
-      title: "Ошибок",
-      dataIndex: "errors",
-      key: "errors",
-      width: 120,
-
-      render: (value: number, record) => {
-        const isClickable = value > 0 && groupBy === "url" && record.url;
-
-        const handleClick = () => {
-          if (isClickable) {
-            const urlParams = new URLSearchParams({
-              level: "error",
-              url: record.url!,
-            });
-            if (dateRange?.[0]) {
-              urlParams.set("startDate", dateRange[0].toISOString());
-            }
-            if (dateRange?.[1]) {
-              urlParams.set("endDate", dateRange[1].toISOString());
-            }
-            router.push(`/project/${projectId}/logs?${urlParams.toString()}`);
-          }
-        };
-
-        return (
-          <span
-            className={
-              value > 0
-                ? isClickable
-                  ? "text-red-500 font-semibold cursor-pointer hover:text-red-700 hover:underline"
-                  : "text-red-500 font-semibold"
-                : ""
-            }
-            onClick={isClickable ? handleClick : undefined}
-          >
-            {value || 0}
-          </span>
-        );
-      },
-      sorter: (a, b) => (a.errors || 0) - (b.errors || 0),
-      defaultSortOrder: "descend",
-    },
-    ...(groupBy === "url"
-      ? [
-          {
-            title: "Среднее время (мс)",
-            dataIndex: "avgDuration",
-            key: "avgDuration",
-            width: 150,
-            render: (value: number) =>
-              value ? `${value.toLocaleString()} мс` : "-",
-            sorter: (a, b) => (a.avgDuration || 0) - (b.avgDuration || 0),
-          },
-        ]
-      : []),
-  ];
-
-  const visitsColumns: ColumnsType<PageVisit> = [
-    {
-      title: "URL",
-      dataIndex: "url",
-      key: "url",
-      render: (text: string, record) => {
-        if (!text) {
-          return <Text className="text-gray-400">—</Text>;
-        }
-
-        const url = decodeURIComponent(text);
-        const shortUrl = url.slice(8);
-        const urlObj = new URL(url);
-        const displayText = `${urlObj.pathname}${urlObj.hash || ""}`;
-
-        return (
-          <Tooltip
-            title={<EventUrlDisplay url={shortUrl} />}
-            styles={{
-              body: {
-                maxWidth: "900px",
-                minWidth: "300px",
-                width: "500px",
-                backgroundColor: "white",
-              },
-            }}
-            placement="topLeft"
-          >
-            <Text
-              className="text-sm font-mono text-blue-600 hover:text-blue-800 cursor-pointer "
-              ellipsis={{ tooltip: false }}
-              style={{ display: "block", maxWidth: "100%" }}
-              onClick={() => {
-                window.open(url, "_blank", "noopener,noreferrer");
-              }}
-            >
-              {displayText}
-            </Text>
-          </Tooltip>
-        );
-      },
-    },
-    {
-      title: "Время",
-      dataIndex: "timestamp",
-      key: "timestamp",
-      render: (text: string) => dayjs(text).format("DD.MM.YYYY HH:mm:ss"),
-    },
-    {
-      title: "Длительность",
-      dataIndex: "duration",
-      key: "duration",
-      render: (value: number | null) =>
-        value ? `${Math.round(value / 1000)} сек` : "-",
-    },
-    {
-      title: "Сессия",
-      dataIndex: "sessionId",
-      key: "sessionId",
-      render: (value: string | null) =>
-        value ? (
-          <span className="text-xs font-mono text-gray-600">
-            {value.slice(0, 8)}...
-          </span>
-        ) : (
-          "-"
-        ),
-    },
-  ];
+  const analyticsRowKey = useCallback(
+    (record: {
+      url?: string;
+      date?: string;
+      hour?: string;
+      visits: number;
+      uniqueSessions: number;
+    }) =>
+      record.url ||
+      record.date ||
+      record.hour ||
+      `${record.visits}-${record.uniqueSessions}`,
+    []
+  );
 
   return (
     <div className="space-y-6">
@@ -300,100 +85,33 @@ export function PageVisitsAnalytics({ projectId }: PageVisitsAnalyticsProps) {
           <div className="flex items-center gap-2">
             <BarChartOutlined className="text-blue-500 text-lg" />
           </div>
-          <Space>
-            <Select
-              value={groupBy}
-              onChange={handleGroupByChange}
-              style={{ width: 150 }}
-              options={[
-                { label: "По URL", value: "url" },
-                { label: "По дате", value: "date" },
-                { label: "По часам", value: "hour" },
-              ]}
-            />
-            <RangePicker
-              value={dateRange}
-              onChange={handleDateRangeChange}
-              placeholder={["Начальная дата", "Конечная дата"]}
-            />
-            <Button
-              icon={<ReloadOutlined />}
-              onClick={handleRefresh}
-              loading={loading}
-            >
-              Обновить
-            </Button>
-          </Space>
+          <AnalyticsFilters
+            groupBy={groupBy}
+            dateRange={dateRange}
+            loading={isLoadingAnalytics}
+            onGroupByChange={handleGroupByChange}
+            onDateRangeChange={handleDateRangeChange}
+            onRefresh={handleRefresh}
+          />
         </div>
 
-        <Row gutter={[16, 16]} className="mb-6">
-          <Col xs={24} sm={6}>
-            <Card>
-              <Statistic
-                title="Онлайн пользователей"
-                value={onlineUsersCount}
-                valueStyle={{ color: "#52c41a" }}
-              />
-            </Card>
-          </Col>
-          <Col xs={24} sm={6}>
-            <Card>
-              <Statistic
-                title="Всего посещений"
-                value={analytics?.summary.totalVisits}
-                valueStyle={{ color: "#3f8600" }}
-                loading={loading || !analytics}
-              />
-            </Card>
-          </Col>
-          <Col xs={24} sm={6}>
-            <Card>
-              <Statistic
-                title="Уникальных сессий"
-                value={analytics?.summary.uniqueSessions}
-                valueStyle={{ color: "#1890ff" }}
-                loading={loading || !analytics}
-              />
-            </Card>
-          </Col>
-          <Col xs={24} sm={6}>
-            <Card>
-              <Statistic
-                title="Среднее время (мс)"
-                value={analytics?.summary.avgDuration}
-                suffix="мс"
-                loading={loading || !analytics}
-              />
-            </Card>
-          </Col>
-          <Col xs={24} sm={6}>
-            <Card>
-              <Statistic
-                title="Всего ошибок"
-                value={analytics?.summary.totalErrors}
-                valueStyle={{ color: "#ff4d4f" }}
-                loading={loading || !analytics}
-              />
-            </Card>
-          </Col>
-        </Row>
+        <AnalyticsStatistics
+          onlineUsersCount={onlineUsersCount}
+          analytics={analytics}
+          loading={isLoadingAnalytics}
+        />
       </Card>
 
-      <Card title="Статистика по страницам" loading={loading}>
+      <Card title="Статистика по страницам" loading={isLoadingAnalytics}>
         <Table
           columns={analyticsColumns}
           dataSource={analytics?.analytics || []}
-          rowKey={(record) =>
-            record.url ||
-            record.date ||
-            record.hour ||
-            `${record.visits}-${record.uniqueSessions}`
-          }
+          rowKey={analyticsRowKey}
           pagination={{ pageSize: 20 }}
         />
       </Card>
 
-      <Card title="Последние посещения" loading={loading}>
+      <Card title="Последние посещения" loading={isLoadingAnalytics}>
         <Table
           columns={visitsColumns}
           dataSource={analytics?.visits || []}

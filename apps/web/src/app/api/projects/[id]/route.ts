@@ -13,6 +13,7 @@ const updateProjectSchema = z.object({
   name: z.string().min(1, "Название проекта обязательно").optional(),
   description: z.string().optional(),
   maxErrors: z.number().int().min(0).optional(),
+  visitsRetentionDays: z.number().int().min(0).nullable().optional(),
 });
 
 export async function GET(
@@ -39,6 +40,9 @@ export async function GET(
 
     const project = await prisma.project.findUnique({
       where: { id },
+      include: {
+        settings: true,
+      },
     });
 
     if (!project) {
@@ -95,6 +99,7 @@ export async function PATCH(
     const body = await request.json();
     const validatedData = updateProjectSchema.parse(body);
 
+    // Обновляем проект
     const updatedProject = await prisma.project.update({
       where: { id },
       data: {
@@ -102,13 +107,53 @@ export async function PATCH(
         ...(validatedData.description !== undefined && {
           description: validatedData.description || null,
         }),
-        ...(validatedData.maxErrors !== undefined && {
-          maxErrors: validatedData.maxErrors,
-        }),
+      },
+      include: {
+        settings: true,
       },
     });
 
-    return NextResponse.json(updatedProject);
+    // Обновляем или создаем настройки проекта
+    if (
+      validatedData.maxErrors !== undefined ||
+      validatedData.visitsRetentionDays !== undefined
+    ) {
+      const settingsData: {
+        maxErrors?: number;
+        visitsRetentionDays?: number | null;
+      } = {};
+
+      if (validatedData.maxErrors !== undefined) {
+        settingsData.maxErrors = validatedData.maxErrors;
+      }
+
+      if (validatedData.visitsRetentionDays !== undefined) {
+        settingsData.visitsRetentionDays =
+          validatedData.visitsRetentionDays === 0
+            ? null
+            : validatedData.visitsRetentionDays;
+      }
+
+      await prisma.projectSettings.upsert({
+        where: { projectId: id },
+        update: settingsData,
+        create: {
+          projectId: id,
+          maxErrors: settingsData.maxErrors ?? 100,
+          visitsRetentionDays: settingsData.visitsRetentionDays ?? null,
+        },
+      });
+    }
+
+    // Получаем обновленный проект с настройками
+    const projectWithSettings = await prisma.project.findUnique({
+      where: { id },
+      include: {
+        settings: true,
+      },
+    });
+
+    return NextResponse.json(projectWithSettings);
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(

@@ -123,7 +123,12 @@ export function ProjectSettingsPage() {
       form.setFieldsValue({
         name: project.name,
         description: project.description || "",
-        maxErrors: project.maxErrors ?? 100,
+        maxErrors: project.settings?.maxErrors ?? 100,
+        visitsRetentionDays:
+          project.settings?.visitsRetentionDays === null ||
+          project.settings?.visitsRetentionDays === undefined
+            ? 7
+            : project.settings.visitsRetentionDays,
       });
       setEditing(true);
     }
@@ -142,6 +147,8 @@ export function ProjectSettingsPage() {
         name: values.name,
         description: values.description || undefined,
         maxErrors: values.maxErrors,
+        visitsRetentionDays:
+          values.visitsRetentionDays === 0 ? null : values.visitsRetentionDays,
       });
       setProject(updatedProject);
       setEditing(false);
@@ -225,7 +232,12 @@ export function ProjectSettingsPage() {
                 initialValues={{
                   name: project.name,
                   description: project.description || "",
-                  maxErrors: project.maxErrors ?? 100,
+                  maxErrors: project.settings?.maxErrors ?? 100,
+                  visitsRetentionDays:
+                    project.settings?.visitsRetentionDays === null ||
+                    project.settings?.visitsRetentionDays === undefined
+                      ? 7
+                      : project.settings.visitsRetentionDays,
                 }}
               >
                 <Form.Item
@@ -261,6 +273,24 @@ export function ProjectSettingsPage() {
                     style={{ width: "100%" }}
                   />
                 </Form.Item>
+                <Form.Item
+                  name="visitsRetentionDays"
+                  label="Период хранения посещений (дни)"
+                  tooltip="Период хранения данных о посещениях в днях. Данные старше указанного периода будут автоматически удаляться. Укажите 0 для сохранения всех данных."
+                  rules={[
+                    {
+                      type: "number",
+                      min: 0,
+                      message: "Значение должно быть не менее 0",
+                    },
+                  ]}
+                >
+                  <InputNumber
+                    placeholder="0 (без ограничений)"
+                    min={0}
+                    style={{ width: "100%" }}
+                  />
+                </Form.Item>
                 <Form.Item>
                   <Space>
                     <Button
@@ -289,9 +319,16 @@ export function ProjectSettingsPage() {
                 )}
                 <Paragraph>
                   <Text strong>Максимальное количество ошибок:</Text>{" "}
-                  {project.maxErrors === 0
+                  {project.settings?.maxErrors === 0
                     ? "Без ограничений"
-                    : (project.maxErrors ?? 100)}
+                    : (project.settings?.maxErrors ?? 100)}
+                </Paragraph>
+                <Paragraph>
+                  <Text strong>Период хранения посещений:</Text>{" "}
+                  {project.settings?.visitsRetentionDays === null ||
+                  project.settings?.visitsRetentionDays === undefined
+                    ? "Без ограничений"
+                    : `${project.settings.visitsRetentionDays} дн.`}
                 </Paragraph>
               </>
             )}

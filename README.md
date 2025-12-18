@@ -15,6 +15,7 @@ Fast Analytics — это полнофункциональный сервис д
 - ✅ Детальный просмотр событий с stack trace и контекстом
 - ✅ Предотвращение дубликатов логов с автоматическим подсчетом повторений
 - ✅ Ограничение количества ошибок — автоматическое удаление старых ошибок при превышении лимита (настраивается для каждого проекта)
+- ✅ Настройка периода хранения посещений — автоматическая очистка данных о посещениях старше установленного периода (по умолчанию 7 дней)
 
 ### Планируемые функции
 
@@ -101,6 +102,8 @@ cp apps/web/example.env apps/web/.env
 DATABASE_URL="postgresql://user:password@localhost:5432/fast_analytics?schema=public"
 JWT_SECRET="your-secret-key-change-in-production"
 NEXTAUTH_URL="http://localhost:3000"
+NEXTAUTH_SECRET="your-nextauth-secret"
+CRON_SECRET="your-cron-secret-key" # Опционально: для защиты cron job очистки посещений
 ```
 
 4. Запустите миграции Prisma:
@@ -247,7 +250,7 @@ pnpm db:studio   # Открыть Prisma Studio
 - `GET /api/projects` — список проектов пользователя
 - `POST /api/projects` — создание проекта
 - `GET /api/projects/:id` — получение проекта
-- `PATCH /api/projects/:id` — обновление проекта (название, описание, maxErrors)
+- `PATCH /api/projects/:id` — обновление проекта (название, описание, maxErrors, visitsRetentionDays)
 - `POST /api/projects/:id/regenerate-key` — обновление API ключа
 
 ### События
@@ -256,6 +259,17 @@ pnpm db:studio   # Открыть Prisma Studio
   - Требует заголовок `x-api-key` с API ключом проекта
   - Автоматически предотвращает дубликаты по комбинации `url` и `context`
   - При обнаружении дубликата увеличивает счетчик `occurrenceCount` существующего события
+  - Автоматически удаляет старые ошибки при превышении лимита `maxErrors` из настроек проекта
+
+### Посещения
+
+- `POST /api/page-visits` — создание записи о посещении (публичный endpoint для SDK)
+  - Требует заголовок `x-api-key` с API ключом проекта
+- `GET /api/page-visits` — получение аналитики посещений (требует авторизации)
+  - Параметры: `projectId`, `startDate`, `endDate`, `groupBy` (url/date/hour)
+- `POST /api/page-visits/cleanup` — очистка старых посещений (cron job)
+  - Защищен секретным ключом через заголовок `Authorization: Bearer <CRON_SECRET>`
+  - Запускается автоматически ежедневно в 2:00 UTC через Vercel Cron
   - Автоматически удаляет старые ошибки при превышении лимита `maxErrors` проекта
 - `GET /api/events?projectId=...` — получение событий (требует аутентификации)
 - `GET /api/events/:id` — получение конкретного события
