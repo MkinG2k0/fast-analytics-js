@@ -36,7 +36,7 @@ import {
   MembersList,
   InvitationsList,
 } from "@/features/manage-members";
-import type { Project } from "@/entities/project";
+import type { ProjectWithSettings } from "@/entities/project";
 
 const { Title, Paragraph, Text } = Typography;
 const { TextArea } = Input;
@@ -46,7 +46,7 @@ export function ProjectSettingsPage() {
   const router = useRouter();
   const { data: session } = useSession();
   const projectId = params.id as string;
-  const [project, setProject] = useState<Project | null>(null);
+  const [project, setProject] = useState<ProjectWithSettings | null>(null);
   const [loading, setLoading] = useState(false);
   const [regeneratingKey, setRegeneratingKey] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -86,8 +86,8 @@ export function ProjectSettingsPage() {
   const handleRegenerateKey = async () => {
     try {
       setRegeneratingKey(true);
-      const { apiKey } = await regenerateApiKey(projectId);
-      setProject(project ? { ...project, apiKey } : null);
+      await regenerateApiKey(projectId);
+      await loadProject();
       message.success("Ключ обновлен");
     } catch {
       message.error("Ошибка обновления ключа");
