@@ -7,10 +7,17 @@ const CRON_SECRET = process.env.CRON_SECRET;
 
 export async function POST(request: Request) {
   try {
-    // Проверка секретного ключа для защиты от несанкционированного доступа
-    const authHeader = request.headers.get("authorization");
-    if (CRON_SECRET && authHeader !== `Bearer ${CRON_SECRET}`) {
-      return NextResponse.json({ message: "Не авторизован" }, { status: 401 });
+    // Проверка что запрос пришел от Vercel Cron
+    const cronHeader = request.headers.get("x-vercel-cron");
+    if (!cronHeader && CRON_SECRET) {
+      // Если нет заголовка от Vercel, проверяем секрет (для ручных вызовов)
+      const authHeader = request.headers.get("authorization");
+      if (authHeader !== `Bearer ${CRON_SECRET}`) {
+        return NextResponse.json(
+          { message: "Не авторизован" },
+          { status: 401 }
+        );
+      }
     }
 
     // Получаем все проекты с установленным visitsRetentionDays
