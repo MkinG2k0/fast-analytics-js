@@ -37,6 +37,7 @@ describe("FastAnalyticsSDK", () => {
       value: { href: "https://example.com/test" },
       writable: true,
     });
+
     Object.defineProperty(navigator, "userAgent", {
       value: "test-user-agent",
       writable: true,
