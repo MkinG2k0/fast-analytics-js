@@ -6,6 +6,7 @@ import {
   Card,
   Button,
   Input,
+  InputNumber,
   message,
   Popconfirm,
   Space,
@@ -122,6 +123,7 @@ export function ProjectSettingsPage() {
       form.setFieldsValue({
         name: project.name,
         description: project.description || "",
+        maxErrors: project.maxErrors ?? 100,
       });
       setEditing(true);
     }
@@ -139,6 +141,7 @@ export function ProjectSettingsPage() {
       const updatedProject = await updateProject(projectId, {
         name: values.name,
         description: values.description || undefined,
+        maxErrors: values.maxErrors,
       });
       setProject(updatedProject);
       setEditing(false);
@@ -222,6 +225,7 @@ export function ProjectSettingsPage() {
                 initialValues={{
                   name: project.name,
                   description: project.description || "",
+                  maxErrors: project.maxErrors ?? 100,
                 }}
               >
                 <Form.Item
@@ -237,6 +241,24 @@ export function ProjectSettingsPage() {
                   <TextArea
                     placeholder="Введите описание проекта (необязательно)"
                     rows={4}
+                  />
+                </Form.Item>
+                <Form.Item
+                  name="maxErrors"
+                  label="Максимальное количество ошибок"
+                  tooltip="Максимальное количество ошибок для хранения. Старые ошибки будут автоматически удаляться. Укажите 0 для сохранения всех ошибок."
+                  rules={[
+                    {
+                      type: "number",
+                      min: 0,
+                      message: "Значение должно быть не менее 0",
+                    },
+                  ]}
+                >
+                  <InputNumber
+                    placeholder="100"
+                    min={0}
+                    style={{ width: "100%" }}
                   />
                 </Form.Item>
                 <Form.Item>
@@ -265,6 +287,12 @@ export function ProjectSettingsPage() {
                     <Text strong>Описание:</Text> {project.description}
                   </Paragraph>
                 )}
+                <Paragraph>
+                  <Text strong>Максимальное количество ошибок:</Text>{" "}
+                  {project.maxErrors === 0
+                    ? "Без ограничений"
+                    : (project.maxErrors ?? 100)}
+                </Paragraph>
               </>
             )}
           </Card>

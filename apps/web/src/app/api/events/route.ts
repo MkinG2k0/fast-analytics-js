@@ -39,6 +39,16 @@ async function getProjectByApiKey(apiKey: string | null) {
 
   return prisma.project.findUnique({
     where: { apiKey },
+    select: {
+      id: true,
+      name: true,
+      description: true,
+      apiKey: true,
+      userId: true,
+      createdAt: true,
+      updatedAt: true,
+      maxErrors: true,
+    },
   });
 }
 
@@ -162,6 +172,49 @@ export async function POST(request: Request) {
       createdCount = result.count;
     }
 
+    // Проверяем ограничение на количество ошибок
+    const hasNewErrors = eventsToCreate.some(
+      (event) => event.level === "error"
+    );
+    const maxErrors = project.maxErrors ?? 100;
+    if (hasNewErrors && maxErrors > 0) {
+      // Подсчитываем общее количество ошибок для проекта
+      const totalErrors = await prisma.event.count({
+        where: {
+          projectId: project.id,
+          level: "error",
+        },
+      });
+
+      // Если превышен лимит, удаляем самые старые ошибки
+      if (totalErrors > maxErrors) {
+        const errorsToDelete = totalErrors - maxErrors;
+        const oldestErrors = await prisma.event.findMany({
+          where: {
+            projectId: project.id,
+            level: "error",
+          },
+          orderBy: {
+            timestamp: "asc",
+          },
+          take: errorsToDelete,
+          select: {
+            id: true,
+          },
+        });
+
+        if (oldestErrors.length > 0) {
+          await prisma.event.deleteMany({
+            where: {
+              id: {
+                in: oldestErrors.map((e) => e.id),
+              },
+            },
+          });
+        }
+      }
+    }
+
     return NextResponse.json(
       {
         success: true,
@@ -276,6 +329,96 @@ export async function GET(request: Request) {
       limit,
     });
   } catch {
+    return NextResponse.json(
+      { message: "Внутренняя ошибка сервера" },
+      { status: 500 }
+    );
+  }
+}
+
+// Endpoint для пакетного удаления событий
+export async function DELETE(request: Request) {
+  try {
+    const session = await getSessionFromRequest();
+    if (!session?.user?.id) {
+      return NextResponse.json({ message: "Не авторизован" }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const { ids } = z.object({ ids: z.array(z.string()) }).parse(body);
+
+    if (!ids || ids.length === 0) {
+      return NextResponse.json(
+        { message: "Список ID обязателен" },
+        { status: 400 }
+      );
+    }
+
+    // Получаем события для проверки доступа
+    const events = await prisma.event.findMany({
+      where: { id: { in: ids } },
+      select: {
+        id: true,
+        projectId: true,
+      },
+    });
+
+    if (events.length === 0) {
+      return NextResponse.json(
+        { message: "События не найдены" },
+        { status: 404 }
+      );
+    }
+
+    // Проверяем доступ к проектам всех событий
+    const projectIds = [...new Set(events.map((e) => e.projectId))];
+    const accessChecks = await Promise.all(
+      projectIds.map(async (projectId) => {
+        const { hasAccess } = await checkProjectAccess(
+          projectId,
+          session.user.id,
+          ProjectPermission.EDIT
+        );
+        return { projectId, hasAccess };
+      })
+    );
+
+    const accessibleProjectIds = new Set(
+      accessChecks
+        .filter(({ hasAccess }) => hasAccess)
+        .map(({ projectId }) => projectId)
+    );
+
+    if (accessibleProjectIds.size === 0) {
+      return NextResponse.json({ message: "Доступ запрещен" }, { status: 403 });
+    }
+
+    // Фильтруем события по доступным проектам
+    const accessibleEventIds = events
+      .filter((e) => accessibleProjectIds.has(e.projectId))
+      .map((e) => e.id);
+
+    if (accessibleEventIds.length === 0) {
+      return NextResponse.json({ message: "Доступ запрещен" }, { status: 403 });
+    }
+
+    // Удаляем события пачкой
+    const result = await prisma.event.deleteMany({
+      where: { id: { in: accessibleEventIds } },
+    });
+
+    return NextResponse.json({
+      success: true,
+      deletedCount: result.count,
+    });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { message: error.errors[0]?.message || "Ошибка валидации" },
+        { status: 400 }
+      );
+    }
+
     return NextResponse.json(
       { message: "Внутренняя ошибка сервера" },
       { status: 500 }

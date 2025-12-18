@@ -30,7 +30,7 @@ export async function regenerateApiKey(
 
 export async function updateProject(
   projectId: string,
-  data: { name?: string; description?: string }
+  data: { name?: string; description?: string; maxErrors?: number }
 ): Promise<Project> {
   const { data: result } = await apiClient.patch<Project>(
     `${API_BASE}/${projectId}`,

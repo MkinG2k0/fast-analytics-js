@@ -12,6 +12,7 @@ import { prisma } from "@/shared/lib/prisma";
 const updateProjectSchema = z.object({
   name: z.string().min(1, "Название проекта обязательно").optional(),
   description: z.string().optional(),
+  maxErrors: z.number().int().min(0).optional(),
 });
 
 export async function GET(
@@ -100,6 +101,9 @@ export async function PATCH(
         ...(validatedData.name !== undefined && { name: validatedData.name }),
         ...(validatedData.description !== undefined && {
           description: validatedData.description || null,
+        }),
+        ...(validatedData.maxErrors !== undefined && {
+          maxErrors: validatedData.maxErrors,
         }),
       },
     });

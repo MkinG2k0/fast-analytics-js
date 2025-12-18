@@ -6,7 +6,7 @@ import { DeleteOutlined } from "@ant-design/icons";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEventsQuery } from "@/features/view-project-logs/lib";
-import { deleteEvent } from "@/shared/api/events";
+import { deleteEvents } from "@/shared/api/events";
 import { createColumns } from "../lib";
 import { useLogsTableStore } from "../model";
 import type { LogsTableProps } from "../model";
@@ -42,12 +42,11 @@ export function LogsTable({ projectId }: LogsTableProps) {
 
     try {
       setIsDeleting(true);
-      const deletePromises = selectedRowKeys.map((id) =>
-        deleteEvent(id as string)
+      const { deletedCount } = await deleteEvents(
+        selectedRowKeys.map((id) => id as string)
       );
-      await Promise.all(deletePromises);
 
-      message.success(`Успешно удалено событий: ${selectedRowKeys.length}`);
+      message.success(`Успешно удалено событий: ${deletedCount}`);
       setSelectedRowKeys([]);
 
       await queryClient.invalidateQueries({
