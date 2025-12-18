@@ -3,6 +3,7 @@ export type {
   Project,
   ProjectInvitation,
   ProjectMember,
+  ProjectSettings,
   User,
 } from "@prisma/client";
 

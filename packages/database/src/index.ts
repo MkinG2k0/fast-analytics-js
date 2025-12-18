@@ -12,6 +12,7 @@ export type {
   ProjectInvitationStatus,
   ProjectMember,
   ProjectRole,
+  ProjectSettings,
   RegisterDto,
   User,
 } from "./model";
