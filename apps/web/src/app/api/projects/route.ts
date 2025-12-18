@@ -79,18 +79,22 @@ export async function POST(request: Request) {
 
     const apiKey = generateApiKey();
 
+    // Сначала создаем ProjectSettings
+    const settings = await prisma.projectSettings.create({
+      data: {
+        maxErrors: 100,
+        visitsRetentionDays: 7,
+      },
+    });
+
+    // Затем создаем Project со ссылкой на settings
     const project = await prisma.project.create({
       data: {
         name: validatedData.name,
         description: validatedData.description || null,
         apiKey,
         userId: session.user.id,
-        settings: {
-          create: {
-            maxErrors: 100,
-            visitsRetentionDays: 7,
-          },
-        },
+        settingsId: settings.id,
       },
       include: {
         settings: true,
