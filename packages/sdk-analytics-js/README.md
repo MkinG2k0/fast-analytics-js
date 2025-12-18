@@ -1,6 +1,6 @@
 # fast-analytics-js
 
-SDK для отправки логов и ошибок в Fast Analytics.
+SDK for sending logs and errors to Fast Analytics.
 
 [![npm version](https://img.shields.io/npm/v/fast-analytics-js)](https://www.npmjs.com/package/fast-analytics-js)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)

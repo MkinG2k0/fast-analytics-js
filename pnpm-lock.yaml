@@ -109,8 +109,8 @@ importers:
         specifier: ^1.11.13
         version: 1.11.19
       fast-analytics-js:
-        specifier: ^0.6.2
-        version: 0.6.2(html2canvas-pro@1.5.13)
+        specifier: ^0.6.4
+        version: 0.6.4(html2canvas-pro@1.5.13)
       html2canvas-pro:
         specifier: ^1.4.1
         version: 1.5.13
@@ -2114,8 +2114,8 @@ packages:
   exsolve@1.0.8:
     resolution: {integrity: sha512-LmDxfWXwcTArk8fUEnOfSZpHOJ6zOMUJKOtFLFqJLoKJetuQG874Uc7/Kki7zFLzYybmZhp1M7+98pfMqeX8yA==}
 
-  fast-analytics-js@0.6.2:
-    resolution: {integrity: sha512-bLXzr/3/0muVSiGJ6gUEsffryF9uM59ihlT8t0O4LZgbTwytbwly9KmtWHVAWny15NTl6/lWHjPuZCet141jvQ==}
+  fast-analytics-js@0.6.4:
+    resolution: {integrity: sha512-JMVM4EQy/4MGeHqaGPrA4aHtSf4iCIBiXUVBKjAC8i4fs8uhOgaF/sjOIPra5lXVzFAceZTq7IP/bu0WVaFBTg==}
     engines: {node: '>=18'}
     peerDependencies:
       html2canvas-pro: ^1.4.1
@@ -5762,7 +5762,7 @@ snapshots:
 
   exsolve@1.0.8: {}
 
-  fast-analytics-js@0.6.2(html2canvas-pro@1.5.13):
+  fast-analytics-js@0.6.4(html2canvas-pro@1.5.13):
     optionalDependencies:
       html2canvas-pro: 1.5.13
 
