@@ -62,14 +62,16 @@ describe("createScreenshot", () => {
     const originalGetContext = HTMLCanvasElement.prototype.getContext;
     HTMLCanvasElement.prototype.getContext = vi.fn(() => null);
 
-    const originalImport = global.import;
-    global.import = vi.fn().mockRejectedValue(new Error("Not found"));
+    const originalImport = (globalThis as Record<string, unknown>).import;
+    (globalThis as Record<string, unknown>).import = vi
+      .fn()
+      .mockRejectedValue(new Error("Not found"));
 
     const result = await createScreenshot();
 
     expect(result).toBeNull();
 
     HTMLCanvasElement.prototype.getContext = originalGetContext;
-    global.import = originalImport;
+    (globalThis as Record<string, unknown>).import = originalImport;
   });
 });

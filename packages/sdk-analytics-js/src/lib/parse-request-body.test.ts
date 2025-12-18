@@ -12,11 +12,13 @@ describe("extractContentType", () => {
   });
 
   it("должен извлекать content-type из строки", () => {
-    expect(extractContentType("application/json")).toBe("application/json");
+    expect(
+      extractContentType("application/json" as unknown as HeadersInit)
+    ).toBe("application/json");
   });
 
   it("должен извлекать content-type из массива заголовков", () => {
-    const headers = [
+    const headers: [string, string][] = [
       ["content-type", "application/json"],
       ["authorization", "Bearer token"],
     ];
@@ -24,7 +26,7 @@ describe("extractContentType", () => {
   });
 
   it("должен возвращать пустую строку если content-type не найден в массиве", () => {
-    const headers = [
+    const headers: [string, string][] = [
       ["authorization", "Bearer token"],
       ["accept", "application/json"],
     ];
@@ -122,7 +124,10 @@ describe("parseRequestBody", () => {
   });
 
   it("должен обрабатывать Document", () => {
-    const result = parseRequestBody(document, "text/html");
+    const result = parseRequestBody(
+      document as unknown as BodyInit,
+      "text/html"
+    );
 
     // Document преобразуется через String(), что дает "[object HTMLDocument]"
     expect(result.body).toBeTruthy();
@@ -130,7 +135,7 @@ describe("parseRequestBody", () => {
   });
 
   it("должен обрабатывать другие типы через String()", () => {
-    const result = parseRequestBody(123, "text/plain");
+    const result = parseRequestBody(123 as unknown as BodyInit, "text/plain");
 
     expect(result.body).toBe("123");
     expect(result.bodyJson).toBeUndefined();
