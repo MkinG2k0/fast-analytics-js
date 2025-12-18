@@ -5,20 +5,23 @@
 STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM)
 
 # Проверяем, есть ли изменения в apps/web (кроме package.json и скриптов версионирования)
-WEB_CHANGES=$(echo "$STAGED_FILES" | grep -E "^apps/web/" | grep -v "apps/web/package.json" | grep -v "apps/web/scripts/bump-version.js" | grep -v "apps/web/CHANGELOG.md")
+WEB_CHANGES=$(echo "$STAGED_FILES" | grep -E "^apps/web/" | grep -v "apps/web/package.json" | grep -v "apps/web/scripts/bump-version.js" | grep -v "apps/web/CHANGELOG.md" || true)
 
 # Если есть изменения в apps/web (кроме package.json), увеличиваем версию
 if [ -n "$WEB_CHANGES" ]; then
   echo "Changes detected in apps/web, bumping version..."
   
   # Переходим в директорию проекта
-  cd "$(git rev-parse --show-toplevel)"
+  cd "$(git rev-parse --show-toplevel)" || exit 1
+  
+  # Проверяем доступность node
+  if ! command -v node >/dev/null 2>&1; then
+    echo "Error: node is not available in PATH"
+    exit 1
+  fi
   
   # Вызываем скрипт увеличения версии
-  node apps/web/scripts/bump-version.js
-  
-  # Если скрипт успешно выполнился, добавляем package.json в staging area
-  if [ $? -eq 0 ]; then
+  if node apps/web/scripts/bump-version.js; then
     git add apps/web/package.json
     echo "Version bumped and package.json staged"
   else
