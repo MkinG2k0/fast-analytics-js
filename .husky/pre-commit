@@ -7,25 +7,69 @@ STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM)
 # Проверяем, есть ли изменения в apps/web (кроме package.json и скриптов версионирования)
 WEB_CHANGES=$(echo "$STAGED_FILES" | grep -E "^apps/web/" | grep -v "apps/web/package.json" | grep -v "apps/web/scripts/bump-version.js" | grep -v "apps/web/CHANGELOG.md" || true)
 
-# Если есть изменения в apps/web (кроме package.json), увеличиваем версию
+# Проверяем, есть ли изменения в packages/sdk-analytics-js (кроме package.json и скриптов версионирования)
+SDK_CHANGES=$(echo "$STAGED_FILES" | grep -E "^packages/sdk-analytics-js/" | grep -v "packages/sdk-analytics-js/package.json" | grep -v "packages/sdk-analytics-js/scripts/bump-version.js" | grep -v "packages/sdk-analytics-js/CHANGELOG.md" || true)
+
+# Переходим в директорию проекта
+cd "$(git rev-parse --show-toplevel)" || exit 1
+
+# Проверяем доступность node и pnpm
+if ! command -v node >/dev/null 2>&1; then
+  echo "Error: node is not available in PATH"
+  exit 1
+fi
+
+if ! command -v pnpm >/dev/null 2>&1; then
+  echo "Error: pnpm is not available in PATH"
+  exit 1
+fi
+
+# Обработка изменений в apps/web
 if [ -n "$WEB_CHANGES" ]; then
-  echo "Changes detected in apps/web, bumping version..."
+  echo "Changes detected in apps/web..."
   
-  # Переходим в директорию проекта
-  cd "$(git rev-parse --show-toplevel)" || exit 1
-  
-  # Проверяем доступность node
-  if ! command -v node >/dev/null 2>&1; then
-    echo "Error: node is not available in PATH"
+  # Проверяем типы перед коммитом
+  echo "Checking types in apps/web..."
+  cd apps/web || exit 1
+  if ! pnpm check-types; then
+    echo "Type check failed in apps/web! Please fix type errors before committing."
     exit 1
   fi
+  cd ../.. || exit 1
+  
+  echo "Type check passed. Bumping version in apps/web..."
   
   # Вызываем скрипт увеличения версии
   if node apps/web/scripts/bump-version.js; then
     git add apps/web/package.json
-    echo "Version bumped and package.json staged"
+    echo "Version bumped and package.json staged for apps/web"
   else
-    echo "Failed to bump version"
+    echo "Failed to bump version in apps/web"
+    exit 1
+  fi
+fi
+
+# Обработка изменений в packages/sdk-analytics-js
+if [ -n "$SDK_CHANGES" ]; then
+  echo "Changes detected in packages/sdk-analytics-js..."
+  
+  # Проверяем типы перед коммитом
+  echo "Checking types in packages/sdk-analytics-js..."
+  cd packages/sdk-analytics-js || exit 1
+  if ! pnpm check-types; then
+    echo "Type check failed in packages/sdk-analytics-js! Please fix type errors before committing."
+    exit 1
+  fi
+  cd ../.. || exit 1
+  
+  echo "Type check passed. Bumping version in packages/sdk-analytics-js..."
+  
+  # Вызываем скрипт увеличения версии
+  if node packages/sdk-analytics-js/scripts/bump-version.js; then
+    git add packages/sdk-analytics-js/package.json
+    echo "Version bumped and package.json staged for packages/sdk-analytics-js"
+  else
+    echo "Failed to bump version in packages/sdk-analytics-js"
     exit 1
   fi
 fi

@@ -25,7 +25,8 @@
     "test": "vitest --silent --run",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
-    "prepublishOnly": "pnpm run build"
+    "prepublishOnly": "pnpm run build",
+    "version:bump": "node scripts/bump-version.js"
   },
   "keywords": [
     "analytics",
