@@ -2,8 +2,7 @@
   "crons": [
     {
       "path": "/api/page-visits/cleanup",
-      "schedule": "0 2 * * *",
-      "secret": "CRON_SECRET"
+      "schedule": "0 2 * * *"
     }
   ]
 }
